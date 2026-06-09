@@ -465,6 +465,48 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
 @keyframes su{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
 @keyframes sum{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
 
+.dia-pills{display:flex;gap:4px;flex-wrap:nowrap}
+.dia-pill{flex:1;padding:5px 2px;border:1.5px solid rgba(255,255,255,.35);border-radius:7px;
+  background:transparent;font-family:var(--font);font-size:10px;font-weight:700;
+  color:rgba(255,255,255,.65);cursor:pointer;transition:all .18s;letter-spacing:.2px}
+.dia-pill:hover{background:rgba(255,255,255,.18);color:#fff}
+.dia-pill.on{background:rgba(255,255,255,.28);color:#fff;border-color:rgba(255,255,255,.75);
+  transform:scale(1.08);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+
+/* SALDO REAL — NEON GLOW */
+@keyframes neonPulse{
+  0%  {box-shadow:0 0 6px rgba(39,174,96,.35), 0 0 18px rgba(39,174,96,.18), 0 2px 12px rgba(0,0,0,.08)}
+  50% {box-shadow:0 0 14px rgba(82,214,138,.55), 0 0 32px rgba(39,174,96,.28), 0 0 56px rgba(39,174,96,.12), 0 2px 12px rgba(0,0,0,.08)}
+  100%{box-shadow:0 0 6px rgba(39,174,96,.35), 0 0 18px rgba(39,174,96,.18), 0 2px 12px rgba(0,0,0,.08)}
+}
+@keyframes neonBorder{
+  0%  {border-color:rgba(39,174,96,.35)}
+  50% {border-color:rgba(82,214,138,.75)}
+  100%{border-color:rgba(39,174,96,.35)}
+}
+.saldo-real-card{
+  animation: neonPulse 2.8s ease-in-out infinite, neonBorder 2.8s ease-in-out infinite;
+}
+.saldo-real-val{
+  text-shadow: 0 0 10px rgba(46,204,113,.6), 0 0 22px rgba(39,174,96,.3);
+}
+
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(39,174,96,.4)}50%{box-shadow:0 0 0 6px rgba(39,174,96,0)}}
+
+.kcard{animation:popIn .35s cubic-bezier(.34,1.4,.64,1) both}
+.kcard.hi{animation:popIn .4s cubic-bezier(.34,1.4,.64,1) both}
+.kcard:nth-child(1){animation-delay:.04s}.kcard:nth-child(2){animation-delay:.08s}
+.kcard:nth-child(3){animation-delay:.12s}.kcard:nth-child(4){animation-delay:.16s}
+.kcard:nth-child(5){animation-delay:.20s}.kcard:nth-child(6){animation-delay:.24s}
+.kcard:nth-child(7){animation-delay:.28s}.kcard:nth-child(8){animation-delay:.32s}
+
+/* Pulsa o saldo real quando configurado */
+.kval.grn.pulse-once{animation:pulse .7s ease}
+
+
+
 /* Data fields — stack vertically on mobile */
 @media(max-width:600px){
   .frow.date-row{grid-template-columns:1fr}
@@ -568,14 +610,17 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
         <label id="rl">Semana R$</label>
         <input type="number" id="renda-input" placeholder="0,00" step="0.01" min="0">
       </div>
-      <div class="rp-row" id="rp-dia-row">
+      <div class="rp-row" id="rp-dia-row" style="flex-direction:column;gap:5px">
         <label>Recebo toda</label>
-        <select id="renda-dia-semana">
-          <option value="0">Domingo</option><option value="1">Segunda</option>
-          <option value="2">Terça</option><option value="3">Quarta</option>
-          <option value="4">Quinta</option><option value="5" selected>Sexta</option>
-          <option value="6">Sábado</option>
-        </select>
+        <div class="dia-pills" id="dia-pills">
+          <button class="dia-pill" data-dia="0" onclick="setDiaSemana(0)">Dom</button>
+          <button class="dia-pill" data-dia="1" onclick="setDiaSemana(1)">Seg</button>
+          <button class="dia-pill" data-dia="2" onclick="setDiaSemana(2)">Ter</button>
+          <button class="dia-pill" data-dia="3" onclick="setDiaSemana(3)">Qua</button>
+          <button class="dia-pill" data-dia="4" onclick="setDiaSemana(4)">Qui</button>
+          <button class="dia-pill on" data-dia="5" onclick="setDiaSemana(5)">Sex</button>
+          <button class="dia-pill" data-dia="6" onclick="setDiaSemana(6)">Sáb</button>
+        </div>
       </div>
       <div class="rp-bot">
         <div onclick="openSaldoModal()" style="cursor:pointer" title="Toque para atualizar saldo real">
@@ -592,11 +637,11 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
   <!-- KPIs -->
   <div class="kpi-grid">
     <!-- Saldo Real — HERO CARD no topo -->
-    <div class="kcard hi" style="grid-column:1/-1;background:linear-gradient(135deg,rgba(39,174,96,.12),rgba(82,214,138,.06));border:2px solid rgba(39,174,96,.3);padding:16px 18px">
+    <div class="kcard hi saldo-real-card" style="grid-column:1/-1;background:linear-gradient(135deg,rgba(39,174,96,.13),rgba(82,214,138,.07));border:2px solid rgba(39,174,96,.4);padding:16px 18px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div class="klbl" style="font-size:11px;letter-spacing:.8px">💰 Saldo Real na Conta</div>
-          <div class="kval grn" id="k-saldo-real" style="font-size:28px;margin-top:2px">—</div>
+          <div class="kval grn saldo-real-val" id="k-saldo-real" style="font-size:28px;margin-top:2px">—</div>
           <div class="ksub" id="k-saldo-real-sub" style="font-size:11px;margin-top:3px">Toque em "Atualizar" para configurar</div>
         </div>
         <button class="btn-meta-set" onclick="openSaldoModal()" style="white-space:nowrap;padding:8px 14px;font-size:11px;font-weight:700">Atualizar</button>
@@ -1104,12 +1149,8 @@ function setupUI(){
     else{S.rendaBaseMensal=v;S.rendaBase=v;}
     save();updRendaTot();updKPIs();
   };
-  const de=document.getElementById('renda-dia-semana');
-  de.onchange=e=>{
-    S.rendaDiaSemana=parseInt(e.target.value);
-    if(!S.semanaAtual.gastos.length)S.semanaAtual.inicioISO=semaIni(new Date(),S.rendaDiaSemana);
-    save();renderSemana();updKPIs();
-  };
+  document.getElementById('renda-dia-semana') && (document.getElementById('renda-dia-semana').onchange=null);
+
   setRM(S.rendaMode||'semanal',true);
   document.getElementById('ex-data').value=todayISO();
   document.getElementById('s-data').value=todayISO();
@@ -1165,13 +1206,13 @@ function setRM(mode,silent){
     document.getElementById('rl').textContent='Semana R$';
     document.getElementById('renda-input').value=S.rendaBaseSemanal||'';
     document.getElementById('rp-dia-row').style.display='flex';
-    document.getElementById('renda-dia-semana').value=S.rendaDiaSemana??5;
-    document.getElementById('rp-total-lbl').textContent='Total mês';
+    updDiaPills();
+    document.getElementById('rp-total-lbl').textContent='💰 Na conta';
   } else {
     document.getElementById('rl').textContent='Mês R$';
     document.getElementById('renda-input').value=S.rendaBaseMensal||'';
     document.getElementById('rp-dia-row').style.display='none';
-    document.getElementById('rp-total-lbl').textContent='Total mensal';
+    document.getElementById('rp-total-lbl').textContent='💰 Na conta';
   }
   if(!silent){save();updRendaTot();updKPIs();}
 }
@@ -1197,7 +1238,17 @@ function updRendaTot(){
   }
 }
 
-// ══ TIPO FIXO ══
+function setDiaSemana(dia){
+  S.rendaDiaSemana=dia;
+  if(!S.semanaAtual.gastos.length) S.semanaAtual.inicioISO=semaIni(new Date(),dia);
+  save(); updDiaPills(); renderSemana(); updKPIs();
+}
+function updDiaPills(){
+  document.querySelectorAll('.dia-pill').forEach(b=>{
+    const on=parseInt(b.dataset.dia)===(S.rendaDiaSemana??5);
+    b.classList.toggle('on',on);
+  });
+}
 function setTipo(t){
   S.tipoFixo=t;
   document.getElementById('tp-pix').className='tog-btn'+(t==='pix'?' ap':'');
@@ -2086,12 +2137,22 @@ function updKPIs(){
   const sr=calcSaldoReal();
   const srEl=document.getElementById('k-saldo-real');
   const srSub=document.getElementById('k-saldo-real-sub');
+  const card=srEl.closest('.saldo-real-card');
   if(sr!==null){
     srEl.textContent=fmtM(sr);
-    srEl.className='kval '+(sr>=0?'grn':'red');
+    srEl.className='kval saldo-real-val '+(sr>=0?'grn':'red');
     srSub.textContent=`Atualizado em ${fmtDate(S.saldoRealData||todayISO())}`;
+    if(card){
+      if(sr<0){
+        card.style.setProperty('--neon1','rgba(232,99,122,.4)');
+        card.style.setProperty('--neon2','rgba(232,99,122,.2)');
+        card.style.borderColor='rgba(232,99,122,.4)';
+      } else {
+        card.style.borderColor='';
+      }
+    }
   } else {
-    srEl.textContent='—';srEl.className='kval';
+    srEl.textContent='—';srEl.className='kval saldo-real-val';
     srSub.textContent='Toque em "Atualizar" para configurar';
   }
   updRendaTot();updMeta();renderPizza();
