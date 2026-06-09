@@ -465,30 +465,37 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
 @keyframes su{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
 @keyframes sum{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
 
-.dia-pills{display:flex;gap:4px;flex-wrap:nowrap}
-.dia-pill{flex:1;padding:5px 2px;border:1.5px solid rgba(255,255,255,.35);border-radius:7px;
-  background:transparent;font-family:var(--font);font-size:10px;font-weight:700;
-  color:rgba(255,255,255,.65);cursor:pointer;transition:all .18s;letter-spacing:.2px}
-.dia-pill:hover{background:rgba(255,255,255,.18);color:#fff}
-.dia-pill.on{background:rgba(255,255,255,.28);color:#fff;border-color:rgba(255,255,255,.75);
-  transform:scale(1.08);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.dia-select-wrap{position:relative;display:block;width:100%}
+.dia-select-wrap::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  color:#fff;font-size:12px;pointer-events:none;font-weight:700}
+.dia-select{width:100%;padding:8px 30px 8px 11px;
+  background:rgba(255,255,255,.2);
+  border:1.5px solid rgba(255,255,255,.5);
+  border-radius:9px;
+  font-family:var(--font);font-size:13px;font-weight:700;
+  color:#fff;cursor:pointer;outline:none;
+  -webkit-appearance:none;appearance:none;
+  transition:all .2s}
+.dia-select option{background:#1a7a42;color:#fff;font-weight:600;font-size:14px}
+.dia-select:focus{border-color:rgba(255,255,255,.85);background:rgba(255,255,255,.28)}
 
 /* SALDO REAL — NEON GLOW */
 @keyframes neonPulse{
-  0%  {box-shadow:0 0 6px rgba(39,174,96,.35), 0 0 18px rgba(39,174,96,.18), 0 2px 12px rgba(0,0,0,.08)}
-  50% {box-shadow:0 0 14px rgba(82,214,138,.55), 0 0 32px rgba(39,174,96,.28), 0 0 56px rgba(39,174,96,.12), 0 2px 12px rgba(0,0,0,.08)}
-  100%{box-shadow:0 0 6px rgba(39,174,96,.35), 0 0 18px rgba(39,174,96,.18), 0 2px 12px rgba(0,0,0,.08)}
+  0%  {box-shadow:0 0 8px rgba(39,174,96,.5), 0 0 22px rgba(39,174,96,.25), 0 4px 16px rgba(0,0,0,.07)}
+  50% {box-shadow:0 0 18px rgba(82,214,138,.8), 0 0 42px rgba(39,174,96,.45), 0 0 72px rgba(39,174,96,.18), 0 4px 16px rgba(0,0,0,.07)}
+  100%{box-shadow:0 0 8px rgba(39,174,96,.5), 0 0 22px rgba(39,174,96,.25), 0 4px 16px rgba(0,0,0,.07)}
 }
 @keyframes neonBorder{
-  0%  {border-color:rgba(39,174,96,.35)}
-  50% {border-color:rgba(82,214,138,.75)}
-  100%{border-color:rgba(39,174,96,.35)}
+  0%  {border-color:rgba(39,174,96,.5)}
+  50% {border-color:rgba(82,214,138,.95)}
+  100%{border-color:rgba(39,174,96,.5)}
 }
 .saldo-real-card{
-  animation: neonPulse 2.8s ease-in-out infinite, neonBorder 2.8s ease-in-out infinite;
+  background:#fff !important;
+  animation: neonPulse 2.6s ease-in-out infinite, neonBorder 2.6s ease-in-out infinite;
 }
 .saldo-real-val{
-  text-shadow: 0 0 10px rgba(46,204,113,.6), 0 0 22px rgba(39,174,96,.3);
+  text-shadow: 0 0 12px rgba(46,204,113,.7), 0 0 28px rgba(39,174,96,.35);
 }
 
 @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
@@ -612,14 +619,16 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
       </div>
       <div class="rp-row" id="rp-dia-row" style="flex-direction:column;gap:5px">
         <label>Recebo toda</label>
-        <div class="dia-pills" id="dia-pills">
-          <button class="dia-pill" data-dia="0" onclick="setDiaSemana(0)">Dom</button>
-          <button class="dia-pill" data-dia="1" onclick="setDiaSemana(1)">Seg</button>
-          <button class="dia-pill" data-dia="2" onclick="setDiaSemana(2)">Ter</button>
-          <button class="dia-pill" data-dia="3" onclick="setDiaSemana(3)">Qua</button>
-          <button class="dia-pill" data-dia="4" onclick="setDiaSemana(4)">Qui</button>
-          <button class="dia-pill on" data-dia="5" onclick="setDiaSemana(5)">Sex</button>
-          <button class="dia-pill" data-dia="6" onclick="setDiaSemana(6)">Sáb</button>
+        <div class="dia-select-wrap">
+          <select class="dia-select" id="renda-dia-semana" onchange="setDiaSemana(parseInt(this.value))">
+            <option value="0">Domingo</option>
+            <option value="1">Segunda-feira</option>
+            <option value="2">Terça-feira</option>
+            <option value="3">Quarta-feira</option>
+            <option value="4">Quinta-feira</option>
+            <option value="5" selected>Sexta-feira</option>
+            <option value="6">Sábado</option>
+          </select>
         </div>
       </div>
       <div class="rp-bot">
@@ -1149,7 +1158,6 @@ function setupUI(){
     else{S.rendaBaseMensal=v;S.rendaBase=v;}
     save();updRendaTot();updKPIs();
   };
-  document.getElementById('renda-dia-semana') && (document.getElementById('renda-dia-semana').onchange=null);
 
   setRM(S.rendaMode||'semanal',true);
   document.getElementById('ex-data').value=todayISO();
@@ -1244,10 +1252,8 @@ function setDiaSemana(dia){
   save(); updDiaPills(); renderSemana(); updKPIs();
 }
 function updDiaPills(){
-  document.querySelectorAll('.dia-pill').forEach(b=>{
-    const on=parseInt(b.dataset.dia)===(S.rendaDiaSemana??5);
-    b.classList.toggle('on',on);
-  });
+  const sel=document.getElementById('renda-dia-semana');
+  if(sel) sel.value=S.rendaDiaSemana??5;
 }
 function setTipo(t){
   S.tipoFixo=t;
