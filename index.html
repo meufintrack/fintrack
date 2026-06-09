@@ -465,38 +465,19 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
 @keyframes su{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
 @keyframes sum{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
 
-.dia-select-wrap{position:relative;display:block;width:100%}
-.dia-select-wrap::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);
-  color:#fff;font-size:12px;pointer-events:none;font-weight:700}
-.dia-select{width:100%;padding:8px 30px 8px 11px;
-  background:rgba(255,255,255,.2);
-  border:1.5px solid rgba(255,255,255,.5);
-  border-radius:9px;
-  font-family:var(--font);font-size:13px;font-weight:700;
-  color:#fff;cursor:pointer;outline:none;
-  -webkit-appearance:none;appearance:none;
-  transition:all .2s}
-.dia-select option{background:#1a7a42;color:#fff;font-weight:600;font-size:14px}
-.dia-select:focus{border-color:rgba(255,255,255,.85);background:rgba(255,255,255,.28)}
-
-/* SALDO REAL — NEON GLOW */
+/* SALDO REAL — glow suave */
 @keyframes neonPulse{
-  0%  {box-shadow:0 0 8px rgba(39,174,96,.5), 0 0 22px rgba(39,174,96,.25), 0 4px 16px rgba(0,0,0,.07)}
-  50% {box-shadow:0 0 18px rgba(82,214,138,.8), 0 0 42px rgba(39,174,96,.45), 0 0 72px rgba(39,174,96,.18), 0 4px 16px rgba(0,0,0,.07)}
-  100%{box-shadow:0 0 8px rgba(39,174,96,.5), 0 0 22px rgba(39,174,96,.25), 0 4px 16px rgba(0,0,0,.07)}
-}
-@keyframes neonBorder{
-  0%  {border-color:rgba(39,174,96,.5)}
-  50% {border-color:rgba(82,214,138,.95)}
-  100%{border-color:rgba(39,174,96,.5)}
+  0%  {box-shadow:0 0 0 2px rgba(39,174,96,.15), 0 4px 20px rgba(39,174,96,.12)}
+  50% {box-shadow:0 0 0 3px rgba(82,214,138,.3), 0 4px 28px rgba(39,174,96,.22)}
+  100%{box-shadow:0 0 0 2px rgba(39,174,96,.15), 0 4px 20px rgba(39,174,96,.12)}
 }
 .saldo-real-card{
   background:#fff !important;
-  animation: neonPulse 2.6s ease-in-out infinite, neonBorder 2.6s ease-in-out infinite;
+  border:1.5px solid rgba(39,174,96,.25) !important;
+  animation: neonPulse 3s ease-in-out infinite;
 }
-.saldo-real-val{
-  text-shadow: 0 0 12px rgba(46,204,113,.7), 0 0 28px rgba(39,174,96,.35);
-}
+.saldo-real-val{ text-shadow:none; }
+
 
 @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
@@ -617,19 +598,17 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
         <label id="rl">Semana R$</label>
         <input type="number" id="renda-input" placeholder="0,00" step="0.01" min="0">
       </div>
-      <div class="rp-row" id="rp-dia-row" style="flex-direction:column;gap:5px">
+      <div class="rp-row" id="rp-dia-row">
         <label>Recebo toda</label>
-        <div class="dia-select-wrap">
-          <select class="dia-select" id="renda-dia-semana" onchange="setDiaSemana(parseInt(this.value))">
-            <option value="0">Domingo</option>
-            <option value="1">Segunda-feira</option>
-            <option value="2">Terça-feira</option>
-            <option value="3">Quarta-feira</option>
-            <option value="4">Quinta-feira</option>
-            <option value="5" selected>Sexta-feira</option>
-            <option value="6">Sábado</option>
-          </select>
-        </div>
+        <select id="renda-dia-semana" onchange="setDiaSemana(parseInt(this.value))">
+          <option value="0">Domingo</option>
+          <option value="1">Segunda</option>
+          <option value="2">Terça</option>
+          <option value="3">Quarta</option>
+          <option value="4">Quinta</option>
+          <option value="5" selected>Sexta</option>
+          <option value="6">Sábado</option>
+        </select>
       </div>
       <div class="rp-bot">
         <div onclick="openSaldoModal()" style="cursor:pointer" title="Toque para atualizar saldo real">
@@ -1851,10 +1830,19 @@ function addExtra(){
   const data=document.getElementById('ex-data').value||todayISO();
   if(!desc||!valor){alert('Preencha descrição e valor.');return;}
   S.extras.push({id:uid(),desc,valor,data});
+  // Soma direto no saldo real se estiver configurado
+  if(S.saldoReal!==null){ S.saldoReal+=valor; S.saldoRealData=todayISO(); }
   save();clearF('ex-desc','ex-val');document.getElementById('ex-data').value=todayISO();
   renderExtras();updRendaTot();updKPIs();
+  showToast(`✅ +${fmtM(valor)} adicionado ao saldo!`);
 }
-function delExtra(id){if(!confirm('Excluir?'))return;S.extras=S.extras.filter(e=>e.id!==id);save();renderExtras();updRendaTot();updKPIs();}
+function delExtra(id){
+  if(!confirm('Excluir?'))return;
+  const ex=S.extras.find(e=>e.id===id);
+  if(ex&&S.saldoReal!==null){ S.saldoReal-=ex.valor; S.saldoRealData=todayISO(); }
+  S.extras=S.extras.filter(e=>e.id!==id);
+  save();renderExtras();updRendaTot();updKPIs();
+}
 function renderExtras(){
   const el=document.getElementById('list-extras');if(!el)return;
   if(!S.extras.length){el.innerHTML='<div class="empty" style="padding:12px"><div class="icon">💵</div>Nenhuma entrada extra.</div>';document.getElementById('s-extras-tot').textContent=fmtM(0);return;}
