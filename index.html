@@ -970,6 +970,7 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
   <div class="fbtns">
     <button class="fbtn" onclick="exportJ()">⬇️ Exportar</button>
     <button class="fbtn" onclick="document.getElementById('imp-input').click()">⬆️ Importar</button>
+    <button class="fbtn" style="background:var(--g1);color:#fff;border-color:var(--g1)" onclick="openExtrato()">📄 Extrato</button>
     <input type="file" id="imp-input" accept=".json" style="display:none" onchange="importJ(event)">
   </div>
 </footer>
@@ -1138,6 +1139,39 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
         🚪 Sair da conta Google
       </button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL EXTRATO PDF -->
+<div class="mbk" id="mbk-extrato">
+  <div class="modal">
+    <div class="mhead">
+      <h3>📄 Extrato Mensal</h3>
+      <button class="bclose" onclick="document.getElementById('mbk-extrato').classList.remove('op')">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Selecione o mês para gerar o extrato em PDF.</p>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <div class="fld" style="flex:1">
+        <label>Mês</label>
+        <select id="ext-mes" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:var(--font);font-size:16px;outline:none">
+          <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+          <option value="3">Março</option><option value="4">Abril</option>
+          <option value="5">Maio</option><option value="6">Junho</option>
+          <option value="7">Julho</option><option value="8">Agosto</option>
+          <option value="9">Setembro</option><option value="10">Outubro</option>
+          <option value="11">Novembro</option><option value="12">Dezembro</option>
+        </select>
+      </div>
+      <div class="fld" style="flex:1">
+        <label>Ano</label>
+        <input type="number" id="ext-ano" value="2026" min="2020" max="2035"
+          style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:var(--font);font-size:16px;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <button onclick="gerarExtratoPDF()" style="width:100%;padding:13px;background:var(--g1);color:#fff;
+      border:none;border-radius:var(--rs);font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer">
+      📥 Gerar e Baixar PDF
+    </button>
   </div>
 </div>
 
@@ -3088,6 +3122,158 @@ function updSaudeHead(){
 }
 
 
+// ══ EXTRATO PDF ══
+function openExtrato(){
+  const now=new Date();
+  document.getElementById('ext-mes').value=now.getMonth()+1;
+  document.getElementById('ext-ano').value=now.getFullYear();
+  document.getElementById('mbk-extrato').classList.add('op');
+}
+
+function gerarExtratoPDF(){
+  const mes=parseInt(document.getElementById('ext-mes').value);
+  const ano=parseInt(document.getElementById('ext-ano').value);
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const nomeMes=meses[mes-1];
+  const perfilNome=document.getElementById('perfil-nome-hdr')?.textContent||'Eu';
+
+  // Fixos
+  const fixosMes=S.fixos.map(f=>({
+    nome:f.nome,valor:f.valor,tipo:f.tipo||'pix',diaVenc:f.diaVenc||'—',
+    pago:S.fixosPagos.some(fp=>fp.id===f.id&&parseInt(fp.mes)===mes&&parseInt(fp.ano)===ano)
+  }));
+
+  // Parcelas do mês
+  const parcelasMes=S.parcelas.filter(p=>{
+    if(p.dataIni){
+      const ini=new Date(p.dataIni+'T12:00:00');
+      if(ano<ini.getFullYear()) return false;
+      if(ano===ini.getFullYear()&&mes<ini.getMonth()+1) return false;
+      if(p.total){
+        const fm=ini.getMonth()+parseInt(p.total);
+        const fa=ini.getFullYear()+Math.floor(fm/12);
+        if(ano>fa||(ano===fa&&mes>fm%12)) return false;
+      }
+    }
+    return true;
+  }).map(p=>({
+    nome:p.desc,valor:p.valor,diaVenc:p.diaVenc||'—',
+    pago:p.pagas&&p.pagas.some(x=>parseInt(x.mes)===mes&&parseInt(x.ano)===ano),
+    parcAtual:p.atual||1,parcTotal:p.total||1
+  }));
+
+  // Gastos variáveis do mês
+  const gastosVariaveis=[];
+  const addGastos=gastos=>gastos.forEach(g=>{
+    if(!g.data) return;
+    const d=new Date(g.data+'T12:00:00');
+    if(d.getMonth()+1===mes&&d.getFullYear()===ano)
+      gastosVariaveis.push({desc:g.desc||g.cat||'Gasto',valor:g.valor,data:g.data});
+  });
+  if(S.semanaAtual?.gastos) addGastos(S.semanaAtual.gastos);
+  S.semanasHist?.forEach(sem=>{if(sem.gastos)addGastos(sem.gastos);});
+
+  // Extras do mês
+  const extrasMes=S.extras.filter(e=>{
+    if(!e.data) return false;
+    const d=new Date(e.data+'T12:00:00');
+    return d.getMonth()+1===mes&&d.getFullYear()===ano;
+  });
+
+  // Cálculos
+  const rendaBase=S.rendaMode==='semanal'?(S.rendaBaseSemanal||0)*4.3:(S.rendaBaseMensal||0);
+  const totalExtras=extrasMes.reduce((a,e)=>a+e.valor,0);
+  const totalRenda=rendaBase+totalExtras;
+  const totalFixos=fixosMes.reduce((a,f)=>a+f.valor,0);
+  const fixosPagosVal=fixosMes.filter(f=>f.pago).reduce((a,f)=>a+f.valor,0);
+  const totalParcelas=parcelasMes.reduce((a,p)=>a+p.valor,0);
+  const parcelasPagasVal=parcelasMes.filter(p=>p.pago).reduce((a,p)=>a+p.valor,0);
+  const totalVariaveis=gastosVariaveis.reduce((a,g)=>a+g.valor,0);
+  const totalPago=fixosPagosVal+parcelasPagasVal;
+  const totalAPagar=(totalFixos-fixosPagosVal)+(totalParcelas-parcelasPagasVal);
+  const saldo=S.saldoReal!==null?S.saldoReal:(totalRenda-totalFixos-totalParcelas-totalVariaveis);
+
+  const fmt=v=>'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtD=iso=>{ if(!iso) return '—'; const p=iso.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
+
+  const rowF=f=>`<tr>
+    <td>${f.nome}</td><td style="text-align:center">${f.diaVenc}</td>
+    <td style="text-align:center">${f.tipo==='cartao'?'💳 Cartão':'📌 PIX'}</td>
+    <td style="text-align:right;font-weight:600">${fmt(f.valor)}</td>
+    <td style="text-align:center;color:${f.pago?'#27AE60':'#E8637A'};font-weight:700">${f.pago?'✅ Pago':'⏳ Pendente'}</td></tr>`;
+  const rowP=p=>`<tr>
+    <td>${p.nome} <span style="color:#999;font-size:11px">(${p.parcAtual}/${p.parcTotal})</span></td>
+    <td style="text-align:center">${p.diaVenc}</td><td style="text-align:center">💳 Parcela</td>
+    <td style="text-align:right;font-weight:600">${fmt(p.valor)}</td>
+    <td style="text-align:center;color:${p.pago?'#27AE60':'#E8637A'};font-weight:700">${p.pago?'✅ Pago':'⏳ Pendente'}</td></tr>`;
+  const rowG=g=>`<tr>
+    <td>${g.desc}</td><td style="text-align:center" colspan="2">${fmtD(g.data)}</td>
+    <td style="text-align:right;font-weight:600;color:#E8637A">${fmt(g.valor)}</td><td></td></tr>`;
+  const rowE=e=>`<tr>
+    <td>${e.desc}</td><td style="text-align:center" colspan="2">${fmtD(e.data)}</td>
+    <td style="text-align:right;font-weight:600;color:#27AE60">${fmt(e.valor)}</td><td></td></tr>`;
+
+  const tHead=`<thead><tr><th>Nome</th><th style="text-align:center">Dia</th><th style="text-align:center">Tipo</th><th style="text-align:right">Valor</th><th style="text-align:center">Status</th></tr></thead>`;
+  const tTot=(lbl,tot,pago)=>`<tr class="total-row"><td colspan="3">${lbl}</td><td style="text-align:right">${fmt(tot)}</td><td style="text-align:center;color:#27AE60">${fmt(pago)} pagos</td></tr>`;
+
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Extrato FinTrack — ${nomeMes} ${ano}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;background:#f0f0f0;padding:24px}
+.page{background:#fff;max-width:700px;margin:0 auto;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+.hdr{background:linear-gradient(135deg,#27AE60,#2ecc71);padding:24px 28px;color:#fff;display:flex;align-items:center;gap:14px}
+.logo{width:44px;height:44px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0}
+.hdr h1{font-size:20px;font-weight:800;margin-bottom:3px}
+.hdr-sub{font-size:12px;opacity:.85}
+.body{padding:24px 28px}
+.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:24px}
+.sc{background:#f8f9fa;border-radius:10px;padding:12px 14px}
+.sc.g{background:#eafaf1;border-left:3px solid #27AE60}
+.sc.r{background:#fdecea;border-left:3px solid #E8637A}
+.sc.b{background:#eaf0fb;border-left:3px solid #3498DB}
+.sc.y{background:#fef9ec;border-left:3px solid #F39C12}
+.sc-lbl{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
+.sc-val{font-size:17px;font-weight:800;margin-top:3px}
+section{margin-bottom:22px}
+section h2{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:1.5px solid #eee}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.3px;padding:5px 7px;border-bottom:2px solid #eee}
+td{padding:8px 7px;border-bottom:1px solid #f2f2f2;color:#333}
+tr:last-child td{border-bottom:none}
+.total-row td{font-weight:700;color:#1a1a1a;border-top:2px solid #eee;padding-top:9px}
+.foot{background:#f8f9fa;padding:12px 28px;text-align:center;font-size:11px;color:#aaa;border-top:1px solid #eee}
+@media print{body{background:#fff;padding:0}.page{box-shadow:none;border-radius:0}}
+</style></head><body><div class="page">
+<div class="hdr"><div class="logo">F</div><div><h1>FinTrack — Extrato ${nomeMes} ${ano}</h1><div class="hdr-sub">Perfil: ${perfilNome} &nbsp;•&nbsp; Gerado em ${new Date().toLocaleDateString('pt-BR')}</div></div></div>
+<div class="body">
+<div class="summary">
+  <div class="sc g"><div class="sc-lbl">💰 Renda do mês</div><div class="sc-val" style="color:#27AE60">${fmt(totalRenda)}</div></div>
+  <div class="sc ${saldo>=0?'g':'r'}"><div class="sc-lbl">🏦 Saldo na conta</div><div class="sc-val" style="color:${saldo>=0?'#27AE60':'#E8637A'}">${fmt(saldo)}</div></div>
+  <div class="sc r"><div class="sc-lbl">⏳ A pagar</div><div class="sc-val" style="color:#E8637A">${fmt(totalAPagar)}</div></div>
+  <div class="sc y"><div class="sc-lbl">🛒 Gastos variáveis</div><div class="sc-val" style="color:#F39C12">${fmt(totalVariaveis)}</div></div>
+  <div class="sc g"><div class="sc-lbl">✅ Total pago</div><div class="sc-val" style="color:#27AE60">${fmt(totalPago)}</div></div>
+  <div class="sc b"><div class="sc-lbl">📅 Contas no mês</div><div class="sc-val" style="color:#3498DB">${fixosMes.length+parcelasMes.length}</div></div>
+</div>
+${fixosMes.length?`<section><h2>📌 Gastos Fixos</h2><table>${tHead}<tbody>${fixosMes.map(rowF).join('')}${tTot('Total Fixos',totalFixos,fixosPagosVal)}</tbody></table></section>`:''}
+${parcelasMes.length?`<section><h2>💳 Parcelas</h2><table>${tHead}<tbody>${parcelasMes.map(rowP).join('')}${tTot('Total Parcelas',totalParcelas,parcelasPagasVal)}</tbody></table></section>`:''}
+${gastosVariaveis.length?`<section><h2>🛒 Gastos Variáveis</h2><table><thead><tr><th>Descrição</th><th colspan="2" style="text-align:center">Data</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>${gastosVariaveis.map(rowG).join('')}<tr class="total-row"><td colspan="3">Total Variáveis</td><td style="text-align:right;color:#E8637A">${fmt(totalVariaveis)}</td><td></td></tr></tbody></table></section>`:''}
+${extrasMes.length?`<section><h2>💚 Rendas Extras</h2><table><thead><tr><th>Descrição</th><th colspan="2" style="text-align:center">Data</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>${extrasMes.map(rowE).join('')}<tr class="total-row"><td colspan="3">Total Extras</td><td style="text-align:right;color:#27AE60">${fmt(totalExtras)}</td><td></td></tr></tbody></table></section>`:''}
+</div>
+<div class="foot">FinTrack &nbsp;•&nbsp; meufintrack.github.io &nbsp;•&nbsp; ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+</div></body></html>`;
+
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`FinTrack_${nomeMes}_${ano}.html`; a.click();
+  URL.revokeObjectURL(url);
+  document.getElementById('mbk-extrato').classList.remove('op');
+  showToast('📄 Extrato baixado! Abra e imprima como PDF (Ctrl+P).');
+}
+
+// ══ EXPORT/IMPORT ══
 function exportJ(){
   const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
   const u=URL.createObjectURL(b);const a=document.createElement('a');
