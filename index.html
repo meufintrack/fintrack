@@ -188,6 +188,55 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .pizza-leg-val{font-weight:700;color:var(--text)}
 .pizza-leg-pct{color:var(--muted);font-size:10px}
 
+/* SAÚDE FINANCEIRA */
+.saude-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);
+  margin-bottom:18px;overflow:hidden;animation:su .4s .5s ease both}
+.saude-head{display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.saude-head:active{background:rgba(0,0,0,.03)}
+.saude-icon{font-size:22px;line-height:1}
+.saude-title{font-size:13px;font-weight:700;color:var(--text)}
+.saude-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.saude-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.saude-badge.ok{background:var(--gpale);color:var(--g1)}
+.saude-badge.warn{background:var(--yelp);color:var(--yel)}
+.saude-badge.crit{background:var(--redp);color:var(--red)}
+.saude-chevron{font-size:16px;color:var(--muted);transition:transform .25s;line-height:1;margin-left:4px}
+.saude-chevron.open{transform:rotate(180deg)}
+.saude-body{padding:0 16px 16px;border-top:1px solid var(--border)}
+.saude-resumo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.saude-kpi{background:var(--bg);border-radius:10px;padding:10px 12px}
+.saude-kpi-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.saude-kpi-val{font-size:16px;font-weight:800;margin-top:3px}
+.saude-section-title{font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px}
+.saude-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.saude-item:last-child{border-bottom:none}
+.saude-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.saude-dot.ok{background:var(--g1)}
+.saude-dot.warn{background:var(--yel)}
+.saude-dot.crit{background:var(--red)}
+.saude-item-info{flex:1;min-width:0}
+.saude-item-nome{font-size:12px;font-weight:700;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saude-item-meta{font-size:10px;color:var(--muted);margin-top:1px}
+.saude-item-right{text-align:right;flex-shrink:0}
+.saude-item-val{font-size:12px;font-weight:800}
+.saude-status-ok{font-size:10px;color:var(--g1);margin-top:1px}
+.saude-status-warn{font-size:10px;color:var(--yel);margin-top:1px}
+.saude-status-crit{font-size:10px;color:var(--red);margin-top:1px}
+.saude-guardar{background:linear-gradient(135deg,rgba(39,174,96,.08),rgba(82,214,138,.04));
+  border:1.5px solid rgba(39,174,96,.2);border-radius:12px;padding:12px 14px;margin-top:14px}
+.saude-guardar-lbl{font-size:10px;font-weight:700;color:var(--g1);text-transform:uppercase;letter-spacing:.5px}
+.saude-guardar-val{font-size:20px;font-weight:800;color:var(--g1);margin:3px 0}
+.saude-guardar-sub{font-size:11px;color:var(--muted)}
+.saude-minrenda{background:var(--yelp);border-radius:10px;padding:10px 12px;margin-top:8px}
+.saude-minrenda-lbl{font-size:10px;font-weight:700;color:var(--yel);text-transform:uppercase;letter-spacing:.4px}
+.saude-minrenda-val{font-size:15px;font-weight:800;color:var(--yel);margin-top:2px}
+.saude-minrenda-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.saude-empty{text-align:center;padding:20px;color:var(--muted);font-size:12px}
+
+
 /* TABS */
 .tabs{background:var(--card);border-radius:var(--r);padding:5px;box-shadow:var(--sh);
   display:flex;gap:3px;margin-bottom:14px;overflow-x:auto}
@@ -675,6 +724,26 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
     <div class="pizza-inner">
       <canvas id="pizza-canvas" width="110" height="110" style="flex-shrink:0"></canvas>
       <div class="pizza-legend" id="pizza-legend"></div>
+    </div>
+  </div>
+
+  <!-- SAÚDE FINANCEIRA -->
+  <div class="saude-card" id="saude-card">
+    <div class="saude-head" onclick="toggleSaude()">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="saude-icon" id="saude-icon">🩺</div>
+        <div>
+          <div class="saude-title">Saúde Financeira</div>
+          <div class="saude-sub" id="saude-sub">Analisando...</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="saude-badge" id="saude-badge"></div>
+        <div class="saude-chevron" id="saude-chevron">▾</div>
+      </div>
+    </div>
+    <div class="saude-body" id="saude-body" style="display:none">
+      <div id="saude-content"></div>
     </div>
   </div>
 
@@ -2149,7 +2218,7 @@ function updKPIs(){
     srEl.textContent='—';srEl.className='kval saldo-real-val';
     srSub.textContent='Toque em "Atualizar" para configurar';
   }
-  updRendaTot();updMeta();renderPizza();
+  updRendaTot();updMeta();renderPizza();updSaudeHead();
 }
 
 // ══ AGENDA / CALENDÁRIO ══
@@ -2402,7 +2471,7 @@ function togglePagaCalendario(pid, mes, ano){
 }
 
 // ══ UPDATE ALL ══
-function updAll(){renderFixos();renderParcelas();renderSemana();renderExtras();updKPIs();}
+function updAll(){renderFixos();renderParcelas();renderSemana();renderExtras();updKPIs();updSaudeHead();}
 
 // ══ MODAL GERAL ══
 function openModal(){
@@ -2488,7 +2557,247 @@ function closeModal(){document.getElementById('mbk').classList.remove('op');}
 document.getElementById('mbk').addEventListener('click',e=>{if(e.target===document.getElementById('mbk'))closeModal();});
 document.getElementById('mbk-chk').addEventListener('click',e=>{if(e.target===document.getElementById('mbk-chk'))closeCHK();});
 
-// ══ EXPORT/IMPORT ══
+// ══ SAÚDE FINANCEIRA ══
+let _saudeOpen = false;
+
+function toggleSaude(){
+  _saudeOpen = !_saudeOpen;
+  const body = document.getElementById('saude-body');
+  const chev = document.getElementById('saude-chevron');
+  body.style.display = _saudeOpen ? 'block' : 'none';
+  chev.classList.toggle('open', _saudeOpen);
+  if(_saudeOpen) renderSaude();
+}
+
+function calcSaude(){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const diaHoje = hoje.getDate();
+  const mesHoje = hoje.getMonth() + 1;
+  const anoHoje = hoje.getFullYear();
+
+  // Renda disponível para cálculo
+  const rendaSem = S.rendaMode === 'semanal' ? (S.rendaBaseSemanal||0) : (S.rendaBaseMensal||0)/4.3;
+  const rendaMes = rendaSem * 4.3;
+
+  // Saldo atual de referência (usa saldo real se disponível, senão projeta)
+  const saldoAtual = S.saldoReal !== null ? S.saldoReal : 0;
+  const temSaldoReal = S.saldoReal !== null;
+
+  // Monta lista de contas futuras (ou do mês) ordenadas por dia de vencimento
+  const contas = [];
+
+  S.fixos.forEach(f => {
+    if(!f.diaVenc) return;
+    const jaPago = S.fixosPagos.some(fp => fp.id===f.id && fp.mes===mesHoje && fp.ano===anoHoje) ||
+      (f.tipo==='cartao' && faturaCartaoPaga(mesHoje, anoHoje));
+    // Dia de vencimento no mês atual ou próximo
+    let diaVenc = f.diaVenc;
+    let vencDate = new Date(anoHoje, mesHoje-1, diaVenc);
+    if(vencDate < hoje) vencDate = new Date(anoHoje, mesHoje, diaVenc); // próximo mês
+    const diasRestantes = Math.round((vencDate - hoje) / 86400000);
+    contas.push({
+      id: f.id, nome: f.nome, valor: f.valor, tipo: 'fixo',
+      tipoPag: f.tipo||'pix', diaVenc, diasRestantes, jaPago, vencDate
+    });
+  });
+
+  S.parcelas.forEach(p => {
+    if(!p.diaVenc) return;
+    if(p.pagas && p.atual >= p.total) return; // quitada
+    const jaPago = p.pagas && p.pagas.some(pg => pg.mes===mesHoje && pg.ano===anoHoje);
+    let diaVenc = p.diaVenc;
+    let vencDate = new Date(anoHoje, mesHoje-1, diaVenc);
+    if(vencDate < hoje) vencDate = new Date(anoHoje, mesHoje, diaVenc);
+    const diasRestantes = Math.round((vencDate - hoje) / 86400000);
+    contas.push({
+      id: p.id, nome: p.desc, valor: p.valor, tipo: 'parcela',
+      tipoPag: 'cartao', diaVenc, diasRestantes, jaPago, vencDate
+    });
+  });
+
+  // Ordena por data de vencimento
+  contas.sort((a,b) => a.vencDate - b.vencDate);
+
+  // Para cada conta, calcula saldo projetado no dia do vencimento
+  // considerando entradas de renda até lá
+  const resultados = contas.map(c => {
+    if(c.jaPago) return {...c, status:'ok', saldoNoDia: null, falta: 0};
+
+    // Quantas semanas de renda chegam até o vencimento
+    let saldoProjetado;
+    if(temSaldoReal){
+      // A partir do saldo real, soma renda até o vencimento
+      const semanasAteVenc = Math.max(0, Math.floor(c.diasRestantes / 7));
+      const entradasAteVenc = rendaSem * semanasAteVenc;
+      // Desconta contas que vencem antes desta
+      const contasAntes = contas.filter(x =>
+        !x.jaPago && x.vencDate < c.vencDate
+      ).reduce((acc, x) => acc + x.valor, 0);
+      saldoProjetado = saldoAtual + entradasAteVenc - contasAntes;
+    } else {
+      // Sem saldo real: usa projeção de renda mensal
+      saldoProjetado = rendaMes - contas.filter(x => !x.jaPago).reduce((a,x)=>a+x.valor,0);
+    }
+
+    const falta = Math.max(0, c.valor - saldoProjetado);
+    let status;
+    if(falta > 0) status = 'crit';
+    else if(saldoProjetado - c.valor < c.valor * 0.2) status = 'warn'; // sobra menos de 20% do valor
+    else status = 'ok';
+
+    return {...c, status, saldoNoDia: saldoProjetado, falta};
+  });
+
+  // Total de compromissos não pagos
+  const totalDevido = contas.filter(c=>!c.jaPago).reduce((a,c)=>a+c.valor,0);
+  const totalPago = contas.filter(c=>c.jaPago).reduce((a,c)=>a+c.valor,0);
+
+  // Quanto guardar por semana para cobrir tudo
+  const semanasMes = 4.3;
+  const guardarPorSemana = totalDevido > 0 ? totalDevido / semanasMes : 0;
+
+  // Renda mínima mensal para cobrir fixos + parcelas
+  const rendaMinima = totalDevido + totalPago; // total de compromisos mensais
+
+  // Status geral
+  const temCrit = resultados.some(r => r.status === 'crit');
+  const temWarn = resultados.some(r => r.status === 'warn');
+  const statusGeral = temCrit ? 'crit' : temWarn ? 'warn' : 'ok';
+
+  return {resultados, totalDevido, totalPago, guardarPorSemana, rendaMinima,
+    rendaMes, saldoAtual, temSaldoReal, statusGeral};
+}
+
+function renderSaude(){
+  const d = calcSaude();
+  const el = document.getElementById('saude-content');
+
+  // Atualiza cabeçalho
+  const badge = document.getElementById('saude-badge');
+  const sub = document.getElementById('saude-sub');
+  const icon = document.getElementById('saude-icon');
+  if(d.statusGeral === 'ok'){
+    badge.className='saude-badge ok'; badge.textContent='✅ Saudável';
+    icon.textContent='💚'; sub.textContent='Você consegue pagar todas as contas';
+  } else if(d.statusGeral === 'warn'){
+    badge.className='saude-badge warn'; badge.textContent='⚠️ Atenção';
+    icon.textContent='💛'; sub.textContent='Algumas contas vão apertar';
+  } else {
+    badge.className='saude-badge crit'; badge.textContent='🔴 Risco';
+    icon.textContent='❤️'; sub.textContent='Não vai cobrir todas as contas';
+  }
+
+  if(!d.resultados.length){
+    el.innerHTML='<div class="saude-empty">Cadastre fixos ou parcelas com dia de vencimento para ver a análise.</div>';
+    return;
+  }
+
+  // KPIs resumo
+  const srTexto = d.temSaldoReal ? fmtM(d.saldoAtual) : 'Não configurado';
+  const srCor = d.saldoAtual >= 0 ? 'var(--g1)' : 'var(--red)';
+  let html = `<div class="saude-resumo">
+    <div class="saude-kpi">
+      <div class="saude-kpi-lbl">💰 Na conta agora</div>
+      <div class="saude-kpi-val" style="color:${d.temSaldoReal ? srCor : 'var(--muted)'}">${srTexto}</div>
+    </div>
+    <div class="saude-kpi">
+      <div class="saude-kpi-lbl">📋 A pagar (mês)</div>
+      <div class="saude-kpi-val" style="color:var(--red)">${fmtM(d.totalDevido)}</div>
+    </div>
+  </div>`;
+
+  // Linha do tempo de contas
+  html += `<div class="saude-section-title">📅 Linha do tempo</div>`;
+
+  d.resultados.forEach(r => {
+    const diasLabel = r.jaPago ? 'Pago ✅' :
+      r.diasRestantes === 0 ? 'Vence hoje!' :
+      r.diasRestantes === 1 ? 'Vence amanhã' :
+      `em ${r.diasRestantes} dias (dia ${r.diaVenc})`;
+
+    const tipoLabel = r.tipo === 'fixo' ?
+      (r.tipoPag === 'cartao' ? '💳 Fixo cartão' : '📌 Fixo PIX') : '💳 Parcela';
+
+    let statusHtml = '';
+    if(r.jaPago){
+      statusHtml = `<div class="saude-status-ok">✅ Já pago</div>`;
+    } else if(r.status === 'ok'){
+      statusHtml = `<div class="saude-status-ok">✅ Vai cobrir</div>`;
+    } else if(r.status === 'warn'){
+      statusHtml = `<div class="saude-status-warn">⚠️ Vai apertar</div>`;
+    } else {
+      statusHtml = `<div class="saude-status-crit">❌ Falta ${fmtM(r.falta)}</div>`;
+    }
+
+    const dotClass = r.jaPago ? 'ok' : r.status;
+    const valCor = r.jaPago ? 'var(--muted)' : r.status==='ok' ? 'var(--text)' : r.status==='warn' ? 'var(--yel)' : 'var(--red)';
+
+    html += `<div class="saude-item">
+      <div class="saude-dot ${dotClass}"></div>
+      <div class="saude-item-info">
+        <div class="saude-item-nome">${esc(r.nome)}</div>
+        <div class="saude-item-meta">${tipoLabel} · ${diasLabel}</div>
+      </div>
+      <div class="saude-item-right">
+        <div class="saude-item-val" style="color:${valCor}">${fmtM(r.valor)}</div>
+        ${statusHtml}
+      </div>
+    </div>`;
+  });
+
+  // Quanto guardar por semana
+  if(d.totalDevido > 0){
+    const semanas = d.guardarPorSemana;
+    const rendaSem = S.rendaMode==='semanal' ? (S.rendaBaseSemanal||0) : (S.rendaBaseMensal||0)/4.3;
+    const pctRenda = rendaSem > 0 ? Math.round((semanas/rendaSem)*100) : 0;
+    html += `<div class="saude-guardar">
+      <div class="saude-guardar-lbl">🎯 Guardar por semana para cobrir tudo</div>
+      <div class="saude-guardar-val">${fmtM(semanas)}</div>
+      <div class="saude-guardar-sub">${pctRenda > 0 ? `${pctRenda}% da sua renda semanal` : 'Configure sua renda para calcular o percentual'}</div>
+    </div>`;
+  }
+
+  // Renda mínima necessária
+  if(d.rendaMinima > 0 && d.rendaMes > 0){
+    const diferenca = d.rendaMes - d.rendaMinima;
+    const suficiente = diferenca >= 0;
+    html += `<div class="saude-minrenda">
+      <div class="saude-minrenda-lbl">📊 Renda mínima para fechar o mês</div>
+      <div class="saude-minrenda-val">${fmtM(d.rendaMinima)}</div>
+      <div class="saude-minrenda-sub">${suficiente
+        ? `✅ Sua renda cobre — sobram ${fmtM(diferenca)}`
+        : `⚠️ Sua renda está ${fmtM(Math.abs(diferenca))} abaixo do necessário`}</div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function updSaudeHead(){
+  // Atualiza apenas o cabeçalho (badge/sub) sem abrir o body
+  const d = calcSaude();
+  const badge = document.getElementById('saude-badge');
+  const sub = document.getElementById('saude-sub');
+  const icon = document.getElementById('saude-icon');
+  if(!d.resultados.length){
+    badge.className='saude-badge ok'; badge.textContent='—';
+    icon.textContent='🩺'; sub.textContent='Cadastre contas com vencimento para analisar';
+    return;
+  }
+  if(d.statusGeral==='ok'){
+    badge.className='saude-badge ok'; badge.textContent='✅ Saudável';
+    icon.textContent='💚'; sub.textContent='Você consegue pagar todas as contas';
+  } else if(d.statusGeral==='warn'){
+    badge.className='saude-badge warn'; badge.textContent='⚠️ Atenção';
+    icon.textContent='💛'; sub.textContent='Algumas contas vão apertar';
+  } else {
+    badge.className='saude-badge crit'; badge.textContent='🔴 Risco';
+    icon.textContent='❤️'; sub.textContent='Não vai cobrir todas as contas';
+  }
+  if(_saudeOpen) renderSaude();
+}
+
+
 function exportJ(){
   const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
   const u=URL.createObjectURL(b);const a=document.createElement('a');
