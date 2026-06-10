@@ -2191,12 +2191,11 @@ function checkAlertas(){
   save();
 }
 function renderFixoAlerta(fixosPix, fixosCartao, mes, ano){
-  const fatPaga=faturaCartaoPaga(mes,ano);
   let html='';
 
   // PIX — individual
   fixosPix.forEach(f=>{
-    const pago=S.fixosPagos.some(fp=>fp.id===f.id&&fp.mes===mes&&fp.ano===ano);
+    const pago=S.fixosPagos.some(fp=>fp.id===f.id&&parseInt(fp.mes)===mes&&parseInt(fp.ano)===ano);
     html+=`<div class="cal-conta-item">
       <div style="width:32px;height:32px;border-radius:8px;background:var(--bluep);
         display:flex;align-items:center;justify-content:center;font-size:16px">📌</div>
@@ -2211,38 +2210,22 @@ function renderFixoAlerta(fixosPix, fixosCartao, mes, ano){
     </div>`;
   });
 
-  // Cartão — banner coletivo
-  if(fixosCartao.length>0){
-    const totalCartao=fixosCartao.reduce((a,f)=>a+f.valor,0);
-    html+=`<div style="margin-top:${fixosPix.length?'10px':'0'};border-radius:12px;overflow:hidden;
-      border:1.5px solid ${fatPaga?'rgba(39,174,96,.35)':'rgba(155,89,182,.3)'}">
-      <div style="background:${fatPaga?'rgba(39,174,96,.08)':'rgba(155,89,182,.06)'};padding:10px 13px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div>
-            <div style="font-size:12px;font-weight:700;color:${fatPaga?'var(--g1)':'var(--pur)'}">
-              💳 Faturas de Cartão${fatPaga?' — Pagas ✅':''}
-            </div>
-            <div style="font-size:10px;color:var(--muted);margin-top:2px">
-              ${fixosCartao.length} conta${fixosCartao.length>1?'s':''} · ${fmtM(totalCartao)} total
-            </div>
-          </div>
-          <button onclick="toggleFaturaCartao(${mes},${ano});renderFixoAlertatAtual()"
-            style="padding:7px 14px;border-radius:8px;border:1.5px solid ${fatPaga?'rgba(39,174,96,.4)':'rgba(155,89,182,.4)'};
-            background:${fatPaga?'rgba(39,174,96,.12)':'rgba(155,89,182,.1)'};
-            font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;
-            color:${fatPaga?'var(--g1)':'var(--pur)'}">
-            ${fatPaga?'✅ Pago':'Marcar tudo pago'}
-          </button>
-        </div>
-        ${fixosCartao.map(f=>`
-          <div style="display:flex;justify-content:space-between;align-items:center;
-            padding:5px 0;border-top:1px solid var(--border);font-size:12px">
-            <span style="color:var(--text);font-weight:500">${esc(f.nome)}</span>
-            <span style="font-weight:700">${fmtM(f.valor)}</span>
-          </div>`).join('')}
+  // Cartão — individual (igual PIX)
+  fixosCartao.forEach(f=>{
+    const pago=S.fixosPagos.some(fp=>fp.id===f.id&&parseInt(fp.mes)===mes&&parseInt(fp.ano)===ano);
+    html+=`<div class="cal-conta-item">
+      <div style="width:32px;height:32px;border-radius:8px;background:rgba(155,89,182,.12);
+        display:flex;align-items:center;justify-content:center;font-size:16px">💳</div>
+      <div class="cal-conta-info">
+        <div class="cal-conta-name">${esc(f.nome)}</div>
+        <div class="cal-conta-sub">Fixo cartão · ${fmtM(f.valor)}</div>
       </div>
+      <button class="pago-btn ${pago?'active-pago':''}" style="flex:0;padding:7px 14px;font-size:12px"
+        onclick="toggleFaturaCartao('${f.id}',${mes},${ano});renderFixoAlertatAtual()">
+        ${pago?'✅ Pago':'Pagar'}
+      </button>
     </div>`;
-  }
+  });
 
   document.getElementById('fixo-alerta-lista').innerHTML=html;
   document.getElementById('fixo-disable-alert').checked=!S.alertasConfig.fixos;
@@ -2548,8 +2531,6 @@ function renderCalDetail(dia, mes, ano){
   const parcelas=contas.filter(c=>c.tipo==='parcela');
   const tudoPago=todasPagas(dia,mes,ano);
   const totalDia=contas.reduce((a,c)=>a+c.valor,0);
-  const totalPago=contas.filter(c=>c.pago).reduce((a,c)=>a+c.valor,0)
-    +(fatPaga?fixosCartao.reduce((a,c)=>a+c.valor,0):0);
 
   let html=`<div class="cal-day-detail">
     <div class="cal-detail-title">
@@ -2880,8 +2861,7 @@ function calcSaude(){
 
   S.fixos.forEach(f => {
     if(!f.diaVenc) return;
-    const jaPago = S.fixosPagos.some(fp => fp.id===f.id && fp.mes===mesHoje && fp.ano===anoHoje) ||
-      (f.tipo==='cartao' && faturaCartaoPaga(mesHoje, anoHoje));
+    const jaPago = S.fixosPagos.some(fp => fp.id===f.id && parseInt(fp.mes)===mesHoje && parseInt(fp.ano)===anoHoje);
     // Dia de vencimento no mês atual ou próximo
     let diaVenc = f.diaVenc;
     let vencDate = new Date(anoHoje, mesHoje-1, diaVenc);
