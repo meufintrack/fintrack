@@ -2385,38 +2385,35 @@ function calNav(dir){
 
 function contasDoDia(dia, mes, ano){
   const contas=[];
-  const dataRef=new Date(ano,mes-1,dia);
+  dia=parseInt(dia); mes=parseInt(mes); ano=parseInt(ano);
 
   S.fixos.forEach(f=>{
-    if(f.diaVenc!==dia) return;
-    // Não mostra se ainda não começou
+    if(parseInt(f.diaVenc)!==dia) return;
     if(f.dataIni){
       const ini=new Date(f.dataIni+'T12:00:00');
       if(ano<ini.getFullYear()) return;
       if(ano===ini.getFullYear()&&mes<ini.getMonth()+1) return;
     }
-    const pago=S.fixosPagos.some(fp=>fp.id===f.id&&fp.mes===mes&&fp.ano===ano);
+    const pago=S.fixosPagos.some(fp=>fp.id===f.id&&parseInt(fp.mes)===mes&&parseInt(fp.ano)===ano);
     contas.push({id:f.id, nome:f.nome, valor:f.valor, tipo:'fixo',
       tipoPagamento:f.tipo||'pix', pago});
   });
 
   S.parcelas.forEach(p=>{
-    if(p.diaVenc!==dia) return;
-    // Não mostra se ainda não começou
+    if(parseInt(p.diaVenc)!==dia) return;
     if(p.dataIni){
       const ini=new Date(p.dataIni+'T12:00:00');
       if(ano<ini.getFullYear()) return;
       if(ano===ini.getFullYear()&&mes<ini.getMonth()+1) return;
     }
-    // Não mostra se já terminou — verifica pela data de fim prevista
     if(p.dataIni&&p.total){
       const ini=new Date(p.dataIni+'T12:00:00');
-      const fimMes=ini.getMonth()+p.total; // mês de fim (pode passar de 11)
+      const fimMes=ini.getMonth()+parseInt(p.total);
       const fimAno=ini.getFullYear()+Math.floor(fimMes/12);
       const fimMesReal=fimMes%12;
       if(ano>fimAno||(ano===fimAno&&mes>fimMesReal)) return;
     }
-    const pago=p.pagas&&p.pagas.some(x=>x.mes===mes&&x.ano===ano);
+    const pago=p.pagas&&p.pagas.some(x=>parseInt(x.mes)===mes&&parseInt(x.ano)===ano);
     contas.push({id:p.id, nome:p.desc, valor:p.valor, tipo:'parcela',
       tipoPagamento:'cartao', pago, pid:p.id});
   });
