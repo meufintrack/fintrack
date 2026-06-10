@@ -1242,20 +1242,25 @@ function perfilRef(){
 async function loadFB(){
   try{
     const snap=await window._fb.getDoc(perfilRef());
-    if(snap.exists() && !snap.data()._deleted){
-      S=Object.assign(S,snap.data());
+    const dados = snap.exists() && !snap.data()._deleted ? snap.data() : null;
+    const temDadosReais = dados && dados.ultimaAt;
+
+    if(temDadosReais){
+      // Perfil já tem dados — carrega normalmente
+      S=Object.assign(S,dados);
     } else if(_perfilAtual==='eu'){
-      // Migra dados antigos de users/{uid}/data/state para perfis/eu
+      // Perfil "eu" vazio — tenta migrar do caminho antigo
       const oldRef=window._fb.doc(window._fb.db,'users',_uid,'data','state');
       const oldSnap=await window._fb.getDoc(oldRef);
-      if(oldSnap.exists()){
+      if(oldSnap.exists() && oldSnap.data().ultimaAt){
         S=Object.assign(S,oldSnap.data());
+        // Salva no novo caminho para próximas vezes
         await window._fb.setDoc(perfilRef(),JSON.parse(JSON.stringify(S)));
-        showToast('✓ Dados migrados para perfil');
+        showToast('✓ Dados restaurados!');
       }
     }
+    // Novo perfil (não eu) fica mesmo vazio — é um perfil novo
     migrate();
-    showToast('✓ Dados carregados');
   }catch(e){console.error(e);migrate();}
 }
 function startSync(){
@@ -1270,7 +1275,10 @@ function startSync(){
   });
 }
 async function saveFB(){
-  if(!_uid)return; _saving=true;
+  if(!_uid) return;
+  // Nunca salva um estado vazio (sem ultimaAt = perfil novo ainda não usado)
+  if(!S.ultimaAt) return;
+  _saving=true;
   try{
     await window._fb.setDoc(perfilRef(),JSON.parse(JSON.stringify(S)));
     showToast('✓ Salvo');
@@ -2762,10 +2770,12 @@ async function deletarPerfil(id){
 }
 async function trocarPerfil(id){
   if(id === _perfilAtual){ document.getElementById('mbk-perfis').classList.remove('op'); return; }
+  // Salva estado atual ANTES de trocar (garante que não perde nada)
+  await saveFB();
   _perfilAtual = id;
   document.getElementById('mbk-perfis').classList.remove('op');
   updPerfilHeader();
-  // Reset state e recarrega dados do novo perfil
+  // Reset state para defaults VAZIOS — não salva ainda
   S = {
     rendaBase:0,rendaMode:'semanal',rendaDiaSemana:5,
     rendaBaseSemanal:0,rendaBaseMensal:0,
@@ -2778,7 +2788,9 @@ async function trocarPerfil(id){
     ultimaVerificacao:null,ultimaAt:null
   };
   showToast('⏳ Carregando perfil...');
+  // Carrega dados do novo perfil (sem salvar nada ainda)
   await loadFB();
+  if(_unsub){_unsub();_unsub=null;}
   startSync();
   setupUI();
   updAll();
