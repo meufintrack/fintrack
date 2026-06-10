@@ -1898,7 +1898,8 @@ function addExtra(){
   const valor=parseFloat(document.getElementById('ex-val').value)||0;
   const data=document.getElementById('ex-data').value||todayISO();
   if(!desc||!valor){alert('Preencha descrição e valor.');return;}
-  S.extras.push({id:uid(),desc,valor,data});
+  const id=uid();
+  S.extras.push({id,desc,valor,data,noSaldo:true}); // marca que já foi somado
   if(S.saldoReal!==null){ S.saldoReal+=valor; S.saldoRealData=todayISO(); }
   save();clearF('ex-desc','ex-val');document.getElementById('ex-data').value=todayISO();
   renderExtras();updRendaTot();updKPIs();
@@ -1907,7 +1908,8 @@ function addExtra(){
 function delExtra(id){
   if(!confirm('Excluir?'))return;
   const ex=S.extras.find(e=>e.id===id);
-  if(ex&&S.saldoReal!==null){ S.saldoReal=Math.max(0,S.saldoReal-ex.valor); S.saldoRealData=todayISO(); }
+  // Só desconta se esse extra foi marcado como somado ao saldo
+  if(ex&&ex.noSaldo&&S.saldoReal!==null){ S.saldoReal=Math.max(0,S.saldoReal-ex.valor); S.saldoRealData=todayISO(); }
   S.extras=S.extras.filter(e=>e.id!==id);
   save();renderExtras();updRendaTot();updKPIs();
 }
