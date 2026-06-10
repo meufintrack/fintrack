@@ -2057,8 +2057,11 @@ function addExtra(){
   const data=document.getElementById('ex-data').value||todayISO();
   if(!desc||!valor){alert('Preencha descrição e valor.');return;}
   const id=uid();
-  S.extras.push({id,desc,valor,data,noSaldo:true}); // marca que já foi somado
-  if(S.saldoReal!==null){ S.saldoReal+=valor; S.saldoRealData=todayISO(); }
+  S.extras.push({id,desc,valor,data,noSaldo:true});
+  // Sempre soma no saldo real — inicializa com 0 se não estiver configurado
+  if(S.saldoReal===null) S.saldoReal=0;
+  S.saldoReal+=valor;
+  S.saldoRealData=todayISO();
   save();clearF('ex-desc','ex-val');document.getElementById('ex-data').value=todayISO();
   renderExtras();updRendaTot();updKPIs();
   showToast(`✅ +${fmtM(valor)} adicionado ao saldo`);
