@@ -522,10 +522,10 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
 .cal-day.today{background:var(--gpale);border:1.5px solid var(--g2)}
 .cal-day.selected{background:linear-gradient(135deg,var(--g1),var(--g2))}
 .cal-day.other-month{opacity:.28}
-.cal-day-num{font-size:12px;font-weight:700;line-height:1}
+.cal-day-num{font-size:12px;font-weight:700;line-height:1;pointer-events:none}
 .cal-day.selected .cal-day-num{color:#fff}
-.cal-dots{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap;justify-content:center}
-.cal-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.cal-dots{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap;justify-content:center;pointer-events:none}
+.cal-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;pointer-events:none}
 .cal-check-overlay{position:absolute;inset:0;display:flex;align-items:center;
   justify-content:center;border-radius:8px;background:#27AE60;pointer-events:none;z-index:2}
 .cal-check-overlay svg{animation:checkPop .4s cubic-bezier(.34,1.56,.64,1) both}
@@ -2481,17 +2481,17 @@ function renderAgenda(){
         style="animation:drawCheck .4s .05s ease forwards"/>
     </svg>`;
     if(allDone&&contas.length){
-      html+=`<div class="${classes}" style="background:#27AE60;border-color:#27AE60" onclick="calSelectDay(${d})">
-        <span class="cal-day-num" style="color:rgba(255,255,255,.9);position:relative;z-index:1;font-size:11px">${d}</span>
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:8px">
+      html+=`<div class="${classes}" style="background:#27AE60;border-color:#27AE60;cursor:pointer" onclick="calSelectDay(${d})">
+        <span class="cal-day-num" style="color:rgba(255,255,255,.9);position:relative;z-index:1;font-size:11px;pointer-events:none">${d}</span>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:8px;pointer-events:none">
           ${checkSVG}
         </div>
-        <div class="cal-dots" style="position:absolute;bottom:3px">${dots}</div>
+        <div class="cal-dots" style="position:absolute;bottom:3px;pointer-events:none">${dots}</div>
       </div>`;
     } else {
-      html+=`<div class="${classes}" onclick="calSelectDay(${d})">
-        <span class="cal-day-num">${d}</span>
-        <div class="cal-dots">${dots}</div>
+      html+=`<div class="${classes}" onclick="calSelectDay(${d})" style="cursor:pointer">
+        <span class="cal-day-num" style="pointer-events:none">${d}</span>
+        <div class="cal-dots" style="pointer-events:none">${dots}</div>
       </div>`;
     }
   }
