@@ -539,8 +539,33 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
 .kcard:nth-child(5){animation-delay:.20s}.kcard:nth-child(6){animation-delay:.24s}
 .kcard:nth-child(7){animation-delay:.28s}.kcard:nth-child(8){animation-delay:.32s}
 
-/* Pulsa o saldo real quando configurado */
-.kval.grn.pulse-once{animation:pulse .7s ease}
+/* PERFIL SELECTOR */
+.perfil-selector{display:flex;align-items:center;gap:8px;cursor:pointer;
+  background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);
+  border-radius:22px;padding:5px 12px 5px 6px;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.perfil-selector:active{background:rgba(255,255,255,.28)}
+.perfil-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.perfil-info{display:flex;flex-direction:column;gap:1px}
+.perfil-nome{font-size:12px;font-weight:700;color:#fff;line-height:1}
+.perfil-trocar{font-size:9px;color:rgba(255,255,255,.7);font-weight:500}
+
+/* PERFIS LISTA no modal */
+.perfil-item{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:10px;cursor:pointer;transition:background .15s;margin-bottom:4px;
+  border:1.5px solid var(--border);-webkit-tap-highlight-color:transparent}
+.perfil-item:active{background:var(--bg)}
+.perfil-item.ativo{border-color:var(--g1);background:rgba(39,174,96,.06)}
+.perfil-item-avatar{width:36px;height:36px;border-radius:50%;background:var(--gpale);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.perfil-item.ativo .perfil-item-avatar{background:rgba(39,174,96,.15)}
+.perfil-item-info{flex:1;min-width:0}
+.perfil-item-nome{font-size:13px;font-weight:700;color:var(--text)}
+.perfil-item-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.perfil-item-check{font-size:16px;color:var(--g1);flex-shrink:0}
+.perfil-del{background:none;border:none;font-size:14px;cursor:pointer;padding:4px;
+  color:var(--muted);flex-shrink:0}
+
 
 
 
@@ -633,9 +658,17 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
         </div>
       </div>
       <div class="hdr-sub" id="hdr-sub">Gestão financeira inteligente</div>
-      <div class="user-badge" id="user-badge" onclick="confirmLogout()" style="display:none">
+      <div class="user-badge" id="user-badge" style="display:none">
         <img id="user-photo" src="" alt="">
         <span id="user-name"></span>
+      </div>
+      <!-- SELETOR DE PERFIL -->
+      <div class="perfil-selector" id="perfil-selector" style="display:none" onclick="openPerfis()">
+        <div class="perfil-avatar" id="perfil-avatar">👤</div>
+        <div class="perfil-info">
+          <div class="perfil-nome" id="perfil-nome-hdr">Eu</div>
+          <div class="perfil-trocar">Trocar perfil ▾</div>
+        </div>
       </div>
     </div>
     <div class="rp">
@@ -1028,6 +1061,36 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
   </div>
 </div>
 
+<!-- MODAL PERFIS -->
+<div class="mbk" id="mbk-perfis">
+  <div class="modal">
+    <div class="mhead">
+      <h3>👥 Perfis</h3>
+      <button class="bclose" onclick="document.getElementById('mbk-perfis').classList.remove('op')">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      Cada perfil tem suas próprias contas, saldo e histórico — tudo separado.</p>
+    <div id="perfis-lista" style="margin-bottom:14px"></div>
+    <div style="border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Novo perfil</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="perfil-novo-nome" placeholder="ex: Pai, Mãe, Mari..."
+          style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rs);
+          font-family:var(--font);font-size:13px;font-weight:500;outline:none">
+        <button onclick="criarPerfil()" style="padding:10px 16px;background:var(--g1);color:#fff;
+          border:none;border-radius:var(--rs);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">
+          + Criar
+        </button>
+      </div>
+    </div>
+    <button onclick="confirmLogout()" style="width:100%;margin-top:14px;padding:10px;background:none;
+      border:1.5px solid var(--border);border-radius:var(--rs);font-family:var(--font);
+      font-size:12px;font-weight:600;color:var(--muted);cursor:pointer">
+      🚪 Sair da conta Google
+    </button>
+  </div>
+</div>
+
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1091,7 +1154,7 @@ let S={
   ultimaVerificacao:null,  // última data que rodou os alertas
   ultimaAt:null
 };
-let _uid=null,_unsub=null,_saving=false;
+let _uid=null,_unsub=null,_saving=false,_perfilAtual='eu';
 
 // ══ FIREBASE ══
 document.addEventListener('fb-ready',()=>{
@@ -1099,12 +1162,10 @@ document.addEventListener('fb-ready',()=>{
     if(user){
       _uid=user.uid;
       document.getElementById('ls').style.display='none';
-      const b=document.getElementById('user-badge');
       const ph=document.getElementById('user-photo');
-      const nm=document.getElementById('user-name');
-      b.style.display='flex';
       if(user.photoURL) ph.src=user.photoURL;
-      nm.textContent=user.displayName||user.email;
+      document.getElementById('perfil-selector').style.display='flex';
+      await loadPerfis();
       await loadFB(); startSync(); setupUI();
     } else {
       _uid=null; if(_unsub){_unsub();_unsub=null;}
@@ -1119,19 +1180,31 @@ function fbLogin(){
 function confirmLogout(){
   if(confirm('Sair da conta?')) window._fb.signOut().then(()=>location.reload());
 }
+function perfilRef(){
+  return window._fb.doc(window._fb.db,'users',_uid,'perfis',_perfilAtual);
+}
 async function loadFB(){
   try{
-    const ref=window._fb.doc(window._fb.db,'users',_uid,'data','state');
-    const snap=await window._fb.getDoc(ref);
-    if(snap.exists()) S=Object.assign(S,snap.data());
+    const snap=await window._fb.getDoc(perfilRef());
+    if(snap.exists() && !snap.data()._deleted){
+      S=Object.assign(S,snap.data());
+    } else if(_perfilAtual==='eu'){
+      // Migra dados antigos de users/{uid}/data/state para perfis/eu
+      const oldRef=window._fb.doc(window._fb.db,'users',_uid,'data','state');
+      const oldSnap=await window._fb.getDoc(oldRef);
+      if(oldSnap.exists()){
+        S=Object.assign(S,oldSnap.data());
+        await window._fb.setDoc(perfilRef(),JSON.parse(JSON.stringify(S)));
+        showToast('✓ Dados migrados para perfil');
+      }
+    }
     migrate();
     showToast('✓ Dados carregados');
   }catch(e){console.error(e);migrate();}
 }
 function startSync(){
   if(_unsub) _unsub();
-  const ref=window._fb.doc(window._fb.db,'users',_uid,'data','state');
-  _unsub=window._fb.onSnapshot(ref,snap=>{
+  _unsub=window._fb.onSnapshot(perfilRef(),snap=>{
     if(snap.exists()&&!_saving){
       const r=snap.data();
       if(r.ultimaAt&&S.ultimaAt&&r.ultimaAt>S.ultimaAt){
@@ -1143,8 +1216,7 @@ function startSync(){
 async function saveFB(){
   if(!_uid)return; _saving=true;
   try{
-    const ref=window._fb.doc(window._fb.db,'users',_uid,'data','state');
-    await window._fb.setDoc(ref,JSON.parse(JSON.stringify(S)));
+    await window._fb.setDoc(perfilRef(),JSON.parse(JSON.stringify(S)));
     showToast('✓ Salvo');
   }catch(e){showToast('⚠️ Erro ao salvar');}
   setTimeout(()=>{_saving=false;},1000);
@@ -2562,7 +2634,103 @@ function closeModal(){document.getElementById('mbk').classList.remove('op');}
 document.getElementById('mbk').addEventListener('click',e=>{if(e.target===document.getElementById('mbk'))closeModal();});
 document.getElementById('mbk-chk').addEventListener('click',e=>{if(e.target===document.getElementById('mbk-chk'))closeCHK();});
 
-// ══ SAÚDE FINANCEIRA ══
+// ══ PERFIS ══
+const EMOJIS = ['👤','👨','👩','👴','👵','👦','👧','🧑','👨‍💼','👩‍💼'];
+let _perfis = []; // [{id, nome, emoji}]
+
+function perfilMetaRef(){
+  return window._fb.doc(window._fb.db,'users',_uid,'meta','perfis');
+}
+async function loadPerfis(){
+  try{
+    const snap = await window._fb.getDoc(perfilMetaRef());
+    if(snap.exists()) _perfis = snap.data().lista || [];
+    if(!_perfis.length) _perfis = [{id:'eu', nome:'Eu', emoji:'👤'}];
+    // Garante que o perfil atual existe
+    if(!_perfis.find(p=>p.id===_perfilAtual)) _perfilAtual = _perfis[0].id;
+    updPerfilHeader();
+  } catch(e){ _perfis=[{id:'eu',nome:'Eu',emoji:'👤'}]; updPerfilHeader(); }
+}
+async function savePerfis(){
+  try{ await window._fb.setDoc(perfilMetaRef(),{lista:_perfis}); }catch(e){}
+}
+function updPerfilHeader(){
+  const p = _perfis.find(x=>x.id===_perfilAtual) || _perfis[0];
+  if(!p) return;
+  document.getElementById('perfil-avatar').textContent = p.emoji || '👤';
+  document.getElementById('perfil-nome-hdr').textContent = p.nome;
+}
+function openPerfis(){
+  renderPerfisModal();
+  document.getElementById('mbk-perfis').classList.add('op');
+}
+function renderPerfisModal(){
+  const lista = document.getElementById('perfis-lista');
+  lista.innerHTML = _perfis.map(p=>{
+    const ativo = p.id === _perfilAtual;
+    const podeDel = _perfis.length > 1 && !ativo;
+    return `<div class="perfil-item ${ativo?'ativo':''}" onclick="trocarPerfil('${p.id}')">
+      <div class="perfil-item-avatar">${p.emoji||'👤'}</div>
+      <div class="perfil-item-info">
+        <div class="perfil-item-nome">${esc(p.nome)}</div>
+        <div class="perfil-item-sub">${ativo?'Perfil ativo':'Toque para trocar'}</div>
+      </div>
+      ${ativo ? '<div class="perfil-item-check">✅</div>' : ''}
+      ${podeDel ? `<button class="perfil-del" onclick="event.stopPropagation();deletarPerfil('${p.id}')">🗑️</button>` : ''}
+    </div>`;
+  }).join('');
+}
+async function criarPerfil(){
+  const inp = document.getElementById('perfil-novo-nome');
+  const nome = inp.value.trim();
+  if(!nome){ inp.focus(); return; }
+  if(_perfis.length >= 6){ showToast('Máximo de 6 perfis'); return; }
+  const id = 'p_'+uid();
+  const emoji = EMOJIS[_perfis.length % EMOJIS.length];
+  _perfis.push({id, nome, emoji});
+  await savePerfis();
+  inp.value = '';
+  renderPerfisModal();
+  showToast(`✅ Perfil "${nome}" criado`);
+}
+async function deletarPerfil(id){
+  if(!confirm('Excluir este perfil e todos os dados dele?')) return;
+  _perfis = _perfis.filter(p=>p.id!==id);
+  await savePerfis();
+  // Deleta os dados do perfil no Firebase
+  try{ await window._fb.setDoc(
+    window._fb.doc(window._fb.db,'users',_uid,'perfis',id),{_deleted:true}
+  );}catch(e){}
+  renderPerfisModal();
+  showToast('Perfil excluído');
+}
+async function trocarPerfil(id){
+  if(id === _perfilAtual){ document.getElementById('mbk-perfis').classList.remove('op'); return; }
+  _perfilAtual = id;
+  document.getElementById('mbk-perfis').classList.remove('op');
+  updPerfilHeader();
+  // Reset state e recarrega dados do novo perfil
+  S = {
+    rendaBase:0,rendaMode:'semanal',rendaDiaSemana:5,
+    rendaBaseSemanal:0,rendaBaseMensal:0,
+    extras:[],fixos:[],parcelas:[],semanasHist:[],
+    semanaAtual:{gastos:[],inicioISO:null},
+    tipoFixo:'pix',histPeriod:'semana',metaMensal:0,
+    saldoReal:null,saldoRealData:null,
+    fixosPagos:[],fixosCartaoPagosMes:[],recebimentos:[],
+    alertasConfig:{recebimento:true,fixos:true,debitoAutoFixos:false},
+    ultimaVerificacao:null,ultimaAt:null
+  };
+  showToast('⏳ Carregando perfil...');
+  await loadFB();
+  startSync();
+  setupUI();
+  updAll();
+  const p = _perfis.find(x=>x.id===id);
+  showToast(`✅ Perfil "${p?.nome||id}" carregado`);
+}
+
+
 let _saudeOpen = false;
 
 function toggleSaude(){
