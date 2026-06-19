@@ -1724,14 +1724,25 @@ function addParcela(desc,valor,atual,total,dataIni,diaVenc){
   const cartaoId=document.getElementById('p-cartao-id')?.value||null;
   if(!desc||!valor){alert('Preencha descrição e valor.');return;}
   if(atual>total){alert('Parcela atual não pode ser maior que o total.');return;}
-  S.parcelas.push({id:uid(),desc,valor,atual,total,dataIni,diaVenc,pagas:[],cartaoId:cartaoId||null});
+  // Parcelas restantes (da atual até o fim) é o que ainda compromete o limite
+  const parcelasRestantes=Math.max(0,total-atual+1);
+  const valorComprometido=valor*parcelasRestantes;
+  S.parcelas.push({id:uid(),desc,valor,atual,total,dataIni,diaVenc,pagas:[],cartaoId:cartaoId||null,valorComprometido:cartaoId?valorComprometido:0});
+  // Compromete o limite do cartão de uma vez (compra parcelada trava o limite total restante)
+  if(cartaoId) _aplicaDescontoGasto(cartaoId,valorComprometido,true);
   save();clearF('p-desc','p-val','p-atual','p-total','p-ini','p-dia-venc');
   if(document.getElementById('p-cartao-id'))document.getElementById('p-cartao-id').value='';
   document.getElementById('p-fim-prev').value='';
   closeModal();renderParcelas();updKPIs();
+  if(cartaoId)showToast(`💳 -${fmtM(valorComprometido)} comprometido no limite do cartão`);
 }
 function delParcela(id){
   if(!confirm('Excluir?'))return;
+  const p=S.parcelas.find(x=>x.id===id);
+  // Devolve ao limite do cartão o que ainda estava comprometido (proporcional ao não pago)
+  if(p&&p.cartaoId&&p.valorComprometido){
+    _aplicaDescontoGasto(p.cartaoId,p.valorComprometido,false);
+  }
   S.parcelas=S.parcelas.filter(p=>p.id!==id);
   if(_parcExpanded===id)_parcExpanded=null;
   save();renderParcelas();updKPIs();
@@ -1742,14 +1753,13 @@ function togglePagaBtn(pid){
   const idx=p.pagas.findIndex(x=>x.mes===mes&&x.ano===ano);
   if(idx>=0){
     const pg=p.pagas[idx];
-    if(p.cartaoId) _aplicaDescontoGasto(p.cartaoId,p.valor,false);
-    else if(_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
+    // Parcela de cartão: o limite já foi comprometido na criação, "pago" é só controle visual
+    if(!p.cartaoId&&_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
     p.pagas.splice(idx,1);
   } else {
     const ts=Date.now();
     p.pagas.push({mes,ano,ts});
-    if(p.cartaoId) _aplicaDescontoGasto(p.cartaoId,p.valor,true);
-    else if(_deveDescontar())S.saldoReal-=p.valor;
+    if(!p.cartaoId&&_deveDescontar())S.saldoReal-=p.valor;
   }
   save();renderParcelas();updKPIs();renderChkList();
 }
@@ -1758,14 +1768,12 @@ function togglePaga(pid,mes,ano){
   const idx=p.pagas.findIndex(x=>x.mes===mes&&x.ano===ano);
   if(idx>=0){
     const pg=p.pagas[idx];
-    if(p.cartaoId) _aplicaDescontoGasto(p.cartaoId,p.valor,false);
-    else if(_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
+    if(!p.cartaoId&&_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
     p.pagas.splice(idx,1);
   } else {
     const ts=Date.now();
     p.pagas.push({mes,ano,ts});
-    if(p.cartaoId) _aplicaDescontoGasto(p.cartaoId,p.valor,true);
-    else if(_deveDescontar())S.saldoReal-=p.valor;
+    if(!p.cartaoId&&_deveDescontar())S.saldoReal-=p.valor;
   }
   save();renderParcelas();updKPIs();renderChkList();
 }
@@ -2926,12 +2934,12 @@ function togglePagaCalendario(pid, mes, ano){
   const idx=p.pagas.findIndex(x=>x.mes===mes&&x.ano===ano);
   if(idx>=0){
     const pg=p.pagas[idx];
-    if(_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
+    if(!p.cartaoId&&_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
     p.pagas.splice(idx,1);
   } else {
     const ts=Date.now();
     p.pagas.push({mes,ano,ts});
-    if(_deveDescontar())S.saldoReal-=p.valor;
+    if(!p.cartaoId&&_deveDescontar())S.saldoReal-=p.valor;
   }
   save();
   renderAgenda();
@@ -3031,10 +3039,15 @@ function confirmarPagamentoFatura(){
   const d=new Date(); const mes=d.getMonth()+1,ano=d.getFullYear();
   const fatura=c.faturas&&c.faturas.find(f=>f.mes===mes&&f.ano===ano);
   if(!fatura)return;
-  fatura.valorPago=Math.min(fatura.valor,(fatura.valorPago||0)+v);
+  fatura.valorPago=Math.min(fatura.valor+(fatura.gastosApp||0),(fatura.valorPago||0)+v);
   // Histórico de pagamentos
   if(!fatura.pagamentos)fatura.pagamentos=[];
   fatura.pagamentos.push({valor:v,data:todayISO(),ts:Date.now()});
+  // Pagar a fatura libera o limite comprometido (gastosApp inclui parcelas+gastos de cartão)
+  if(fatura.gastosApp>0){
+    const liberar=Math.min(fatura.gastosApp,v);
+    fatura.gastosApp=Math.max(0,fatura.gastosApp-liberar);
+  }
   // Desconta do saldoReal se configurado
   if(_deveDescontar())S.saldoReal-=v;
   save();renderCartoes();updKPIs();
