@@ -273,9 +273,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 /* TABS */
 .tabs{background:var(--card);border-radius:var(--r);padding:5px;box-shadow:var(--sh);
-  display:flex;gap:3px;margin-bottom:14px;overflow-x:auto}
-.tbtn{flex:1;min-width:60px;padding:9px 6px;border:none;background:transparent;border-radius:var(--rs);
-  font-family:var(--font);font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap}
+  display:flex;gap:3px;margin-bottom:14px;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity}
+.tabs::-webkit-scrollbar{display:none}
+.tbtn{flex:0 0 auto;padding:9px 11px;border:none;background:transparent;border-radius:var(--rs);
+  font-family:var(--font);font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap;scroll-snap-align:center}
 .tbtn.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;
   box-shadow:0 2px 8px rgba(39,174,96,.3)}
 
@@ -443,6 +445,120 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .bclose{background:var(--bg);border:none;width:30px;height:30px;border-radius:50%;font-size:16px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .2s}
 .bclose:hover{background:var(--redp);color:var(--red)}
+
+/* ══ EMPRÉSTIMOS ══ */
+.emp-kpis{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.emp-kpi{background:var(--card);border-radius:var(--r);padding:13px;box-shadow:var(--sh);
+  position:relative;overflow:hidden;animation:su .35s ease both}
+.emp-kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:.5}
+.emp-kpi.out::before{background:linear-gradient(90deg,var(--red),#F5A3B4)}
+.emp-kpi.in::before{background:linear-gradient(90deg,var(--blue),#7FC4EC)}
+.emp-kpi-lbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:3px}
+.emp-kpi-val{font-size:18px;font-weight:800;letter-spacing:-.4px}
+.emp-kpi-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+.emp-tipo-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px}
+.emp-tipo{display:flex;flex-direction:column;align-items:center;gap:2px;padding:11px 8px;
+  border:1.5px solid var(--border);border-radius:var(--rs);background:var(--card);
+  font-family:var(--font);cursor:pointer;transition:all .2s}
+.emp-tipo-ico{font-size:18px;line-height:1}
+.emp-tipo-lbl{font-size:11px;font-weight:700;color:var(--text)}
+.emp-tipo-sub{font-size:9px;color:var(--muted)}
+.emp-tipo.on[data-emptipo="emprestei"]{border-color:var(--red);background:var(--redp)}
+.emp-tipo.on[data-emptipo="peguei"]{border-color:var(--blue);background:var(--bluep)}
+
+.emp-juros-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.emp-jbtn{padding:8px 6px;border:1.5px solid var(--border);border-radius:var(--rs);
+  background:var(--card);font-family:var(--font);font-size:11px;font-weight:600;
+  color:var(--muted);cursor:pointer;transition:all .2s}
+.emp-jbtn.on{border-color:var(--g1);background:var(--gpale);color:#1a7a42}
+
+.emp-hint{font-size:9.5px;color:var(--muted);margin-top:4px}
+
+.emp-preview{background:var(--bg);border-radius:var(--rs);padding:11px;margin-bottom:11px;
+  border:1px dashed var(--border)}
+.emp-preview-row{display:flex;justify-content:space-between;font-size:11px;
+  color:var(--muted);margin-bottom:3px}
+.emp-preview-row:last-child{margin-bottom:0;font-weight:700;color:var(--text);font-size:12.5px;
+  padding-top:5px;border-top:1px solid var(--border);margin-top:5px}
+
+.emp-filtros{display:flex;gap:6px;margin-bottom:11px;overflow-x:auto;padding-bottom:2px}
+.emp-fbtn{padding:6px 12px;border:1.5px solid var(--border);border-radius:20px;
+  background:var(--card);font-family:var(--font);font-size:11px;font-weight:600;
+  color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s}
+.emp-fbtn.on{border-color:var(--g1);background:var(--g1);color:#fff}
+
+.emp-card{background:var(--card);border-radius:var(--r);padding:14px;box-shadow:var(--sh);
+  margin-bottom:10px;border-left:3px solid var(--border);animation:su .35s ease both}
+.emp-card.out{border-left-color:var(--red)}
+.emp-card.in{border-left-color:var(--blue)}
+.emp-card.done{border-left-color:var(--g1);opacity:.62}
+.emp-card.late{border-left-color:var(--yel)}
+
+.emp-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.emp-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:17px;flex-shrink:0}
+.emp-avatar.out{background:var(--redp)}
+.emp-avatar.in{background:var(--bluep)}
+.emp-avatar.done{background:var(--gpale)}
+.emp-nome{font-size:13.5px;font-weight:700;letter-spacing:-.2px}
+.emp-meta{font-size:10px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:5px}
+.emp-tag{background:var(--bg);border-radius:5px;padding:1px 6px;font-weight:600}
+.emp-tag.warn{background:var(--yelp);color:#B9770E}
+.emp-tag.ok{background:var(--gpale);color:#1a7a42}
+.emp-restante{margin-left:auto;text-align:right;flex-shrink:0}
+.emp-restante-val{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.emp-restante-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.4px;font-weight:600}
+
+.emp-bar{height:6px;background:var(--bg);border-radius:6px;overflow:hidden;margin-bottom:8px}
+.emp-bar-fill{height:100%;border-radius:6px;transition:width .45s ease}
+
+.emp-nums{display:flex;justify-content:space-between;font-size:10.5px;
+  color:var(--muted);margin-bottom:10px}
+.emp-nums b{color:var(--text);font-weight:700}
+
+.emp-acts{display:flex;gap:6px;flex-wrap:wrap}
+.emp-btn{flex:1;min-width:0;padding:7px 9px;border:1.5px solid var(--border);border-radius:var(--rs);
+  background:var(--card);font-family:var(--font);font-size:11px;font-weight:600;
+  color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap}
+.emp-btn:hover{border-color:var(--g1);color:var(--g1)}
+.emp-btn.main{background:var(--g1);border-color:var(--g1);color:#fff}
+.emp-btn.main:hover{background:var(--g2);border-color:var(--g2);color:#fff}
+.emp-btn.warn{border-color:var(--yel);color:#B9770E}
+.emp-btn.dang{flex:0 0 auto;min-width:36px}
+.emp-btn.dang:hover{border-color:var(--red);color:var(--red)}
+
+.emp-pags{margin-top:10px;padding-top:9px;border-top:1px dashed var(--border)}
+.emp-pag-item{display:flex;justify-content:space-between;align-items:center;
+  font-size:11px;padding:4px 0;color:var(--muted)}
+.emp-pag-del{background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:12px;padding:0 4px;opacity:.5;transition:opacity .2s}
+.emp-pag-del:hover{opacity:1;color:var(--red)}
+
+.emp-empty{background:var(--card);border-radius:var(--r);padding:34px 18px;text-align:center;
+  box-shadow:var(--sh);color:var(--muted);font-size:12px}
+.emp-empty-ico{font-size:32px;display:block;margin-bottom:8px;opacity:.55}
+
+/* Toque confortável — iPhone/iPad */
+.emp-tipo,.emp-jbtn,.emp-fbtn,.emp-btn,#panel-emprestimos .btnadd{
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  -webkit-user-select:none;user-select:none}
+.emp-tipo:active,.emp-jbtn:active,.emp-fbtn:active,.emp-btn:active{transform:scale(.97)}
+#panel-emprestimos .btnadd{padding:14px;font-size:14px;letter-spacing:.2px;
+  display:flex;align-items:center;justify-content:center;gap:7px;min-height:48px}
+#panel-emprestimos .btnadd:active{transform:scale(.985);box-shadow:0 2px 8px rgba(39,174,96,.3)}
+
+@media(max-width:520px){
+  .emp-tipo{padding:13px 8px}
+  .emp-jbtn{padding:11px 6px;font-size:11.5px}
+  .emp-fbtn{padding:9px 14px;font-size:11.5px}
+  .emp-btn{padding:11px 9px;font-size:11.5px;min-height:42px}
+  .emp-btn.dang{min-width:44px}
+  .emp-kpi-val{font-size:17px}
+  #panel-emprestimos .btnadd{min-height:50px;font-size:14.5px}
+}
 
 /* FOOTER */
 footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
@@ -831,6 +947,7 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
     <button class="tbtn" data-tab="semana">📅 Semana</button>
     <button class="tbtn" data-tab="agenda">🗓️ Agenda</button>
     <button class="tbtn" data-tab="cartoes">💳 Cartões</button>
+    <button class="tbtn" data-tab="emprestimos">🤝 Empréstimos</button>
     <button class="tbtn" data-tab="historico">📊 Histórico</button>
   </div>
 
@@ -977,6 +1094,72 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
     <div class="cal-day-detail" id="cal-day-detail"></div>
   </div>
 
+  <!-- EMPRÉSTIMOS -->
+  <div class="panel" id="panel-emprestimos">
+    <div class="emp-kpis" id="emp-kpis"></div>
+
+    <div class="fcard">
+      <h3>➕ Novo Empréstimo</h3>
+
+      <div class="emp-tipo-row">
+        <button class="emp-tipo on" data-emptipo="emprestei" onclick="setEmpTipo('emprestei')">
+          <span class="emp-tipo-ico">📤</span>
+          <span class="emp-tipo-lbl">Eu emprestei</span>
+          <span class="emp-tipo-sub">sai do saldo</span>
+        </button>
+        <button class="emp-tipo" data-emptipo="peguei" onclick="setEmpTipo('peguei')">
+          <span class="emp-tipo-ico">📥</span>
+          <span class="emp-tipo-lbl">Peguei emprestado</span>
+          <span class="emp-tipo-sub">entra no saldo</span>
+        </button>
+      </div>
+
+      <div class="frow s1"><div class="fld"><label>Pessoa</label>
+        <input type="text" id="e-pessoa" placeholder="Ex: João, Maria..."></div></div>
+
+      <div class="frow">
+        <div class="fld"><label>Valor (R$)</label>
+          <input type="number" id="e-valor" placeholder="0,00" step="0.01" min="0"></div>
+        <div class="fld"><label>Data do empréstimo</label>
+          <input type="date" id="e-data"></div>
+      </div>
+
+      <div class="frow s1"><div class="fld"><label>Juros</label>
+        <div class="emp-juros-row">
+          <button class="emp-jbtn on" data-empjuros="nenhum" onclick="setEmpJuros('nenhum')">Sem juros</button>
+          <button class="emp-jbtn" data-empjuros="simples" onclick="setEmpJuros('simples')">Simples</button>
+          <button class="emp-jbtn" data-empjuros="composto" onclick="setEmpJuros('composto')">Composto</button>
+        </div>
+      </div></div>
+
+      <div class="frow" id="e-juros-cfg" style="display:none">
+        <div class="fld"><label>Taxa (% ao mês)</label>
+          <input type="number" id="e-taxa" placeholder="Ex: 2" step="0.01" min="0"></div>
+        <div class="fld"><label>Prazo (opcional)</label>
+          <input type="date" id="e-venc"></div>
+      </div>
+
+      <div class="frow s1" id="e-venc-solo">
+        <div class="fld"><label>Prazo / vencimento (opcional)</label>
+          <input type="date" id="e-venc2">
+          <div class="emp-hint">Se preencher, aparece na Agenda 🗓️</div></div>
+      </div>
+
+      <div id="e-preview" class="emp-preview" style="display:none"></div>
+
+      <button class="btnadd" onclick="addEmprestimo()">🤝 Adicionar empréstimo</button>
+    </div>
+
+    <div class="emp-filtros" id="emp-filtros">
+      <button class="emp-fbtn on" data-empf="todos" onclick="setEmpFilter('todos')">Todos</button>
+      <button class="emp-fbtn" data-empf="emprestei" onclick="setEmpFilter('emprestei')">📤 Emprestei</button>
+      <button class="emp-fbtn" data-empf="peguei" onclick="setEmpFilter('peguei')">📥 Peguei</button>
+      <button class="emp-fbtn" data-empf="quitados" onclick="setEmpFilter('quitados')">✅ Quitados</button>
+    </div>
+
+    <div id="list-emprestimos"></div>
+  </div>
+
   <!-- HISTÓRICO -->
   <!-- CARTÕES -->
   <div class="panel" id="panel-cartoes">
@@ -1078,6 +1261,24 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
 </div>
 
 <!-- MODAL CHECKLIST -->
+<!-- MODAL PAGAMENTO EMPRÉSTIMO -->
+<div class="mbk" id="mbk-emp-pag">
+  <div class="modal">
+    <div class="mhead"><h3 id="emp-pag-title">💵 Registrar pagamento</h3>
+      <button class="bclose" onclick="closeEmpPag()">✕</button></div>
+    <div id="emp-pag-body"></div>
+  </div>
+</div>
+
+<!-- MODAL ADIAR EMPRÉSTIMO -->
+<div class="mbk" id="mbk-emp-adiar">
+  <div class="modal">
+    <div class="mhead"><h3>📅 Adiar vencimento</h3>
+      <button class="bclose" onclick="closeEmpAdiar()">✕</button></div>
+    <div id="emp-adiar-body"></div>
+  </div>
+</div>
+
 <div class="mbk" id="mbk-chk">
   <div class="modal">
     <div class="mhead"><h3>✅ Checklist de Pagamento</h3>
@@ -1473,6 +1674,12 @@ function migrate(){
   if(S.alertasConfig.fixos===undefined)S.alertasConfig.fixos=true;
   if(S.alertasConfig.debitoAutoFixos===undefined)S.alertasConfig.debitoAutoFixos=false;
   if(!S.cartoes)S.cartoes=[];
+  if(!S.emprestimos)S.emprestimos=[];
+  S.emprestimos.forEach(e=>{
+    if(!e.pagamentos)e.pagamentos=[];
+    if(!e.juros)e.juros={tipo:'nenhum',taxa:0};
+    if(e.adiado===undefined)e.adiado=null;
+  });
   if(!S.ultimaVerificacao)S.ultimaVerificacao=null;
   // Migra rendaBase antiga para os campos separados
   if(!S.rendaBaseSemanal && !S.rendaBaseMensal && S.rendaBase){
@@ -1507,6 +1714,7 @@ function _populaCartaoSel(selId){
 }
 function updAll(){
   renderFixos();renderParcelas();renderSemana();renderExtras();updKPIs();updSaudeHead();
+  try{ renderEmprestimos(); }catch(err){ console.error('updAll/empréstimos:', err); }
   _populaCartaoSel('s-cartao-id');
   _populaCartaoSel('p-cartao-id');
 }
@@ -1524,6 +1732,14 @@ function setupUI(){
   setRM(S.rendaMode||'semanal',true);
   document.getElementById('ex-data').value=todayISO();
   document.getElementById('s-data').value=todayISO();
+  // Empréstimos: defaults + preview reativo
+  try{
+    document.getElementById('e-data').value=todayISO();
+    ['e-valor','e-taxa','e-venc','e-venc2','e-data'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.addEventListener('input', empPreview);
+    });
+  }catch(err){ console.error('Init empréstimos:', err); }
   if(!S.semanaAtual.inicioISO)S.semanaAtual.inicioISO=semaIni(new Date(),S.rendaDiaSemana??5);
   document.querySelectorAll('[data-hperiod]').forEach(b=>{
     b.onclick=()=>{
@@ -1537,9 +1753,12 @@ function setupUI(){
       document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
       b.classList.add('on');
       document.getElementById('panel-'+b.dataset.tab).classList.add('on');
+      // Centraliza a aba ativa quando a barra rola (iPhone/iPad)
+      try{ b.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }catch(err){}
       if(b.dataset.tab==='historico') renderHistorico();
       if(b.dataset.tab==='agenda'){ _calDate=new Date(); renderAgenda(); }
       if(b.dataset.tab==='cartoes'){ renderCartoes(); }
+      if(b.dataset.tab==='emprestimos'){ renderEmprestimos(); }
       if(b.dataset.tab==='semana'){ _populaCartaoSel('s-cartao-id'); }
       if(b.dataset.tab==='parcelas'){ _populaCartaoSel('p-cartao-id'); }
     };
@@ -2721,6 +2940,24 @@ function contasDoDia(dia, mes, ano){
     contas.push({id:p.id, nome:p.desc, valor:p.valor, tipo:'parcela',
       tipoPagamento:'cartao', pago, pid:p.id});
   });
+
+  // ── EMPRÉSTIMOS (fonte adicional, isolada) ──
+  try{
+    (S.emprestimos||[]).forEach(e=>{
+      try{
+        const v=empVenc(e);
+        if(!v || typeof v!=='string') return;
+        const [vy,vm,vd]=v.split('-').map(Number);
+        if(vd!==dia||vm!==mes||vy!==ano) return;
+        contas.push({
+          id:e.id, nome:e.pessoa, valor:empRestante(e), tipo:'emprestimo',
+          tipoPagamento:'emprestimo', pago:empQuitado(e),
+          empTipo:e.tipo, empAtrasado:empAtrasado(e), empAdiado:!!e.adiado
+        });
+      }catch(e2){ console.error('Agenda/empréstimo item:', e2); }
+    });
+  }catch(err){ console.error('Agenda/empréstimos:', err); }
+
   return contas;
 }
 
@@ -2780,7 +3017,8 @@ function renderAgenda(){
     const classes=['cal-day',isToday?'today':'',isSel?'selected':''].filter(Boolean).join(' ');
     const dots=contas.map(c=>{
       let cor;
-      if(c.tipo==='parcela') cor=c.pago?'#27AE60':'#E8637A';
+      if(c.tipo==='emprestimo') cor=c.pago?'#27AE60':(c.empAtrasado?'#F39C12':'#16A085');
+      else if(c.tipo==='parcela') cor=c.pago?'#27AE60':'#E8637A';
       else if(c.tipoPagamento==='cartao') cor=c.pago?'#27AE60':'#9B59B6';
       else cor=c.pago?'#27AE60':'#3498DB';
       return `<div class="cal-dot" style="background:${cor}"></div>`;
@@ -2861,6 +3099,7 @@ function renderCalDetail(dia, mes, ano){
   const fixosPix=contas.filter(c=>c.tipo==='fixo'&&c.tipoPagamento==='pix');
   const fixosCartao=contas.filter(c=>c.tipo==='fixo'&&c.tipoPagamento==='cartao');
   const parcelas=contas.filter(c=>c.tipo==='parcela');
+  const emprestimos=contas.filter(c=>c.tipo==='emprestimo');
   const tudoPago=todasPagas(dia,mes,ano);
   const totalDia=contas.reduce((a,c)=>a+c.valor,0);
 
@@ -2896,6 +3135,43 @@ function renderCalDetail(dia, mes, ano){
     </div>`;
   };
 
+  // Empréstimo — item próprio (2 botões: pagar + adiar se vencido)
+  const renderEmpItem=(c)=>{
+    const isOut=c.empTipo==='emprestei';
+    const isPago=c.pago;
+    const opacity=isPago?'opacity:.45;':'';
+    const strike=isPago?'text-decoration:line-through;color:var(--muted);':'';
+    const label=(isOut?'🤝 Emprestei':'🤝 Peguei emprestado')
+      + (c.empAdiado?' · 📅 adiado':'')
+      + (isPago?' · ✅ Quitado':(c.empAtrasado?' · ⚠️ Vencido':''));
+    return `<div class="cal-conta-item" style="${opacity}transition:opacity .3s">
+      <div style="width:32px;height:32px;border-radius:8px;
+        background:${isPago?'var(--gpale)':(c.empAtrasado?'var(--yelp)':(isOut?'var(--redp)':'var(--bluep)'))};
+        display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">
+        ${isPago?'✅':'🤝'}
+      </div>
+      <div class="cal-conta-info">
+        <div class="cal-conta-name" style="${strike}">${esc(c.nome)}</div>
+        <div class="cal-conta-sub">${label}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="cal-conta-val" style="${strike}">${fmtM(c.valor)}</div>
+        ${!isPago?`<div style="display:flex;gap:4px">
+          ${c.empAtrasado?`<button class="pago-btn" style="padding:4px 8px;font-size:11px;
+            border-color:var(--yel);color:#B9770E"
+            onclick="empAdiarFromCal('${c.id}')">📅 Adiar</button>`:''}
+          <button class="pago-btn" style="padding:4px 10px;font-size:11px"
+            onclick="empPagFromCal('${c.id}')">${isOut?'Recebi':'Paguei'}</button>
+        </div>`:`<button class="pago-btn active-pago" style="padding:4px 10px;font-size:11px"
+            onclick="setEmpAba('${c.id}')">✅ Quitado</button>`}
+      </div>
+    </div>`;
+  };
+
+  // Empréstimos — pendentes (vencidos primeiro)
+  emprestimos.filter(c=>!c.pago).sort((a,b)=>(b.empAtrasado?1:0)-(a.empAtrasado?1:0))
+    .forEach(c=>{ html+=renderEmpItem(c); });
+
   // PIX — pendentes
   fixosPix.filter(c=>!c.pago).forEach(c=>{
     html+=renderItem(c,false,`toggleFixoPagoCal('${c.id}',${mes},${ano})`,'📌 PIX/Débito');
@@ -2923,10 +3199,17 @@ function renderCalDetail(dia, mes, ano){
     parcelas.filter(c=>c.pago).forEach(c=>{
       html+=renderItem(c,true,`togglePagaCalendario('${c.pid}',${mes},${ano})`,'💳 Parcela');
     });
+    emprestimos.filter(c=>c.pago).forEach(c=>{ html+=renderEmpItem(c); });
   }
 
   html+='</div>';
   el.innerHTML=html;
+}
+
+// Atalho: leva o usuário para a aba de empréstimos
+function setEmpAba(){
+  const b=document.querySelector('[data-tab="emprestimos"]');
+  if(b) b.click();
 }
 
 function togglePagaCalendario(pid, mes, ano){
@@ -2948,6 +3231,399 @@ function togglePagaCalendario(pid, mes, ano){
   const dia=_calSelected||(new Date().getDate());
   if(todasPagas(dia,mes,ano)) setTimeout(()=>renderAgenda(),100);
 }
+
+// ══════════════ EMPRÉSTIMOS ══════════════
+// Módulo isolado: não altera fixos/parcelas/cartões.
+let _empTipo='emprestei';
+let _empJuros='nenhum';
+let _empFilter='todos';
+let _empPagId=null;
+let _empAdiarId=null;
+
+function _empArr(){ return (S.emprestimos||[]); }
+
+// Data de vencimento efetiva (considera adiamentos)
+function empVenc(e){ return e.adiado || e.venc || null; }
+
+// Meses decorridos (fracionários) entre duas datas ISO
+function _mesesEntre(iniISO, fimISO){
+  if(!iniISO||!fimISO) return 0;
+  const a=new Date(iniISO+'T12:00:00'), b=new Date(fimISO+'T12:00:00');
+  const dias=(b-a)/86400000;
+  return dias<=0 ? 0 : dias/30;
+}
+
+// Valor devido atualizado com juros até hoje (ou até data de referência)
+function empValorAtual(e, refISO){
+  try{
+    const ref = refISO || todayISO();
+    const P = Number(e.valor)||0;
+    const j = e.juros||{tipo:'nenhum',taxa:0};
+    if(j.tipo==='nenhum' || !j.taxa) return P;
+    const n = _mesesEntre(e.data, ref);
+    if(n<=0) return P;
+    const i = (Number(j.taxa)||0)/100;
+    if(j.tipo==='simples') return P*(1+i*n);
+    if(j.tipo==='composto') return P*Math.pow(1+i, n);
+    return P;
+  }catch(err){ return Number(e.valor)||0; }
+}
+
+function empPago(e){
+  return (e.pagamentos||[]).reduce((a,p)=>a+(Number(p.valor)||0),0);
+}
+function empRestante(e){
+  return Math.max(0, empValorAtual(e) - empPago(e));
+}
+function empQuitado(e){
+  return empRestante(e) < 0.01;
+}
+function empAtrasado(e){
+  const v=empVenc(e);
+  if(!v || empQuitado(e)) return false;
+  return v < todayISO();
+}
+function empJurosAcum(e){
+  return Math.max(0, empValorAtual(e) - (Number(e.valor)||0));
+}
+
+// ── UI do formulário ──
+function setEmpTipo(t){
+  _empTipo=t;
+  document.querySelectorAll('[data-emptipo]').forEach(b=>
+    b.classList.toggle('on', b.dataset.emptipo===t));
+  empPreview();
+}
+function setEmpJuros(j){
+  _empJuros=j;
+  document.querySelectorAll('[data-empjuros]').forEach(b=>
+    b.classList.toggle('on', b.dataset.empjuros===j));
+  const cfg=document.getElementById('e-juros-cfg');
+  const solo=document.getElementById('e-venc-solo');
+  if(j==='nenhum'){ cfg.style.display='none'; solo.style.display=''; }
+  else { cfg.style.display=''; solo.style.display='none'; }
+  empPreview();
+}
+function _empVencInput(){
+  return _empJuros==='nenhum'
+    ? document.getElementById('e-venc2').value
+    : document.getElementById('e-venc').value;
+}
+function empPreview(){
+  const box=document.getElementById('e-preview');
+  if(!box) return;
+  const valor=parseFloat(document.getElementById('e-valor').value)||0;
+  const taxa=parseFloat(document.getElementById('e-taxa').value)||0;
+  const data=document.getElementById('e-data').value||todayISO();
+  const venc=_empVencInput();
+  if(!valor || _empJuros==='nenhum' || !taxa || !venc){ box.style.display='none'; return; }
+  const fake={valor, data, juros:{tipo:_empJuros, taxa}};
+  const total=empValorAtual(fake, venc);
+  const juros=total-valor;
+  const n=_mesesEntre(data, venc);
+  box.style.display='';
+  box.innerHTML=`
+    <div class="emp-preview-row"><span>Principal</span><span>${fmtM(valor)}</span></div>
+    <div class="emp-preview-row"><span>Período</span><span>${n.toFixed(1)} meses</span></div>
+    <div class="emp-preview-row"><span>Juros ${_empJuros} (${taxa}% a.m.)</span><span>${fmtM(juros)}</span></div>
+    <div class="emp-preview-row"><span>Total no vencimento</span><span>${fmtM(total)}</span></div>`;
+}
+
+// ── Saldo real: mesmo motor já usado por parcelas ──
+function _empAplicaSaldo(valor, entrada){
+  if(!_deveDescontar()) return;
+  S.saldoReal += entrada ? valor : -valor;
+  S.saldoRealData=todayISO();
+}
+
+function addEmprestimo(){
+  const pessoa=document.getElementById('e-pessoa').value.trim();
+  const valor=parseFloat(document.getElementById('e-valor').value)||0;
+  const data=document.getElementById('e-data').value||todayISO();
+  const taxa=parseFloat(document.getElementById('e-taxa').value)||0;
+  const venc=_empVencInput()||null;
+
+  if(!pessoa){ alert('Informe a pessoa.'); return; }
+  if(valor<=0){ alert('Informe um valor válido.'); return; }
+  if(_empJuros!=='nenhum' && taxa<=0){ alert('Informe a taxa de juros.'); return; }
+  if(venc && venc < data){ alert('O vencimento não pode ser antes da data do empréstimo.'); return; }
+
+  const e={
+    id:uid(), tipo:_empTipo, pessoa, valor, data, venc, adiado:null,
+    juros:{ tipo:_empJuros, taxa: _empJuros==='nenhum'?0:taxa },
+    pagamentos:[], ts:Date.now()
+  };
+  S.emprestimos.push(e);
+
+  // emprestei → sai do saldo | peguei → entra no saldo
+  _empAplicaSaldo(valor, _empTipo==='peguei');
+
+  save();
+  document.getElementById('e-pessoa').value='';
+  document.getElementById('e-valor').value='';
+  document.getElementById('e-taxa').value='';
+  document.getElementById('e-venc').value='';
+  document.getElementById('e-venc2').value='';
+  document.getElementById('e-data').value=todayISO();
+  document.getElementById('e-preview').style.display='none';
+  renderEmprestimos(); updKPIs(); renderAgenda();
+  showToast(_empTipo==='emprestei'?'📤 Empréstimo registrado':'📥 Empréstimo recebido');
+}
+
+function delEmprestimo(id){
+  const e=_empArr().find(x=>x.id===id); if(!e) return;
+  if(!confirm(`Excluir empréstimo de ${e.pessoa}?\nO saldo será revertido.`)) return;
+  // Reverte principal
+  _empAplicaSaldo(Number(e.valor)||0, e.tipo==='emprestei');
+  // Reverte pagamentos lançados após a base do saldo
+  (e.pagamentos||[]).forEach(p=>{
+    if(_deveDescontar() && p.ts && p.ts>=(S.saldoRealTs||0))
+      _empAplicaSaldo(Number(p.valor)||0, e.tipo!=='emprestei');
+  });
+  S.emprestimos=_empArr().filter(x=>x.id!==id);
+  save(); renderEmprestimos(); updKPIs(); renderAgenda();
+}
+
+// ── Modal de pagamento ──
+function openEmpPag(id){
+  const e=_empArr().find(x=>x.id===id); if(!e) return;
+  _empPagId=id;
+  const rest=empRestante(e);
+  const isOut=e.tipo==='emprestei';
+  document.getElementById('emp-pag-title').textContent =
+    isOut ? `💵 ${e.pessoa} me pagou` : `💵 Paguei ${e.pessoa}`;
+  document.getElementById('emp-pag-body').innerHTML=`
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+      Restante: <b style="color:var(--text)">${fmtM(rest)}</b>.
+      Pode registrar pagamento parcial — o app recalcula quanto falta.
+    </p>
+    <div class="frow">
+      <div class="fld"><label>Valor pago (R$)</label>
+        <input type="number" id="emp-pag-valor" step="0.01" min="0" value="${rest.toFixed(2)}"></div>
+      <div class="fld"><label>Data</label>
+        <input type="date" id="emp-pag-data" value="${todayISO()}"></div>
+    </div>
+    <button class="btnadd" style="margin-top:6px" onclick="confirmEmpPag()">Confirmar pagamento</button>
+    <button class="fbtn" style="width:100%;margin-top:7px;padding:9px"
+      onclick="empPagTotal()">Quitar valor total (${fmtM(rest)})</button>`;
+  document.getElementById('mbk-emp-pag').classList.add('op');
+}
+function closeEmpPag(){
+  document.getElementById('mbk-emp-pag').classList.remove('op');
+  _empPagId=null;
+}
+function empPagTotal(){
+  const e=_empArr().find(x=>x.id===_empPagId); if(!e) return;
+  document.getElementById('emp-pag-valor').value=empRestante(e).toFixed(2);
+  confirmEmpPag();
+}
+function confirmEmpPag(){
+  const e=_empArr().find(x=>x.id===_empPagId); if(!e) return;
+  const valor=parseFloat(document.getElementById('emp-pag-valor').value)||0;
+  const data=document.getElementById('emp-pag-data').value||todayISO();
+  if(valor<=0){ alert('Informe um valor válido.'); return; }
+  const rest=empRestante(e);
+  if(valor>rest+0.01 && !confirm(`Valor maior que o restante (${fmtM(rest)}). Registrar mesmo assim?`)) return;
+
+  e.pagamentos.push({ id:uid(), valor, data, ts:Date.now() });
+  // emprestei → me pagaram → entra | peguei → eu pago → sai
+  _empAplicaSaldo(valor, e.tipo==='emprestei');
+  // Ao receber pagamento, o adiamento perde o efeito se quitou
+  if(empQuitado(e)) e.adiado=null;
+
+  save(); closeEmpPag(); renderEmprestimos(); updKPIs(); renderAgenda();
+  showToast(empQuitado(e)?'✅ Empréstimo quitado!':'💵 Pagamento registrado');
+}
+function delEmpPag(eid, pid){
+  const e=_empArr().find(x=>x.id===eid); if(!e) return;
+  const idx=e.pagamentos.findIndex(p=>p.id===pid); if(idx<0) return;
+  if(!confirm('Remover este pagamento?')) return;
+  const p=e.pagamentos[idx];
+  if(_deveDescontar() && p.ts && p.ts>=(S.saldoRealTs||0))
+    _empAplicaSaldo(Number(p.valor)||0, e.tipo!=='emprestei');
+  e.pagamentos.splice(idx,1);
+  save(); renderEmprestimos(); updKPIs(); renderAgenda();
+}
+
+// ── Modal adiar (só faz sentido com vencimento vencido) ──
+function openEmpAdiar(id){
+  const e=_empArr().find(x=>x.id===id); if(!e) return;
+  _empAdiarId=id;
+  const atual=empVenc(e);
+  const d=new Date(); d.setDate(d.getDate()+7);
+  const sugestao=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  document.getElementById('emp-adiar-body').innerHTML=`
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+      Vencimento atual: <b style="color:var(--text)">${fmtDate(atual)}</b>${e.adiado?' (já adiado)':''}.<br>
+      Informe a nova data que <b style="color:var(--text)">${esc(e.pessoa)}</b> combinou de pagar.
+      ${e.juros.tipo!=='nenhum'?'<br>⚠️ Os juros continuam correndo até o pagamento.':''}
+    </p>
+    <div class="frow s1">
+      <div class="fld"><label>Nova data</label>
+        <input type="date" id="emp-adiar-data" value="${sugestao}" min="${todayISO()}"></div>
+    </div>
+    <button class="btnadd" style="margin-top:6px" onclick="confirmEmpAdiar()">Adiar vencimento</button>
+    ${e.adiado?`<button class="fbtn" style="width:100%;margin-top:7px;padding:9px"
+      onclick="empResetAdiar()">↩︎ Voltar à data original (${fmtDate(e.venc)})</button>`:''}`;
+  document.getElementById('mbk-emp-adiar').classList.add('op');
+}
+function closeEmpAdiar(){
+  document.getElementById('mbk-emp-adiar').classList.remove('op');
+  _empAdiarId=null;
+}
+function confirmEmpAdiar(){
+  const e=_empArr().find(x=>x.id===_empAdiarId); if(!e) return;
+  const nova=document.getElementById('emp-adiar-data').value;
+  if(!nova){ alert('Informe a nova data.'); return; }
+  if(nova <= (empVenc(e)||'')){ alert('A nova data deve ser posterior ao vencimento atual.'); return; }
+  e.adiado=nova;
+  if(!e.adiamentos) e.adiamentos=[];
+  e.adiamentos.push({ de: empVenc(e), para: nova, ts: Date.now() });
+  save(); closeEmpAdiar(); renderEmprestimos(); renderAgenda();
+  showToast('📅 Vencimento adiado para '+fmtDate(nova));
+}
+function empResetAdiar(){
+  const e=_empArr().find(x=>x.id===_empAdiarId); if(!e) return;
+  e.adiado=null;
+  save(); closeEmpAdiar(); renderEmprestimos(); renderAgenda();
+}
+
+// ── Render ──
+function setEmpFilter(f){
+  _empFilter=f;
+  document.querySelectorAll('[data-empf]').forEach(b=>
+    b.classList.toggle('on', b.dataset.empf===f));
+  renderEmprestimos();
+}
+
+function renderEmprestimos(){
+  const box=document.getElementById('list-emprestimos');
+  if(!box) return;
+  try{
+    const all=_empArr();
+
+    // KPIs
+    const aReceber=all.filter(e=>e.tipo==='emprestei'&&!empQuitado(e))
+      .reduce((a,e)=>a+empRestante(e),0);
+    const aPagar=all.filter(e=>e.tipo==='peguei'&&!empQuitado(e))
+      .reduce((a,e)=>a+empRestante(e),0);
+    const nR=all.filter(e=>e.tipo==='emprestei'&&!empQuitado(e)).length;
+    const nP=all.filter(e=>e.tipo==='peguei'&&!empQuitado(e)).length;
+    const kbox=document.getElementById('emp-kpis');
+    if(kbox) kbox.innerHTML=`
+      <div class="emp-kpi out">
+        <div class="emp-kpi-lbl">📤 A receber</div>
+        <div class="emp-kpi-val" style="color:var(--red)">${fmtM(aReceber)}</div>
+        <div class="emp-kpi-sub">${nR} ${nR===1?'empréstimo aberto':'empréstimos abertos'}</div>
+      </div>
+      <div class="emp-kpi in">
+        <div class="emp-kpi-lbl">📥 A pagar</div>
+        <div class="emp-kpi-val" style="color:var(--blue)">${fmtM(aPagar)}</div>
+        <div class="emp-kpi-sub">${nP} ${nP===1?'dívida aberta':'dívidas abertas'}</div>
+      </div>`;
+
+    // Filtro
+    let lista=all.slice();
+    if(_empFilter==='emprestei') lista=lista.filter(e=>e.tipo==='emprestei'&&!empQuitado(e));
+    else if(_empFilter==='peguei') lista=lista.filter(e=>e.tipo==='peguei'&&!empQuitado(e));
+    else if(_empFilter==='quitados') lista=lista.filter(e=>empQuitado(e));
+    else lista=lista.filter(e=>!empQuitado(e));
+
+    // Ordena: atrasados → com vencimento mais próximo → sem prazo
+    lista.sort((a,b)=>{
+      const la=empAtrasado(a)?0:1, lb=empAtrasado(b)?0:1;
+      if(la!==lb) return la-lb;
+      const va=empVenc(a)||'9999-12-31', vb=empVenc(b)||'9999-12-31';
+      return va.localeCompare(vb);
+    });
+
+    if(!lista.length){
+      box.innerHTML=`<div class="emp-empty">
+        <span class="emp-empty-ico">🤝</span>
+        ${_empFilter==='quitados'?'Nenhum empréstimo quitado ainda.':'Nenhum empréstimo em aberto.'}
+      </div>`;
+      return;
+    }
+
+    box.innerHTML=lista.map(e=>renderEmpCard(e)).join('');
+  }catch(err){
+    console.error('Erro ao renderizar empréstimos:', err);
+    box.innerHTML=`<div class="emp-empty">⚠️ Erro ao carregar empréstimos.</div>`;
+  }
+}
+
+function renderEmpCard(e){
+  const isOut=e.tipo==='emprestei';
+  const quit=empQuitado(e);
+  const late=empAtrasado(e);
+  const total=empValorAtual(e);
+  const pago=empPago(e);
+  const rest=empRestante(e);
+  const pct=total>0 ? Math.min(100,(pago/total)*100) : 0;
+  const jur=empJurosAcum(e);
+  const venc=empVenc(e);
+
+  const cls=quit?'done':(late?'late':(isOut?'out':'in'));
+  const cor=quit?'var(--g1)':(isOut?'var(--red)':'var(--blue)');
+
+  let tags=`<span class="emp-tag">${isOut?'📤 Emprestei':'📥 Peguei'}</span>`;
+  if(e.juros.tipo!=='nenhum')
+    tags+=`<span class="emp-tag">${e.juros.tipo==='simples'?'Juros simples':'Juros composto'} ${e.juros.taxa}% a.m.</span>`;
+  else tags+=`<span class="emp-tag">Sem juros</span>`;
+  tags+=`<span class="emp-tag">${fmtDate(e.data)}</span>`;
+  if(venc){
+    if(quit) tags+=`<span class="emp-tag ok">✅ Quitado</span>`;
+    else if(late) tags+=`<span class="emp-tag warn">⚠️ Venceu ${fmtDate(venc)}</span>`;
+    else tags+=`<span class="emp-tag">🗓️ Vence ${fmtDate(venc)}</span>`;
+    if(e.adiado) tags+=`<span class="emp-tag warn">📅 Adiado</span>`;
+  } else if(quit) tags+=`<span class="emp-tag ok">✅ Quitado</span>`;
+  else tags+=`<span class="emp-tag">Sem prazo</span>`;
+
+  const pagsHtml=(e.pagamentos||[]).length ? `<div class="emp-pags">
+    ${e.pagamentos.map(p=>`<div class="emp-pag-item">
+      <span>💵 ${fmtDate(p.data)}</span>
+      <span><b style="color:var(--g1)">${fmtM(p.valor)}</b>
+      <button class="emp-pag-del" onclick="delEmpPag('${e.id}','${p.id}')">✕</button></span>
+    </div>`).join('')}
+  </div>` : '';
+
+  return `<div class="emp-card ${cls}">
+    <div class="emp-head">
+      <div class="emp-avatar ${quit?'done':(isOut?'out':'in')}">${quit?'✅':(isOut?'📤':'📥')}</div>
+      <div style="min-width:0;flex:1">
+        <div class="emp-nome">${esc(e.pessoa)}</div>
+        <div class="emp-meta">${tags}</div>
+      </div>
+      <div class="emp-restante">
+        <div class="emp-restante-val" style="color:${cor}">${fmtM(rest)}</div>
+        <div class="emp-restante-lbl">${quit?'quitado':'falta'}</div>
+      </div>
+    </div>
+
+    <div class="emp-bar">
+      <div class="emp-bar-fill" style="width:${pct}%;background:${quit?'var(--g1)':cor}"></div>
+    </div>
+    <div class="emp-nums">
+      <span>Principal <b>${fmtM(e.valor)}</b></span>
+      ${jur>0.005?`<span>Juros <b style="color:var(--yel)">+${fmtM(jur)}</b></span>`:''}
+      <span>Pago <b style="color:var(--g1)">${fmtM(pago)}</b></span>
+      <span>Total <b>${fmtM(total)}</b></span>
+    </div>
+
+    <div class="emp-acts">
+      ${!quit?`<button class="emp-btn main" onclick="openEmpPag('${e.id}')">
+        ${isOut?'💵 Recebi':'💵 Paguei'}</button>`:''}
+      ${(!quit&&venc)?`<button class="emp-btn ${late?'warn':''}" onclick="openEmpAdiar('${e.id}')">
+        📅 Adiar</button>`:''}
+      <button class="emp-btn dang" onclick="delEmprestimo('${e.id}')">🗑️</button>
+    </div>
+    ${pagsHtml}
+  </div>`;
+}
+
+// ── Ações vindas da Agenda ──
+function empPagFromCal(id){ openEmpPag(id); }
+function empAdiarFromCal(id){ openEmpAdiar(id); }
 
 // ══ CARTÕES ══
 let _cartaoFaturaId=null;
