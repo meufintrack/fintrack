@@ -519,6 +519,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   color:var(--muted);margin-bottom:10px}
 .emp-nums b{color:var(--text);font-weight:700}
 
+.emp-proj{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  background:var(--yelp);border-radius:var(--rs);padding:8px 10px;margin-bottom:10px;
+  border:1px dashed #F5D89B}
+.emp-proj.warn{background:var(--bg);border-color:var(--border);flex-direction:column;
+  align-items:flex-start;gap:2px}
+.emp-proj-lbl{font-size:10.5px;font-weight:700;color:#B9770E}
+.emp-proj.warn .emp-proj-lbl{color:var(--muted)}
+.emp-proj-val{font-size:13px;font-weight:800;color:#B9770E;text-align:right;line-height:1.3}
+.emp-proj-val em{display:block;font-size:9.5px;font-weight:600;font-style:normal;opacity:.8}
+.emp-proj-note{font-size:9.5px;color:var(--muted);line-height:1.4}
+
 .emp-acts{display:flex;gap:6px;flex-wrap:wrap}
 .emp-btn{flex:1;min-width:0;padding:7px 9px;border:1.5px solid var(--border);border-radius:var(--rs);
   background:var(--card);font-family:var(--font);font-size:11px;font-weight:600;
@@ -3286,6 +3297,21 @@ function empAtrasado(e){
 function empJurosAcum(e){
   return Math.max(0, empValorAtual(e) - (Number(e.valor)||0));
 }
+// Valor projetado no vencimento (só faz sentido se houver prazo e juros)
+function empTemJuros(e){
+  return e && e.juros && e.juros.tipo!=='nenhum' && Number(e.juros.taxa)>0;
+}
+function empValorNoVenc(e){
+  const v=empVenc(e);
+  if(!v || !empTemJuros(e)) return null;
+  return empValorAtual(e, v);
+}
+// Projeção só é útil enquanto o vencimento não chegou
+function empProjecaoAtiva(e){
+  const v=empVenc(e);
+  if(!v || !empTemJuros(e) || empQuitado(e)) return false;
+  return v > todayISO();
+}
 
 // ── UI do formulário ──
 function setEmpTipo(t){
@@ -3316,16 +3342,37 @@ function empPreview(){
   const taxa=parseFloat(document.getElementById('e-taxa').value)||0;
   const data=document.getElementById('e-data').value||todayISO();
   const venc=_empVencInput();
-  if(!valor || _empJuros==='nenhum' || !taxa || !venc){ box.style.display='none'; return; }
+
+  if(!valor || _empJuros==='nenhum' || !taxa){ box.style.display='none'; return; }
+  box.style.display='';
+
   const fake={valor, data, juros:{tipo:_empJuros, taxa}};
+
+  // Sem prazo: mostra a projeção em marcos de tempo
+  if(!venc){
+    const marcos=[1,3,6,12].map(m=>{
+      const d=new Date(data+'T12:00:00');
+      d.setDate(d.getDate()+Math.round(m*30));
+      const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      return {m, v:empValorAtual(fake, iso)};
+    });
+    box.innerHTML=`
+      <div class="emp-preview-row"><span>Principal</span><span>${fmtM(valor)}</span></div>
+      <div class="emp-preview-row"><span>Juros ${_empJuros} · ${taxa}% a.m.</span><span>—</span></div>
+      ${marcos.map(x=>`<div class="emp-preview-row">
+        <span>Em ${x.m} ${x.m===1?'mês':'meses'}</span><span>${fmtM(x.v)}</span></div>`).join('')}
+      <div class="emp-preview-row"><span>⚠️ Sem prazo definido</span>
+        <span>começa em ${fmtM(valor)}</span></div>`;
+    return;
+  }
+
   const total=empValorAtual(fake, venc);
   const juros=total-valor;
   const n=_mesesEntre(data, venc);
-  box.style.display='';
   box.innerHTML=`
     <div class="emp-preview-row"><span>Principal</span><span>${fmtM(valor)}</span></div>
-    <div class="emp-preview-row"><span>Período</span><span>${n.toFixed(1)} meses</span></div>
-    <div class="emp-preview-row"><span>Juros ${_empJuros} (${taxa}% a.m.)</span><span>${fmtM(juros)}</span></div>
+    <div class="emp-preview-row"><span>Período até ${fmtDate(venc)}</span><span>${n.toFixed(1)} ${n<2?'mês':'meses'}</span></div>
+    <div class="emp-preview-row"><span>Juros ${_empJuros} · ${taxa}% a.m.</span><span>${fmtM(juros)}</span></div>
     <div class="emp-preview-row"><span>Total no vencimento</span><span>${fmtM(total)}</span></div>`;
 }
 
@@ -3346,6 +3393,7 @@ function addEmprestimo(){
   if(!pessoa){ alert('Informe a pessoa.'); return; }
   if(valor<=0){ alert('Informe um valor válido.'); return; }
   if(_empJuros!=='nenhum' && taxa<=0){ alert('Informe a taxa de juros.'); return; }
+  if(taxa>100 && !confirm(`Taxa de ${taxa}% ao mês é muito alta.\nConfirma que está correta?`)) return;
   if(venc && venc < data){ alert('O vencimento não pode ser antes da data do empréstimo.'); return; }
 
   const e={
@@ -3566,6 +3614,23 @@ function renderEmpCard(e){
   const cls=quit?'done':(late?'late':(isOut?'out':'in'));
   const cor=quit?'var(--g1)':(isOut?'var(--red)':'var(--blue)');
 
+  // Projeção no vencimento / aviso de juros sem prazo
+  let projHtml='';
+  if(empProjecaoAtiva(e)){
+    const alvo=empValorNoVenc(e);
+    const jurosProj=alvo-(Number(e.valor)||0);
+    projHtml=`<div class="emp-proj">
+      <span class="emp-proj-lbl">🎯 Projeção em ${fmtDate(venc)}</span>
+      <span class="emp-proj-val">${fmtM(alvo)}
+        <em>+${fmtM(jurosProj)} de juros</em></span>
+    </div>`;
+  } else if(empTemJuros(e) && !venc && !quit){
+    projHtml=`<div class="emp-proj warn">
+      <span class="emp-proj-lbl">⏳ Juros correndo sem prazo</span>
+      <span class="emp-proj-note">O total sobe a cada dia. Defina um prazo para ver a projeção.</span>
+    </div>`;
+  }
+
   let tags=`<span class="emp-tag">${isOut?'📤 Emprestei':'📥 Peguei'}</span>`;
   if(e.juros.tipo!=='nenhum')
     tags+=`<span class="emp-tag">${e.juros.tipo==='simples'?'Juros simples':'Juros composto'} ${e.juros.taxa}% a.m.</span>`;
@@ -3607,8 +3672,9 @@ function renderEmpCard(e){
       <span>Principal <b>${fmtM(e.valor)}</b></span>
       ${jur>0.005?`<span>Juros <b style="color:var(--yel)">+${fmtM(jur)}</b></span>`:''}
       <span>Pago <b style="color:var(--g1)">${fmtM(pago)}</b></span>
-      <span>Total <b>${fmtM(total)}</b></span>
+      <span>Total hoje <b>${fmtM(total)}</b></span>
     </div>
+    ${projHtml}
 
     <div class="emp-acts">
       ${!quit?`<button class="emp-btn main" onclick="openEmpPag('${e.id}')">
