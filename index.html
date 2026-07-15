@@ -1143,17 +1143,15 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
         </div>
       </div></div>
 
-      <div class="frow" id="e-juros-cfg" style="display:none">
+      <div class="frow s1" id="e-juros-cfg" style="display:none">
         <div class="fld"><label>Taxa (% ao mês)</label>
           <input type="number" id="e-taxa" placeholder="Ex: 2" step="0.01" min="0"></div>
-        <div class="fld"><label>Prazo (opcional)</label>
-          <input type="date" id="e-venc"></div>
       </div>
 
-      <div class="frow s1" id="e-venc-solo">
+      <div class="frow s1">
         <div class="fld"><label>Prazo / vencimento (opcional)</label>
-          <input type="date" id="e-venc2">
-          <div class="emp-hint">Se preencher, aparece na Agenda 🗓️</div></div>
+          <input type="date" id="e-venc">
+          <div class="emp-hint">Se preencher, aparece na Agenda 🗓️ e o app projeta o total final</div></div>
       </div>
 
       <div id="e-preview" class="emp-preview" style="display:none"></div>
@@ -1746,9 +1744,9 @@ function setupUI(){
   // Empréstimos: defaults + preview reativo
   try{
     document.getElementById('e-data').value=todayISO();
-    ['e-valor','e-taxa','e-venc','e-venc2','e-data'].forEach(id=>{
+    ['e-valor','e-taxa','e-venc','e-data'].forEach(id=>{
       const el=document.getElementById(id);
-      if(el) el.addEventListener('input', empPreview);
+      if(el){ el.addEventListener('input', empPreview); el.addEventListener('change', empPreview); }
     });
   }catch(err){ console.error('Init empréstimos:', err); }
   if(!S.semanaAtual.inicioISO)S.semanaAtual.inicioISO=semaIni(new Date(),S.rendaDiaSemana??5);
@@ -3325,15 +3323,12 @@ function setEmpJuros(j){
   document.querySelectorAll('[data-empjuros]').forEach(b=>
     b.classList.toggle('on', b.dataset.empjuros===j));
   const cfg=document.getElementById('e-juros-cfg');
-  const solo=document.getElementById('e-venc-solo');
-  if(j==='nenhum'){ cfg.style.display='none'; solo.style.display=''; }
-  else { cfg.style.display=''; solo.style.display='none'; }
+  if(cfg) cfg.style.display = (j==='nenhum') ? 'none' : '';
   empPreview();
 }
 function _empVencInput(){
-  return _empJuros==='nenhum'
-    ? document.getElementById('e-venc2').value
-    : document.getElementById('e-venc').value;
+  const el=document.getElementById('e-venc');
+  return el ? el.value : '';
 }
 function empPreview(){
   const box=document.getElementById('e-preview');
@@ -3343,10 +3338,20 @@ function empPreview(){
   const data=document.getElementById('e-data').value||todayISO();
   const venc=_empVencInput();
 
-  if(!valor || _empJuros==='nenhum' || !taxa){ box.style.display='none'; return; }
+  if(!valor){ box.style.display='none'; return; }
   box.style.display='';
 
   const fake={valor, data, juros:{tipo:_empJuros, taxa}};
+  const ganhoLbl = _empTipo==='emprestei' ? 'Você recebe a mais' : 'Você paga a mais';
+
+  // Sem juros: só confirma o valor/prazo
+  if(_empJuros==='nenhum' || !taxa){
+    box.innerHTML=`
+      <div class="emp-preview-row"><span>Principal</span><span>${fmtM(valor)}</span></div>
+      <div class="emp-preview-row"><span>Juros</span><span>Sem juros</span></div>
+      <div class="emp-preview-row"><span>${venc?'Total em '+fmtDate(venc):'Total'}</span><span>${fmtM(valor)}</span></div>`;
+    return;
+  }
 
   // Sem prazo: mostra a projeção em marcos de tempo
   if(!venc){
@@ -3371,9 +3376,9 @@ function empPreview(){
   const n=_mesesEntre(data, venc);
   box.innerHTML=`
     <div class="emp-preview-row"><span>Principal</span><span>${fmtM(valor)}</span></div>
-    <div class="emp-preview-row"><span>Período até ${fmtDate(venc)}</span><span>${n.toFixed(1)} ${n<2?'mês':'meses'}</span></div>
-    <div class="emp-preview-row"><span>Juros ${_empJuros} · ${taxa}% a.m.</span><span>${fmtM(juros)}</span></div>
-    <div class="emp-preview-row"><span>Total no vencimento</span><span>${fmtM(total)}</span></div>`;
+    <div class="emp-preview-row"><span>Juros ${_empJuros} · ${taxa}% a.m.</span><span>${n.toFixed(1)} ${n<2?'mês':'meses'}</span></div>
+    <div class="emp-preview-row"><span>${ganhoLbl}</span><span>+${fmtM(juros)}</span></div>
+    <div class="emp-preview-row"><span>Total em ${fmtDate(venc)}</span><span>${fmtM(total)}</span></div>`;
 }
 
 // ── Saldo real: mesmo motor já usado por parcelas ──
@@ -3411,7 +3416,6 @@ function addEmprestimo(){
   document.getElementById('e-valor').value='';
   document.getElementById('e-taxa').value='';
   document.getElementById('e-venc').value='';
-  document.getElementById('e-venc2').value='';
   document.getElementById('e-data').value=todayISO();
   document.getElementById('e-preview').style.display='none';
   renderEmprestimos(); updKPIs(); renderAgenda();
@@ -3619,10 +3623,11 @@ function renderEmpCard(e){
   if(empProjecaoAtiva(e)){
     const alvo=empValorNoVenc(e);
     const jurosProj=alvo-(Number(e.valor)||0);
+    const lbl=isOut?'você recebe a mais':'você paga a mais';
     projHtml=`<div class="emp-proj">
-      <span class="emp-proj-lbl">🎯 Projeção em ${fmtDate(venc)}</span>
+      <span class="emp-proj-lbl">🎯 Estimativa em ${fmtDate(venc)}</span>
       <span class="emp-proj-val">${fmtM(alvo)}
-        <em>+${fmtM(jurosProj)} de juros</em></span>
+        <em>+${fmtM(jurosProj)} · ${lbl}</em></span>
     </div>`;
   } else if(empTemJuros(e) && !venc && !quit){
     projHtml=`<div class="emp-proj warn">
