@@ -2967,6 +2967,29 @@ function contasDoDia(dia, mes, ano){
     });
   }catch(err){ console.error('Agenda/empréstimos:', err); }
 
+  // ── FATURAS DE CARTÃO (fonte adicional, isolada) ──
+  try{
+    (S.cartoes||[]).forEach(c=>{
+      try{
+        if(!c.venc) return;
+        if(parseInt(c.venc)!==dia) return;
+        // Considera a fatura do mês corrente
+        const fatura=(c.faturas||[]).find(f=>f.mes===mes&&f.ano===ano);
+        const gastosApp=fatura?fatura.gastosApp||0:0;
+        const faturaFechada=fatura?fatura.valor||0:0;
+        const total=faturaFechada+gastosApp;
+        if(total<=0 && !fatura) return; // sem fatura nem gastos, não mostra
+        const valorPago=fatura?fatura.valorPago||0:0;
+        const pago=total>0&&valorPago>=total-0.01;
+        contas.push({
+          id:c.id, nome:`Fatura ${c.nome}`, valor:Math.max(0,total-valorPago),
+          tipo:'fatura-cartao', tipoPagamento:'fatura-cartao',
+          pago, cartaoId:c.id, cor:c.cor||'#9B59B6'
+        });
+      }catch(e2){ console.error('Agenda/fatura-cartao item:', e2); }
+    });
+  }catch(err){ console.error('Agenda/faturas-cartao:', err); }
+
   return contas;
 }
 
@@ -3027,6 +3050,7 @@ function renderAgenda(){
     const dots=contas.map(c=>{
       let cor;
       if(c.tipo==='emprestimo') cor=c.pago?'#27AE60':(c.empAtrasado?'#F39C12':'#16A085');
+      else if(c.tipo==='fatura-cartao') cor=c.pago?'#27AE60':(c.cor||'#9B59B6');
       else if(c.tipo==='parcela') cor=c.pago?'#27AE60':'#E8637A';
       else if(c.tipoPagamento==='cartao') cor=c.pago?'#27AE60':'#9B59B6';
       else cor=c.pago?'#27AE60':'#3498DB';
@@ -3109,6 +3133,7 @@ function renderCalDetail(dia, mes, ano){
   const fixosCartao=contas.filter(c=>c.tipo==='fixo'&&c.tipoPagamento==='cartao');
   const parcelas=contas.filter(c=>c.tipo==='parcela');
   const emprestimos=contas.filter(c=>c.tipo==='emprestimo');
+  const faturasCartao=contas.filter(c=>c.tipo==='fatura-cartao');
   const tudoPago=todasPagas(dia,mes,ano);
   const totalDia=contas.reduce((a,c)=>a+c.valor,0);
 
@@ -3177,9 +3202,39 @@ function renderCalDetail(dia, mes, ano){
     </div>`;
   };
 
+  // Fatura cartão — item próprio
+  const renderFaturaItem=(c, isPago)=>{
+    const opacity=isPago?'opacity:.45;':'';
+    const strike=isPago?'text-decoration:line-through;color:var(--muted);':'';
+    const label=isPago?'💳 Fatura · ✅ Paga':'💳 Fatura do cartão';
+    return `<div class="cal-conta-item" style="${opacity}transition:opacity .3s">
+      <div style="width:32px;height:32px;border-radius:8px;
+        background:${isPago?'var(--gpale)':'var(--redp)'};
+        display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">
+        ${isPago?'✅':'💳'}
+      </div>
+      <div class="cal-conta-info">
+        <div class="cal-conta-name" style="${strike}">${esc(c.nome)}</div>
+        <div class="cal-conta-sub">${label}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="cal-conta-val" style="${strike}">${fmtM(c.valor)}</div>
+        ${!isPago
+          ?`<button class="pago-btn" style="padding:4px 10px;font-size:11px"
+              onclick="abrirPagamentoFatura('${c.cartaoId}')">Pagar</button>`
+          :`<button class="pago-btn active-pago" style="padding:4px 10px;font-size:11px"
+              onclick="(function(){const b=document.querySelector('[data-tab=\\'cartoes\\']');if(b)b.click();})()">✅ Paga</button>`
+        }
+      </div>
+    </div>`;
+  };
+
   // Empréstimos — pendentes (vencidos primeiro)
   emprestimos.filter(c=>!c.pago).sort((a,b)=>(b.empAtrasado?1:0)-(a.empAtrasado?1:0))
     .forEach(c=>{ html+=renderEmpItem(c); });
+
+  // Faturas cartão — pendentes
+  faturasCartao.filter(c=>!c.pago).forEach(c=>{ html+=renderFaturaItem(c,false); });
 
   // PIX — pendentes
   fixosPix.filter(c=>!c.pago).forEach(c=>{
@@ -3208,6 +3263,7 @@ function renderCalDetail(dia, mes, ano){
     parcelas.filter(c=>c.pago).forEach(c=>{
       html+=renderItem(c,true,`togglePagaCalendario('${c.pid}',${mes},${ano})`,'💳 Parcela');
     });
+    faturasCartao.filter(c=>c.pago).forEach(c=>{ html+=renderFaturaItem(c,true); });
     emprestimos.filter(c=>c.pago).forEach(c=>{ html+=renderEmpItem(c); });
   }
 
@@ -3725,6 +3781,17 @@ function toggleAlertaCartao(id){
   c.alertaFatura=c.alertaFatura===false?true:false;
   save();renderCartoes();
 }
+function editarVencCartao(id){
+  const c=S.cartoes.find(x=>x.id===id);if(!c)return;
+  const novo=prompt(`Novo dia de vencimento para "${c.nome}" (1-31):\nAtual: dia ${c.venc}`,''+c.venc);
+  if(novo===null)return;
+  const d=parseInt(novo);
+  if(isNaN(d)||d<1||d>31){alert('Dia inválido (1-31).');return;}
+  c.venc=d;
+  save();renderCartoes();renderAgenda();
+  showToast(`✅ Vencimento do ${c.nome} alterado para dia ${d}`);
+}
+
 function editarLimiteCartao(id){
   const c=S.cartoes.find(x=>x.id===id);if(!c)return;
   _cartaoFaturaId=id;
@@ -3873,7 +3940,7 @@ function renderCartoes(){
         <div style="width:36px;height:36px;border-radius:10px;background:${c.cor};display:flex;align-items:center;justify-content:center;font-size:18px">💳</div>
         <div style="flex:1">
           <div style="font-weight:700;font-size:15px;color:var(--tx1)">${esc(c.nome)}</div>
-          <div style="font-size:12px;color:var(--tx2)">Vence dia ${c.venc} · Limite ${fmtM(c.limite)} <button onclick="editarLimiteCartao('${c.id}')" style="background:none;border:none;color:var(--g1);font-size:11px;cursor:pointer;padding:0;font-weight:600">✏️ editar</button></div>
+          <div style="font-size:12px;color:var(--tx2)">Vence dia ${c.venc} <button onclick="editarVencCartao('${c.id}')" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:0;font-weight:600" title="Alterar dia de vencimento">✏️</button> · Limite ${fmtM(c.limite)} <button onclick="editarLimiteCartao('${c.id}')" style="background:none;border:none;color:var(--g1);font-size:11px;cursor:pointer;padding:0;font-weight:600">✏️ editar</button></div>
         </div>
         <button onclick="delCartao('${c.id}')" style="background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;padding:4px">🗑️</button>
       </div>
@@ -4413,6 +4480,21 @@ function gerarExtratoPDF(){
     parcAtual:p.atual||1,parcTotal:p.total||1
   }));
 
+  // Faturas de cartão do mês
+  const faturasMes=(S.cartoes||[]).map(c=>{
+    const f=(c.faturas||[]).find(x=>x.mes===mes&&x.ano===ano);
+    const gastosApp=f?f.gastosApp||0:0;
+    const faturaFechada=f?f.valor||0:0;
+    const total=faturaFechada+gastosApp;
+    if(total<=0) return null;
+    const valorPago=f?f.valorPago||0:0;
+    return {
+      nome:c.nome, diaVenc:c.venc||'—', total,
+      valorPago, falta:Math.max(0,total-valorPago),
+      pago:total>0&&valorPago>=total-0.01
+    };
+  }).filter(Boolean);
+
   // Gastos variáveis do mês
   const gastosVariaveis=[];
   const addGastos=gastos=>gastos.forEach(g=>{
@@ -4431,7 +4513,35 @@ function gerarExtratoPDF(){
     return d.getMonth()+1===mes&&d.getFullYear()===ano;
   });
 
+  // Empréstimos (situação atual de todos os registros)
+  const emprestimosMes=(S.emprestimos||[]).map(e=>{
+    try{
+      const pago=empQuitado(e);
+      const restante=empRestante(e);
+      const total=empValorAtual(e);
+      const jurosAcum=empJurosAcum(e);
+      const venc=empVenc(e);
+      return {
+        nome:e.pessoa, tipo:e.tipo,
+        principal:Number(e.valor)||0,
+        total, restante, jurosAcum, pago, venc,
+        juros:e.juros&&e.juros.tipo!=='nenhum'
+          ?`${e.juros.tipo} ${e.juros.taxa}% a.m.`:'Sem juros',
+        dataIni:e.data
+      };
+    }catch(err){ return null; }
+  }).filter(Boolean);
+
   // Cálculos
+  // Ordena cada seção por dia antes de calcular totais
+  const _sortDia=(a,b)=>(parseInt(a.diaVenc)||99)-(parseInt(b.diaVenc)||99);
+  const _sortData=(a,b)=>(a.data||'').localeCompare(b.data||'');
+  fixosMes.sort(_sortDia);
+  parcelasMes.sort(_sortDia);
+  faturasMes.sort(_sortDia);
+  gastosVariaveis.sort(_sortData);
+  extrasMes.sort(_sortData);
+
   const rendaBase=S.rendaMode==='semanal'?(S.rendaBaseSemanal||0)*4.3:(S.rendaBaseMensal||0);
   const totalExtras=extrasMes.reduce((a,e)=>a+e.valor,0);
   const totalRenda=rendaBase+totalExtras;
@@ -4439,9 +4549,11 @@ function gerarExtratoPDF(){
   const fixosPagosVal=fixosMes.filter(f=>f.pago).reduce((a,f)=>a+f.valor,0);
   const totalParcelas=parcelasMes.reduce((a,p)=>a+p.valor,0);
   const parcelasPagasVal=parcelasMes.filter(p=>p.pago).reduce((a,p)=>a+p.valor,0);
+  const totalFaturas=faturasMes.reduce((a,f)=>a+f.total,0);
+  const faturasPagasVal=faturasMes.filter(f=>f.pago).reduce((a,f)=>a+f.valorPago,0);
   const totalVariaveis=gastosVariaveis.reduce((a,g)=>a+g.valor,0);
-  const totalPago=fixosPagosVal+parcelasPagasVal;
-  const totalAPagar=(totalFixos-fixosPagosVal)+(totalParcelas-parcelasPagasVal);
+  const totalPago=fixosPagosVal+parcelasPagasVal+faturasPagasVal;
+  const totalAPagar=(totalFixos-fixosPagosVal)+(totalParcelas-parcelasPagasVal)+(totalFaturas-faturasPagasVal);
   const saldo=S.saldoReal!==null?S.saldoReal:(totalRenda-totalFixos-totalParcelas-totalVariaveis);
 
   const fmt=v=>'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -4452,6 +4564,17 @@ function gerarExtratoPDF(){
     <td style="text-align:center">${f.tipo==='cartao'?'💳 Cartão':'📌 PIX'}</td>
     <td style="text-align:right;font-weight:600">${fmt(f.valor)}</td>
     <td style="text-align:center;color:${f.pago?'#27AE60':'#E8637A'};font-weight:700">${f.pago?'✅ Pago':'⏳ Pendente'}</td></tr>`;
+  const rowFC=f=>`<tr>
+    <td>${f.nome}</td><td style="text-align:center">${f.diaVenc}</td>
+    <td style="text-align:center">💳 Fatura</td>
+    <td style="text-align:right;font-weight:600">${fmt(f.total)}</td>
+    <td style="text-align:center;color:${f.pago?'#27AE60':'#E8637A'};font-weight:700">${f.pago?'✅ Pago':'⏳ Pendente'}</td></tr>`;
+  const rowEmp=e=>`<tr>
+    <td>${e.nome} <span style="color:#999;font-size:11px">${e.tipo==='emprestei'?'📤 Emprestei':'📥 Peguei'}</span></td>
+    <td style="text-align:center">${e.venc?fmtDate(e.venc):'Sem prazo'}</td>
+    <td style="text-align:center">${e.juros}</td>
+    <td style="text-align:right;font-weight:600">${fmt(e.restante)}</td>
+    <td style="text-align:center;color:${e.pago?'#27AE60':'#E8637A'};font-weight:700">${e.pago?'✅ Quitado':'⏳ Pendente'}</td></tr>`;
   const rowP=p=>`<tr>
     <td>${p.nome} <span style="color:#999;font-size:11px">(${p.parcAtual}/${p.parcTotal})</span></td>
     <td style="text-align:center">${p.diaVenc}</td><td style="text-align:center">💳 Parcela</td>
@@ -4504,13 +4627,24 @@ tr:last-child td{border-bottom:none}
   <div class="sc r"><div class="sc-lbl">⏳ A pagar</div><div class="sc-val" style="color:#E8637A">${fmt(totalAPagar)}</div></div>
   <div class="sc y"><div class="sc-lbl">🛒 Gastos variáveis</div><div class="sc-val" style="color:#F39C12">${fmt(totalVariaveis)}</div></div>
   <div class="sc g"><div class="sc-lbl">✅ Total pago</div><div class="sc-val" style="color:#27AE60">${fmt(totalPago)}</div></div>
-  <div class="sc b"><div class="sc-lbl">📅 Contas no mês</div><div class="sc-val" style="color:#3498DB">${fixosMes.length+parcelasMes.length}</div></div>
+  <div class="sc b"><div class="sc-lbl">📅 Contas no mês</div><div class="sc-val" style="color:#3498DB">${fixosMes.length+parcelasMes.length+faturasMes.length}</div></div>
 </div>
 ${fixosMes.length?`<section><h2>📌 Gastos Fixos</h2><table>${tHead}<tbody>${fixosMes.map(rowF).join('')}${tTot('Total Fixos',totalFixos,fixosPagosVal)}</tbody></table></section>`:''}
 ${parcelasMes.length?`<section><h2>💳 Parcelas</h2><table>${tHead}<tbody>${parcelasMes.map(rowP).join('')}${tTot('Total Parcelas',totalParcelas,parcelasPagasVal)}</tbody></table></section>`:''}
+${faturasMes.length?`<section><h2>🏦 Faturas de Cartão</h2><table>${tHead}<tbody>${faturasMes.map(rowFC).join('')}${tTot('Total Faturas',totalFaturas,faturasPagasVal)}</tbody></table></section>`:''}
 ${gastosVariaveis.length?`<section><h2>🛒 Gastos Variáveis</h2><table><thead><tr><th>Descrição</th><th colspan="2" style="text-align:center">Data</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>${gastosVariaveis.map(rowG).join('')}<tr class="total-row"><td colspan="3">Total Variáveis</td><td style="text-align:right;color:#E8637A">${fmt(totalVariaveis)}</td><td></td></tr></tbody></table></section>`:''}
 ${extrasMes.length?`<section><h2>💚 Rendas Extras</h2><table><thead><tr><th>Descrição</th><th colspan="2" style="text-align:center">Data</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>${extrasMes.map(rowE).join('')}<tr class="total-row"><td colspan="3">Total Extras</td><td style="text-align:right;color:#27AE60">${fmt(totalExtras)}</td><td></td></tr></tbody></table></section>`:''}
-</div>
+${emprestimosMes.length?`<section><h2>🤝 Empréstimos</h2><table>
+  <thead><tr><th>Pessoa</th><th style="text-align:center">Vencimento</th><th style="text-align:center">Juros</th><th style="text-align:right">Falta</th><th style="text-align:center">Status</th></tr></thead>
+  <tbody>
+    ${emprestimosMes.map(rowEmp).join('')}
+    <tr class="total-row">
+      <td colspan="3">Total a receber</td>
+      <td style="text-align:right">${fmt(emprestimosMes.filter(e=>e.tipo==='emprestei'&&!e.pago).reduce((a,e)=>a+e.restante,0))}</td>
+      <td style="text-align:center;color:#E8637A">${emprestimosMes.filter(e=>!e.pago).length} aberto(s)</td>
+    </tr>
+  </tbody>
+</table></section>`:''}
 <div class="foot">FinTrack &nbsp;•&nbsp; meufintrack.github.io &nbsp;•&nbsp; ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
 </div></body></html>`;
 
