@@ -4714,8 +4714,8 @@ loadLocal();
 </script>
 
 <!-- ═══ FinTrack — PANORAMA FINANCEIRO ═══
-     Card 'Onde vai o dinheiro' (janela de 7 ou 30 dias) e
-     'Quando sobra mais' (saldo acumulado mês a mês) + panorama em PDF.
+     'Onde vai o dinheiro' (7 ou 30 dias) e 'Quando sobra mais'
+     (saldo semana a semana, ancorado no dia de recebimento) + PDF de 18 meses.
      Recalcula do zero a cada mudança. A Saúde Financeira fica escondida.
 -->
 <script>
@@ -5152,6 +5152,65 @@ loadLocal();
       negativo,recupera,N};
   };
 
+  // ══════════ PROJEÇÃO SEMANAL (ancorada no dia de recebimento) ══════════
+  window.pnProjSem=function(nSem){
+    const N=nSem||12;
+    const hoje=new Date(); hoje.setHours(0,0,0,0);
+    const dw=(S.rendaDiaSemana==null)?5:Number(S.rendaDiaSemana);
+    const ddMes=diaDiaValor();
+    const rSemana=Number(S.rendaBaseSemanal)||0;
+
+    let saldo=null;
+    try{ saldo=calcSaldoReal(); }catch(e){}
+    const temSaldo=(saldo!==null);
+    let acum=temSaldo?saldo:0;
+
+    const linha=[];
+    let ini=new Date(hoje);
+    for(let i=0;i<N;i++){
+      const pd=new Date(ini);
+      while(pd.getDay()!==dw) pd.setDate(pd.getDate()+1);
+      const dias=Math.round((pd-ini)/86400000)+1;
+      const sd=saidasPeriodo(ini,pd,i===0);
+      const dd=ddMes*(dias/30);
+      const ini2=acum;
+      acum=acum+rSemana-sd.total-dd;
+
+      // parcelas cuja ÚLTIMA cobrança cai nesta semana
+      const acabam=[];
+      (S.parcelas||[]).forEach(p=>{
+        const f=parcFim(p); if(!f) return;
+        const dm=diasNoMes(f.ano,f.mes-1);
+        const dUlt=new Date(f.ano,f.mes-1,Math.min(Number(p.diaVenc)||1,dm));
+        if(dUlt>=ini && dUlt<=pd) acabam.push({nome:p.desc||'Parcela',valor:Number(p.valor)||0});
+      });
+      const quitar=sd.itens.filter(x=>x.tipo==='emprestimo')
+        .map(x=>({nome:x.nome,valor:x.valor,atrasado:!!x.atrasado}));
+      const contas=sd.itens.filter(x=>x.tipo!=='emprestimo')
+        .map(x=>({nome:x.nome,valor:x.valor,data:x.data}));
+
+      linha.push({i,ini:new Date(ini),fim:new Date(pd),dias,
+        entradas:rSemana,saidas:sd.total,diaDia:dd,
+        saldoIni:ini2,saldoFim:acum,acabam,quitar,contas,itens:sd.itens});
+
+      ini=new Date(pd); ini.setDate(ini.getDate()+1);
+    }
+
+    const negativo=linha.find(l=>l.saldoFim<0)||null;
+    let recupera=null;
+    if(negativo){
+      const k=linha.indexOf(negativo);
+      recupera=linha.slice(k+1).find(l=>l.saldoFim>=0)||null;
+    }
+    return {linha,temSaldo,saldoHoje:temSaldo?saldo:0,
+      saldoFinal:linha.length?linha[linha.length-1].saldoFim:0,negativo,recupera,N};
+  };
+
+  // true quando faz sentido mostrar por semana
+  window.pnEhSemanal=function(){
+    return S.rendaMode==='semanal' && (Number(S.rendaBaseSemanal)||0)>0;
+  };
+
   // ══════════ RENDER ══════════
   const _op={1:false,2:false};
   window.pnTg=function(n){
@@ -5297,10 +5356,18 @@ loadLocal();
     el.innerHTML=h;
   }
 
+  function fmtDia(d){
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+  }
+  const DIAS_SEM=['dom','seg','ter','qua','qui','sex','sáb'];
+
   function pnR2(){
     const el=document.getElementById('pn-ct2'); if(!el) return;
-    let d,p;
-    try{ d=pnCalc(); p=pnProj(18); }catch(e){ console.error('pnProj:',e); return; }
+    let d,p,sem;
+    try{
+      d=pnCalc(); sem=pnEhSemanal();
+      p = sem ? pnProjSem(12) : pnProj(12);
+    }catch(e){ console.error('pnProj:',e); return; }
 
     if(!d.rendaMes && !p.temSaldo){
       el.innerHTML=`<div class="pn-vaz">Configure sua renda e o saldo da conta
@@ -5308,66 +5375,77 @@ loadLocal();
       return;
     }
 
-    const ult=p.linha[p.linha.length-1];
     let h='';
+    const horiz = sem ? '3 meses' : `${p.N} meses`;
 
     h+=`<div class="pn-big">
-      <div class="pn-big-l">Daqui a ${p.N} meses você terá</div>
+      <div class="pn-big-l">Em ${horiz} você terá</div>
       <div class="pn-big-v" style="color:${p.saldoFinal>=0?'var(--g1)':'var(--red)'}">${fmtM(p.saldoFinal)}</div>
       <div class="pn-big-s">se tudo seguir como está cadastrado hoje</div></div>`;
 
     if(!p.temSaldo){
       h+=`<div class="pn-box y">⚠️ Você não informou quanto tem na conta, então
-        a projeção começa do zero. Informe o saldo em "Na conta" para acertar o ponto de partida.</div>`;
+        a projeção começa do zero. Informe em "Na conta", no topo.</div>`;
     }
     if(p.negativo){
-      const dtn=`${MESES[p.negativo.mes-1]}/${String(p.negativo.ano).slice(2)}`;
-      h+=`<div class="pn-box r">🔴 Pelo ritmo atual, o saldo fica negativo em
-        <b>${dtn}</b> (${fmtM(p.negativo.saldoFim)}).${p.recupera
-          ? ` Volta ao positivo em <b>${MESES[p.recupera.mes-1]}/${String(p.recupera.ano).slice(2)}</b>.`
-          : ' E não se recupera dentro do período previsto.'}</div>`;
+      const q = sem ? fmtDia(p.negativo.fim) : `${MESES[p.negativo.mes-1]}/${String(p.negativo.ano).slice(2)}`;
+      const r = p.recupera ? (sem ? fmtDia(p.recupera.fim)
+              : `${MESES[p.recupera.mes-1]}/${String(p.recupera.ano).slice(2)}`) : null;
+      h+=`<div class="pn-box r">🔴 Pelo ritmo atual o saldo fica negativo em
+        <b>${q}</b> (${fmtM(p.negativo.saldoFim)}).${r
+          ? ` Volta ao positivo em <b>${r}</b>.` : ' E não se recupera no período previsto.'}</div>`;
     }
 
-    // linha do tempo: saldo no fim de cada mês
-    h+=`<div class="pn-sec">Saldo previsto</div><div class="pn-mk">`;
-    h+=`<div class="pn-mki now"><div class="pn-mkd">Hoje · ${MESES[d.mes-1]}/${String(d.ano).slice(2)}</div>
+    h+=`<div class="pn-sec">${sem?'Semana a semana':'Mês a mês'}</div><div class="pn-mk">`;
+    h+=`<div class="pn-mki now"><div class="pn-mkd">Hoje</div>
       <div class="pn-mkv now">${fmtM(p.saldoHoje)}</div>
       <div class="pn-mkx">${p.temSaldo?'é o que você tem na conta agora':'saldo não informado'}</div></div>`;
 
     p.linha.forEach((l,i)=>{
-      if(i>11) return; // 12 meses na tela; o PDF traz todos
-      const dt=`${MESES[l.mes-1]}/${String(l.ano).slice(2)}`;
+      // pula período morto (sem entrada e sem saída)
+      if(l.entradas<0.01 && l.saidas<0.01 && l.diaDia<0.01) return;
       const neg=l.saldoFim<0;
-      const cls=neg?'out':'';
-      const partes=[];
-      if(l.nRec!==null && l.nRec>0) partes.push(`entram ${fmtM(l.entradas)}`);
-      else if(l.entradas>0) partes.push(`entram ${fmtM(l.entradas)}`);
-      partes.push(`saem ${fmtM(l.saidas+l.diaDia)}`);
+      const rot = sem
+        ? `${DIAS_SEM[l.fim.getDay()]} ${fmtDia(l.fim)}`
+        : `${l.parcial?'fim de ':''}${MESES[l.mes-1]}/${String(l.ano).slice(2)}`;
+
+      const det=[];
+      if(l.entradas>0.01) det.push(`entram ${fmtM(l.entradas)}`);
+      const saiTot=l.saidas+l.diaDia;
+      if(saiTot>0.01) det.push(`saem ${fmtM(saiTot)}`);
+
       let extra='';
-      if(l.acabam.length){
-        const nomes=l.acabam.slice(0,2).map(x=>esc(x.nome)).join(', ');
-        const resto=l.acabam.length>2?` +${l.acabam.length-2}`:'';
-        const som=l.acabam.reduce((a,x)=>a+x.valor,0);
-        extra+=`<br>🎉 <b>${nomes}${resto}</b> ${l.acabam.length>1?'acabam':'acaba'} · libera ${fmtM(som)}/mês`;
+      const contas = sem ? (l.contas||[]) : [];
+      if(sem && contas.length){
+        const nm=contas.slice(0,3).map(x=>esc(x.nome)).join(', ');
+        const rs=contas.length>3?` +${contas.length-3}`:'';
+        extra+=`<br>${nm}${rs}`;
       }
-      if(l.quitar.length){
+      if(l.quitar && l.quitar.length){
         l.quitar.forEach(q=>{
           extra+=`<br>🤝 quitar <b>${esc(q.nome)}</b> · ${fmtM(q.valor)}${q.atrasado?' <span style="color:var(--red)">(atrasado)</span>':''}`;
         });
       }
-      h+=`<div class="pn-mki ${cls}"><div class="pn-mkd">${l.parcial?'fim de ':''}${dt}</div>
+      if(l.acabam && l.acabam.length){
+        const nm=l.acabam.slice(0,2).map(x=>esc(x.nome)).join(', ');
+        const rs=l.acabam.length>2?` +${l.acabam.length-2}`:'';
+        const som=l.acabam.reduce((a,x)=>a+x.valor,0);
+        extra+=`<br>🎉 <b>${nm}${rs}</b> ${l.acabam.length>1?'acabam':'acaba'} · libera ${fmtM(som)}/mês`;
+      }
+
+      h+=`<div class="pn-mki ${neg?'out':''}"><div class="pn-mkd">${rot}</div>
         <div class="pn-mkv ${neg?'out':''}" style="${neg?'':'color:var(--g1)'}">${fmtM(l.saldoFim)}</div>
-        <div class="pn-mkx">${partes.join(' · ')}${extra}</div></div>`;
+        <div class="pn-mkx">${det.join(' · ')}${extra}</div></div>`;
     });
     h+=`</div>`;
 
     h+=`<div class="pn-box y">⚠️ A projeção usa <b>só o que está cadastrado</b>:
-      suas contas, parcelas, faturas e empréstimos. Compras novas no cartão, mudança
-      de renda e gastos que ainda não aconteceram não entram.${d.modo==='fixo'
-        ? ' O gasto do dia a dia também <b>não está sendo descontado</b> — mude o modo no card acima para incluir.'
+      contas, parcelas, faturas e empréstimos. Compras novas no cartão, mudança de
+      renda e gastos que ainda não aconteceram não entram.${d.modo==='fixo'
+        ? ' O gasto do dia a dia <b>não está sendo descontado</b> — mude o modo no card acima.'
         : ''}</div>`;
 
-    h+=`<button class="pn-btn" onclick="pnPanorama()">📊 Gerar panorama em PDF</button>`;
+    h+=`<button class="pn-btn" onclick="pnPanorama()">📊 Panorama de 18 meses em PDF</button>`;
     el.innerHTML=h;
   }
 
@@ -5384,15 +5462,18 @@ loadLocal();
           sb1.textContent=(d.per==='semana'?'Próximos 7 dias':'Próximos 30 dias')+
             (d.modo==='fixo'?' · sem o dia a dia':''); }
       }
-      const p=pnProj(18);
+      const semX=pnEhSemanal();
+      const p=semX?pnProjSem(12):pnProj(12);
       const bg2=document.getElementById('pn-b2'), sb2=document.getElementById('pn-s2');
       if(bg2){
         if(!d.rendaMes && !p.temSaldo){ bg2.className='pn-bg warn'; bg2.textContent='—';
           sb2.textContent='Configure renda e saldo'; }
         else if(p.negativo){ bg2.className='pn-bg crit'; bg2.textContent='🔴 '+fmtM(p.saldoFinal);
-          sb2.textContent=`Fica negativo em ${MESES[p.negativo.mes-1]}/${String(p.negativo.ano).slice(2)}`; }
+          const q=semX?('em '+String(p.negativo.fim.getDate()).padStart(2,'0')+'/'+String(p.negativo.fim.getMonth()+1).padStart(2,'0'))
+                      :('em '+MESES[p.negativo.mes-1]+'/'+String(p.negativo.ano).slice(2));
+          sb2.textContent='Fica negativo '+q; }
         else { bg2.className='pn-bg ok'; bg2.textContent=fmtM(p.saldoFinal);
-          sb2.textContent='Saldo previsto em 18 meses'; }
+          sb2.textContent=semX?'Saldo previsto nas próximas 12 semanas':'Saldo previsto em 12 meses'; }
       }
       if(_op[1]) pnR1();
       if(_op[2]) pnR2();
@@ -5435,7 +5516,7 @@ loadLocal();
        <td style="text-align:center">${String(x.data.getDate()).padStart(2,'0')}/${String(x.data.getMonth()+1).padStart(2,'0')}</td>
        <td style="text-align:center">${x.tipo==='fixo'?'fixo':x.tipo==='parcela'?'parcela':x.tipo==='fatura'?'cartão':'empréstimo'}</td>
        <td style="text-align:right">${fmtM(x.valor)}</td></tr>`).join('');
-    const mk=p.linha.map(l=>{
+    const mk=p.linha.filter(l=>l.entradas>0.01||l.saidas>0.01||l.diaDia>0.01).map(l=>{
       const dt=`${MESES_L[l.mes-1]}/${l.ano}`;
       const ev=[];
       if(l.acabam.length) ev.push(l.acabam.map(x=>esc(x.nome)).join(', ')+(l.acabam.length>1?' terminam':' termina'));
