@@ -2060,16 +2060,11 @@ function renderParcelas(){
   }
   const hoje=new Date();hoje.setHours(0,0,0,0);
   function proximoVenc(p){
-    if(!p.diaVenc) return new Date(9999,0,1);
-    const d=new Date();d.setDate(p.diaVenc);d.setHours(0,0,0,0);
-    if(d<hoje)d.setMonth(d.getMonth()+1);
-    return d;
+    const d=_proxCobranca(p);
+    return d||new Date(9999,0,1);
   }
   const sorted=[...S.parcelas].sort((a,b)=>proximoVenc(a)-proximoVenc(b));
-  function diasAteVenc(p){
-    if(!p.diaVenc) return 999;
-    return Math.round((proximoVenc(p)-hoje)/(1000*60*60*24));
-  }
+  function diasAteVenc(p){ return _diasAteVenc(p); }
 
   // Aplica filtro da aba selecionada
   let filtrado=sorted;
@@ -2117,11 +2112,35 @@ function renderParcelas(){
   document.getElementById('s-parc-falta').textContent=fmtM(allTF);
 }
 // ── Helpers for parcela rendering (outside renderParcelas so filter can use them) ──
+// Primeira cobrança AINDA POR VIR, respeitando dataIni e total de parcelas.
+// Retorna null quando o parcelamento já terminou.
+function _proxCobranca(p){
+  if(!p.diaVenc) return null;
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const dm=(y,m)=>new Date(y,m+1,0).getDate();
+  let iniY,iniM;
+  if(p.dataIni){
+    const di=new Date(p.dataIni+'T12:00:00');
+    if(!isNaN(di)){ iniY=di.getFullYear(); iniM=di.getMonth(); }
+  }
+  const base=new Date(hoje.getFullYear(),hoje.getMonth(),1);
+  for(let k=0;k<36;k++){
+    const y=base.getFullYear(), m=base.getMonth()+k;
+    const d=new Date(y,m,Math.min(Number(p.diaVenc),dm(y,m)));
+    if(d<hoje) continue;
+    if(iniY!==undefined && p.total){
+      const idx=(d.getFullYear()-iniY)*12+(d.getMonth()-iniM);
+      if(idx<0) continue;              // ainda nao comecou
+      if(idx>=Number(p.total)) return null; // ja terminou
+    }
+    return d;
+  }
+  return null;
+}
 function _diasAteVenc(p){
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  if(!p.diaVenc) return 999;
-  const d=new Date();d.setDate(p.diaVenc);d.setHours(0,0,0,0);
-  if(d<hoje)d.setMonth(d.getMonth()+1);
+  const d=_proxCobranca(p);
+  if(!d) return 999;
   return Math.round((d-hoje)/(1000*60*60*24));
 }
 function renderCard(p){
@@ -2152,7 +2171,7 @@ function renderCard(p){
       </div>
       <div class="pcc-right">
         <div class="pcc-val">${fmtM(p.valor)}</div>
-        <div class="pcc-prog">${p.atual}/${p.total}</div>
+        <div class="pcc-prog">${(p.atual===p.total&&st!=='finalizada')?'<span style="color:var(--g1);font-weight:800">🎉 última!</span>':p.atual+'/'+p.total}</div>
       </div>
       <div class="pcc-arrow">${expanded?'▲':'▼'}</div>
     </div>
