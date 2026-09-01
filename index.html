@@ -4712,5 +4712,637 @@ function clearF(...ids){ids.forEach(id=>{const el=document.getElementById(id);if
 // ══ BOOT ══
 loadLocal();
 </script>
+
+<!-- ═══ FinTrack — PANORAMA FINANCEIRO ═══
+     Card 'Onde vai o dinheiro' + 'Quando sobra mais' + panorama em PDF.
+     Módulo aditivo: não altera nenhuma função das outras abas.
+-->
+<script>
+(function(){
+  'use strict';
+
+  const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const MESES_L=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
+                 'Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  // ══════════ CSS ══════════
+  const css=`
+  .pn-c{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);margin:0 0 14px;overflow:hidden}
+  .pn-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;gap:10px}
+  .pn-h:active{background:rgba(0,0,0,.03)}
+  .pn-ic{font-size:22px;line-height:1}
+  .pn-t{font-size:13px;font-weight:700;color:var(--text)}
+  .pn-s{font-size:11px;color:var(--muted);margin-top:2px}
+  .pn-bg{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+  .pn-bg.ok{background:var(--gpale);color:var(--g1)}
+  .pn-bg.warn{background:var(--yelp);color:var(--yel)}
+  .pn-bg.crit{background:var(--redp);color:var(--red)}
+  .pn-ch{font-size:16px;color:var(--muted);transition:transform .25s;line-height:1;margin-left:4px}
+  .pn-ch.op{transform:rotate(180deg)}
+  .pn-b{padding:0 16px 16px;border-top:1px solid var(--border)}
+  .pn-big{text-align:center;padding:18px 12px 12px}
+  .pn-big-l{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .pn-big-v{font-size:32px;font-weight:800;margin:5px 0 3px;line-height:1.1}
+  .pn-big-s{font-size:11.5px;color:var(--muted);line-height:1.55}
+  .pn-bar{display:flex;height:9px;border-radius:5px;overflow:hidden;margin:10px 0 5px;background:var(--border)}
+  .pn-bar i{display:block;height:100%}
+  .pn-lg{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px}
+  .pn-sec{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.5px;margin:16px 0 2px}
+  .pn-i{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border)}
+  .pn-i:last-of-type{border-bottom:none}
+  .pn-e{font-size:19px;width:24px;text-align:center;flex-shrink:0}
+  .pn-ii{flex:1;min-width:0}
+  .pn-n{font-size:12.5px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pn-d{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .pn-v{font-size:13.5px;font-weight:800;flex-shrink:0}
+  .pn-i.tot{border-top:2px solid var(--border);border-bottom:none;margin-top:4px;padding-top:13px}
+  .pn-modo{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0 4px}
+  .pn-mb{padding:8px 4px;border:1.5px solid var(--border);border-radius:var(--rs);background:none;
+    font-family:var(--font);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s}
+  .pn-mb.on{border-color:var(--g1);background:var(--gpale);color:var(--g1)}
+  .pn-mk{position:relative;padding:0 0 0 26px;margin-top:4px}
+  .pn-mk::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--border)}
+  .pn-mki{position:relative;padding:11px 0}
+  .pn-mki::before{content:'';position:absolute;left:-23px;top:16px;width:10px;height:10px;border-radius:50%;
+    background:var(--g1);border:2px solid var(--card);box-shadow:0 0 0 2px var(--gpale)}
+  .pn-mki.now::before{background:var(--muted);box-shadow:0 0 0 2px var(--border)}
+  .pn-mki.out::before{background:var(--red);box-shadow:0 0 0 2px var(--redp)}
+  .pn-mkd{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .pn-mkv{font-size:18px;font-weight:800;color:var(--g1);margin:2px 0}
+  .pn-mkv.now{color:var(--text)} .pn-mkv.out{color:var(--red)}
+  .pn-mkx{font-size:10.5px;color:var(--muted);line-height:1.55}
+  .pn-mkx b{color:var(--text)}
+  .pn-box{border-radius:10px;padding:11px 13px;margin-top:11px;font-size:11.5px;line-height:1.6}
+  .pn-box.y{background:var(--yelp);color:#7d5a00}
+  .pn-box.r{background:var(--redp);color:#8b2740}
+  .pn-box.b{background:var(--bluep);color:var(--text)}
+  .pn-btn{margin-top:11px;width:100%;padding:11px;border:none;border-radius:var(--rs);
+    background:linear-gradient(135deg,var(--g1),var(--g3));color:#fff;font-family:var(--font);
+    font-size:12.5px;font-weight:700;cursor:pointer}
+  .pn-btn:active{transform:scale(.99)}
+  .pn-btn.sec{background:none;border:1.5px solid var(--border);color:var(--muted);font-weight:600}
+  .pn-vaz{text-align:center;padding:20px 8px;color:var(--muted);font-size:12.5px;line-height:1.7}
+  `;
+  const stEl=document.createElement('style'); stEl.textContent=css; document.head.appendChild(stEl);
+
+  // ══════════ HTML ══════════
+  const cards=`
+  <div class="pn-c" id="pn-c1">
+    <div class="pn-h" onclick="pnTg(1)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="pn-ic">🧭</div>
+        <div><div class="pn-t">Onde vai o dinheiro</div><div class="pn-s" id="pn-s1">Calculando...</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="pn-bg" id="pn-b1"></div><div class="pn-ch" id="pn-ch1">▾</div></div>
+    </div>
+    <div class="pn-b" id="pn-bd1" style="display:none"><div id="pn-ct1"></div></div>
+  </div>
+  <div class="pn-c" id="pn-c2">
+    <div class="pn-h" onclick="pnTg(2)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="pn-ic">📈</div>
+        <div><div class="pn-t">Quando sobra mais</div><div class="pn-s" id="pn-s2">Calculando...</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="pn-bg" id="pn-b2"></div><div class="pn-ch" id="pn-ch2">▾</div></div>
+    </div>
+    <div class="pn-b" id="pn-bd2" style="display:none"><div id="pn-ct2"></div></div>
+  </div>`;
+
+  const modal=`
+  <div class="mbk" id="mbk-pn">
+    <div class="modal">
+      <div class="mhead"><h3>🛒 Gasto do dia a dia</h3>
+        <button class="bclose" onclick="document.getElementById('mbk-pn').classList.remove('op')">✕</button></div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+        Comida, transporte, farmácia — o que varia todo mês.</p>
+      <div class="frow s1" style="margin-bottom:13px">
+        <div class="fld"><label>Quanto por mês (R$)</label>
+          <input type="number" id="pn-inp" placeholder="ex: 600,00" step="0.01" min="0"></div>
+      </div>
+      <button class="btnadd" onclick="pnSalvarManual()">💾 Salvar</button>
+    </div>
+  </div>`;
+
+  function inject(){
+    const a=document.getElementById('saude-card');
+    if(a && !document.getElementById('pn-c1')) a.insertAdjacentHTML('afterend',cards);
+    if(!document.getElementById('mbk-pn')){
+      document.body.insertAdjacentHTML('beforeend',modal);
+      const m=document.getElementById('mbk-pn');
+      if(m) m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('op'); });
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',inject);
+  else inject();
+
+  // ══════════ HELPERS ══════════
+  function rendaSem(){
+    return S.rendaMode==='semanal' ? (Number(S.rendaBaseSemanal)||0)
+                                   : (Number(S.rendaBaseMensal)||0)/4.3;
+  }
+  function rendaMes(){ return rendaSem()*4.3; }
+
+  // Parcela ativa num mês (mes 1-12)
+  function parcAtiva(p,ano,mes){
+    if(!p.dataIni || !p.total) return true;
+    const ini=new Date(p.dataIni+'T12:00:00');
+    if(isNaN(ini)) return true;
+    const idx=(ano-ini.getFullYear())*12 + ((mes-1)-ini.getMonth());
+    return idx>=0 && idx<Number(p.total);
+  }
+  // Último mês da parcela → {ano,mes} ou null
+  function parcFim(p){
+    if(!p.dataIni || !p.total) return null;
+    const ini=new Date(p.dataIni+'T12:00:00');
+    if(isNaN(ini)) return null;
+    const d=new Date(ini.getFullYear(), ini.getMonth()+Number(p.total)-1, 1);
+    return {ano:d.getFullYear(), mes:d.getMonth()+1};
+  }
+
+  // Semanas de gasto registradas → array de totais
+  function semanasGasto(){
+    const out=[];
+    try{
+      (S.semanasHist||[]).forEach(s=>{
+        if(s.gastos&&s.gastos.length) out.push(s.gastos.reduce((a,g)=>a+(Number(g.valor)||0),0));
+      });
+      const at=S.semanaAtual;
+      if(at&&at.gastos&&at.gastos.length)
+        out.push(at.gastos.reduce((a,g)=>a+(Number(g.valor)||0),0));
+    }catch(e){}
+    return out;
+  }
+  function mediaAuto(){
+    const w=semanasGasto();
+    if(w.length<2) return null;
+    const use=w.slice(-6); // últimas 6 semanas
+    const med=use.reduce((a,b)=>a+b,0)/use.length;
+    return {mes:med*4.3, min:Math.min(...use)*4.3, max:Math.max(...use)*4.3, n:use.length};
+  }
+
+  function modo(){ return S.diaDiaModo || 'fixo'; }
+  function diaDiaValor(){
+    const m=modo();
+    if(m==='manual') return Number(S.pisoEssencial)||0;
+    if(m==='auto'){ const a=mediaAuto(); return a?a.mes:0; }
+    return 0;
+  }
+
+  // ── Gastos de cartão num mês, SEM duplicar com parcelas ──
+  // Regra: parcela com cartaoId conta só dentro da fatura.
+  function cartaoNoMes(ano,mes,ehMesAtual){
+    const itens=[]; let total=0;
+    const cartoes=S.cartoes||[];
+    cartoes.forEach(c=>{
+      let val=0, prev=false;
+      const f=(c.faturas||[]).find(x=>parseInt(x.mes)===mes&&parseInt(x.ano)===ano);
+      if(f && ehMesAtual){
+        const t=(Number(f.valor)||0)+(Number(f.gastosApp)||0);
+        val=Math.max(0, t-(Number(f.valorPago)||0));
+      }else{
+        // mês futuro (ou sem fatura): soma as parcelas daquele cartão
+        (S.parcelas||[]).forEach(p=>{
+          if(p.cartaoId===c.id && parcAtiva(p,ano,mes)) val+=Number(p.valor)||0;
+        });
+        prev=true;
+      }
+      if(val>0.01){
+        itens.push({nome:'Fatura '+(c.nome||'cartão')+(prev?' (previsto)':''),
+          emoji:'💳', valor:val, diaVenc:c.venc||null, tipo:'fatura'});
+        total+=val;
+      }
+    });
+    return {itens,total};
+  }
+
+  // ── Tudo que sai num mês ──
+  function saidasDoMes(ano,mes,ehMesAtual){
+    const itens=[]; 
+    const idsCartao=new Set((S.cartoes||[]).map(c=>c.id));
+
+    (S.fixos||[]).forEach(f=>{
+      const v=Number(f.valor)||0; if(v<=0) return;
+      let pago=false;
+      if(ehMesAtual) pago=(S.fixosPagos||[]).some(x=>x.id===f.id&&parseInt(x.mes)===mes&&parseInt(x.ano)===ano);
+      if(pago) return;
+      itens.push({nome:f.nome||'Conta fixa',emoji:'📌',valor:v,diaVenc:f.diaVenc||null,tipo:'fixo'});
+    });
+
+    (S.parcelas||[]).forEach(p=>{
+      const v=Number(p.valor)||0; if(v<=0) return;
+      if(!parcAtiva(p,ano,mes)) return;
+      // se está num cartão que existe, já entra na fatura → não conta aqui
+      if(p.cartaoId && idsCartao.has(p.cartaoId)) return;
+      let pago=false;
+      if(ehMesAtual) pago=(p.pagas||[]).some(x=>parseInt(x.mes)===mes&&parseInt(x.ano)===ano);
+      if(pago) return;
+      itens.push({nome:p.desc||'Parcela',emoji:'💳',valor:v,diaVenc:p.diaVenc||null,tipo:'parcela'});
+    });
+
+    const cc=cartaoNoMes(ano,mes,ehMesAtual);
+    cc.itens.forEach(x=>itens.push(x));
+
+    const total=itens.reduce((a,x)=>a+x.valor,0);
+    return {itens,total};
+  }
+
+  // ══════════ CÁLCULO PRINCIPAL ══════════
+  window.pnCalc=function(){
+    const hoje=new Date(); hoje.setHours(0,0,0,0);
+    const ano=hoje.getFullYear(), mes=hoje.getMonth()+1;
+    const rm=rendaMes(), dd=diaDiaValor(), md=modo();
+    const s=saidasDoMes(ano,mes,true);
+    const sobra=rm-dd-s.total;
+
+    let saldo=null;
+    try{ saldo=calcSaldoReal(); }catch(e){}
+
+    const auto=mediaAuto();
+    const semDados = (md==='auto' && !auto);
+
+    return {ano,mes,hoje,rendaMes:rm,diaDia:dd,modo:md,auto,semDados,
+      itens:s.itens,comprometido:s.total,sobra,saldo};
+  };
+
+  // ══════════ PROJEÇÃO ══════════
+  window.pnProj=function(nMeses){
+    const N=nMeses||18;
+    const hoje=new Date(); hoje.setHours(0,0,0,0);
+    const rm=rendaMes(), dd=diaDiaValor();
+    const linha=[];
+    for(let i=0;i<N;i++){
+      const d=new Date(hoje.getFullYear(),hoje.getMonth()+i,1);
+      const a=d.getFullYear(), m=d.getMonth()+1;
+      const s=saidasDoMes(a,m,i===0);
+      linha.push({ano:a,mes:m,dt:d,saidas:s.total,sobra:rm-dd-s.total});
+    }
+    // marcos verdes: mês em que a sobra sobe
+    const marcos=[];
+    for(let i=1;i<linha.length;i++){
+      const dif=linha[i].sobra-linha[i-1].sobra;
+      if(dif<=0.5) continue;
+      // Só vira marco se houver parcela identificada terminando no mês anterior.
+      // (evita marco fantasma vindo da troca fatura-real → parcelas previstas)
+      const saiu=[], val=[];
+      (S.parcelas||[]).forEach(p=>{
+        const f=parcFim(p); if(!f) return;
+        if(f.ano===linha[i-1].ano && f.mes===linha[i-1].mes){
+          saiu.push(p.desc||'Parcela'); val.push(Number(p.valor)||0);
+        }
+      });
+      if(!saiu.length) continue;
+      const ganho=val.reduce((a,b)=>a+b,0);
+      marcos.push({tipo:'alivio',dt:linha[i].dt,ano:linha[i].ano,mes:linha[i].mes,
+        sobra:linha[i].sobra,ganho:ganho>0.5?ganho:dif,saiu});
+    }
+    // marcos vermelhos: empréstimos a vencer
+    try{
+      (S.emprestimos||[]).forEach(e=>{
+        if(e.tipo!=='peguei') return;
+        if(typeof empQuitado==='function' && empQuitado(e)) return;
+        const v=(typeof empVenc==='function')?empVenc(e):(e.venc||null);
+        if(!v||typeof v!=='string') return;
+        const [vy,vm]=v.split('-').map(Number);
+        if(!vy||!vm) return;
+        const lim=new Date(hoje.getFullYear(),hoje.getMonth()+N,1);
+        const alvo=new Date(vy,vm-1,1);
+        if(alvo>lim) return;
+        marcos.push({tipo:'saida',dt:alvo,ano:vy,mes:vm,
+          pessoa:e.pessoa||'Empréstimo',
+          valor:(typeof empRestante==='function')?empRestante(e):(Number(e.valor)||0),
+          atrasado:(typeof empAtrasado==='function')?empAtrasado(e):false});
+      });
+    }catch(err){ console.error('pn/emprestimos:',err); }
+
+    marcos.sort((a,b)=>a.dt-b.dt);
+    const ganhoTotal=linha.length?linha[linha.length-1].sobra-linha[0].sobra:0;
+    return {linha,marcos,hojeSobra:linha.length?linha[0].sobra:0,ganhoTotal};
+  };
+
+  // ══════════ RENDER ══════════
+  const _op={1:false,2:false};
+  window.pnTg=function(n){
+    _op[n]=!_op[n];
+    const b=document.getElementById('pn-bd'+n), c=document.getElementById('pn-ch'+n);
+    if(!b) return;
+    b.style.display=_op[n]?'block':'none';
+    if(c) c.classList.toggle('op',_op[n]);
+    if(_op[n]) (n===1?pnR1():pnR2());
+  };
+
+  function txtModo(d){
+    if(d.modo==='fixo') return 'antes dos gastos do dia a dia';
+    if(d.modo==='manual') return 'já descontando '+fmtM(d.diaDia)+' do dia a dia';
+    if(d.auto) return 'estimado pelas suas últimas '+d.auto.n+' semanas';
+    return 'anote gastos por 2 semanas para estimar';
+  }
+
+  function pnR1(){
+    const el=document.getElementById('pn-ct1'); if(!el) return;
+    let d; try{ d=pnCalc(); }catch(e){ console.error('pnCalc:',e); return; }
+
+    // cabeçalho
+    const bg=document.getElementById('pn-b1'), sb=document.getElementById('pn-s1');
+    if(bg){
+      if(!d.rendaMes){ bg.className='pn-bg warn'; bg.textContent='⚙️ Sem renda';
+        sb.textContent='Configure quanto você recebe'; }
+      else if(d.sobra<0){ bg.className='pn-bg crit'; bg.textContent='🔴 Falta';
+        sb.textContent='As contas passam do que entra'; }
+      else { bg.className='pn-bg ok'; bg.textContent='✅ '+fmtM(d.sobra);
+        sb.textContent=d.modo==='fixo'?'Antes dos gastos do dia a dia':'Cada real com destino'; }
+    }
+
+    if(!d.rendaMes){
+      el.innerHTML=`<div class="pn-vaz">Configure quanto você recebe para o app
+        calcular para onde vai o seu dinheiro.</div>`;
+      return;
+    }
+
+    let h='';
+    if(d.sobra>=0){
+      h+=`<div class="pn-big"><div class="pn-big-l">Sobra no mês</div>
+        <div class="pn-big-v" style="color:var(--g1)">${fmtM(d.sobra)}</div>
+        <div class="pn-big-s">${fmtM(d.sobra/4.3)} por semana<br>${txtModo(d)}</div></div>`;
+    }else{
+      h+=`<div class="pn-big"><div class="pn-big-l">Falta no mês</div>
+        <div class="pn-big-v" style="color:var(--red)">${fmtM(Math.abs(d.sobra))}</div>
+        <div class="pn-big-s">${txtModo(d)}</div></div>`;
+    }
+
+    // barra
+    const tot=d.rendaMes||1;
+    const pc=Math.max(0,Math.min(100,d.comprometido/tot*100));
+    const pd=Math.max(0,Math.min(100,d.diaDia/tot*100));
+    const pl=Math.max(0,Math.min(100,d.sobra/tot*100));
+    h+=`<div class="pn-bar"><i style="width:${pc}%;background:var(--red)"></i>
+      <i style="width:${pd}%;background:var(--yel)"></i>
+      <i style="width:${pl}%;background:var(--g1)"></i></div>
+      <div class="pn-lg"><span>🔴 contas</span>${d.diaDia>0?'<span>🟡 dia a dia</span>':''}<span>🟢 sobra</span></div>`;
+
+    // seletor de modo
+    h+=`<div class="pn-sec">Gasto do dia a dia</div>
+      <div class="pn-modo">
+        <button class="pn-mb ${d.modo==='fixo'?'on':''}" onclick="pnModo('fixo')">Não contar</button>
+        <button class="pn-mb ${d.modo==='auto'?'on':''}" onclick="pnModo('auto')">Automático</button>
+        <button class="pn-mb ${d.modo==='manual'?'on':''}" onclick="pnModo('manual')">Eu digito</button>
+      </div>`;
+
+    if(d.modo==='fixo'){
+      h+=`<div class="pn-box y">⚠️ Este valor <b>ainda não desconta</b> comida, transporte e
+        farmácia. O que sobra de verdade é menos que isso.</div>`;
+    }else if(d.modo==='auto'){
+      if(d.auto){
+        h+=`<div class="pn-box b">Média de <b>${fmtM(d.auto.mes)}</b> por mês, pelas suas
+          últimas ${d.auto.n} semanas anotadas. Variou entre ${fmtM(d.auto.min)} e ${fmtM(d.auto.max)}.</div>`;
+      }else{
+        h+=`<div class="pn-box y">⚠️ Ainda não há semanas suficientes anotadas.
+          Registre gastos na aba Semana por 2 semanas e o app passa a estimar sozinho.</div>`;
+      }
+    }else{
+      h+=`<button class="pn-btn sec" onclick="pnAbrirManual()">Dia a dia: ${fmtM(d.diaDia)} — alterar</button>`;
+    }
+
+    // lista
+    h+=`<div class="pn-sec">Já tem dono</div>`;
+    if(!d.itens.length){
+      h+=`<div class="pn-vaz">Nenhuma conta em aberto neste mês.</div>`;
+    }else{
+      d.itens.slice().sort((a,b)=>(a.diaVenc||99)-(b.diaVenc||99)).forEach(x=>{
+        const dia=x.diaVenc?`todo dia ${x.diaVenc}`:'sem dia definido';
+        const tp=x.tipo==='fixo'?'conta fixa':x.tipo==='parcela'?'parcela':'cartão';
+        h+=`<div class="pn-i"><div class="pn-e">${x.emoji}</div>
+          <div class="pn-ii"><div class="pn-n">${esc(x.nome)}</div>
+            <div class="pn-d">${tp} · ${dia}</div></div>
+          <div class="pn-v" style="color:var(--red)">${fmtM(x.valor)}</div></div>`;
+      });
+    }
+    if(d.diaDia>0){
+      h+=`<div class="pn-i"><div class="pn-e">🛒</div>
+        <div class="pn-ii"><div class="pn-n">Dia a dia</div>
+          <div class="pn-d">comida, transporte, farmácia</div></div>
+        <div class="pn-v" style="color:var(--yel)">${fmtM(d.diaDia)}</div></div>`;
+    }
+    h+=`<div class="pn-i tot"><div class="pn-e">💚</div>
+      <div class="pn-ii"><div class="pn-n">Sobra</div>
+        <div class="pn-d">${d.modo==='fixo'?'ainda sai o dia a dia daqui':'sem destino definido'}</div></div>
+      <div class="pn-v" style="color:${d.sobra>=0?'var(--g1)':'var(--red)'}">${fmtM(d.sobra)}</div></div>`;
+
+    if(d.saldo===null){
+      h+=`<div class="pn-box y">⚠️ Você não informou quanto tem na conta.
+        Informe o saldo real para o número ficar exato.</div>`;
+    }
+
+    el.innerHTML=h;
+  }
+
+  function pnR2(){
+    const el=document.getElementById('pn-ct2'); if(!el) return;
+    let d,p;
+    try{ d=pnCalc(); p=pnProj(18); }catch(e){ console.error('pnProj:',e); return; }
+
+    const bg=document.getElementById('pn-b2'), sb=document.getElementById('pn-s2');
+    const alivios=p.marcos.filter(m=>m.tipo==='alivio');
+    const saidas=p.marcos.filter(m=>m.tipo==='saida');
+    if(bg){
+      if(!d.rendaMes){ bg.className='pn-bg warn'; bg.textContent='—';
+        sb.textContent='Configure sua renda'; }
+      else if(saidas.some(s=>s.atrasado)){ bg.className='pn-bg crit'; bg.textContent='🔴 Atrasado';
+        sb.textContent='Tem empréstimo vencido'; }
+      else if(p.ganhoTotal>0.5){ bg.className='pn-bg ok'; bg.textContent='+'+fmtM(p.ganhoTotal);
+        sb.textContent=`${alivios.length} alívio${alivios.length>1?'s':''} pela frente`; }
+      else { bg.className='pn-bg warn'; bg.textContent='estável';
+        sb.textContent='Sem mudanças nos próximos 18 meses'; }
+    }
+
+    if(!d.rendaMes){
+      el.innerHTML=`<div class="pn-vaz">Configure quanto você recebe para ver a projeção.</div>`;
+      return;
+    }
+
+    let h='';
+    if(p.ganhoTotal>0.5){
+      h+=`<div class="pn-big"><div class="pn-big-l">Daqui a 18 meses</div>
+        <div class="pn-big-v" style="color:var(--g1)">+${fmtM(p.ganhoTotal)}</div>
+        <div class="pn-big-s">a mais sobrando por mês,<br>conforme as parcelas vão acabando</div></div>`;
+    }else{
+      h+=`<div class="pn-big"><div class="pn-big-l">Sobra por mês</div>
+        <div class="pn-big-v" style="color:var(--text)">${fmtM(p.hojeSobra)}</div>
+        <div class="pn-big-s">sem mudanças previstas nos próximos 18 meses</div></div>`;
+    }
+
+    h+=`<div class="pn-mk">`;
+    h+=`<div class="pn-mki now"><div class="pn-mkd">Hoje · ${MESES[d.mes-1]}/${String(d.ano).slice(2)}</div>
+      <div class="pn-mkv now">${fmtM(p.hojeSobra)}</div>
+      <div class="pn-mkx">é o que sobra por mês agora</div></div>`;
+
+    if(!p.marcos.length){
+      h+=`<div class="pn-mki"><div class="pn-mkd">Próximos 18 meses</div>
+        <div class="pn-mkv">${fmtM(p.hojeSobra)}</div>
+        <div class="pn-mkx">nenhuma parcela termina nesse período</div></div>`;
+    }
+    p.marcos.forEach(m=>{
+      const dt=`${MESES[m.mes-1]}/${String(m.ano).slice(2)}`;
+      if(m.tipo==='alivio'){
+        const nm=m.saiu.length?`<b>${esc(m.saiu.join(' e '))}</b> ${m.saiu.length>1?'acabam':'acaba'} · `:'';
+        h+=`<div class="pn-mki"><div class="pn-mkd">${dt}</div>
+          <div class="pn-mkv">${fmtM(m.sobra)}</div>
+          <div class="pn-mkx">${nm}+${fmtM(m.ganho)} por mês</div></div>`;
+      }else{
+        h+=`<div class="pn-mki out"><div class="pn-mkd">${dt}${m.atrasado?' · ATRASADO':''}</div>
+          <div class="pn-mkv out">− ${fmtM(m.valor)}</div>
+          <div class="pn-mkx">precisa quitar <b>${esc(m.pessoa)}</b></div></div>`;
+      }
+    });
+    h+=`</div>`;
+
+    h+=`<div class="pn-box y">⚠️ A projeção assume que sua renda e seus gastos continuam
+      como estão hoje, e <b>considera só as parcelas já cadastradas</b> — compras novas
+      no cartão não entram.</div>`;
+
+    h+=`<button class="pn-btn" onclick="pnPanorama()">📊 Gerar panorama em PDF</button>`;
+    el.innerHTML=h;
+  }
+
+  window.pnHead=function(){
+    try{
+      const d=pnCalc();
+      const bg1=document.getElementById('pn-b1'), sb1=document.getElementById('pn-s1');
+      if(bg1){
+        if(!d.rendaMes){ bg1.className='pn-bg warn'; bg1.textContent='⚙️ Sem renda';
+          sb1.textContent='Configure quanto você recebe'; }
+        else if(d.sobra<0){ bg1.className='pn-bg crit'; bg1.textContent='🔴 Falta';
+          sb1.textContent='As contas passam do que entra'; }
+        else { bg1.className='pn-bg ok'; bg1.textContent='✅ '+fmtM(d.sobra);
+          sb1.textContent=d.modo==='fixo'?'Antes dos gastos do dia a dia':'Cada real com destino'; }
+      }
+      const p=pnProj(18);
+      const bg2=document.getElementById('pn-b2'), sb2=document.getElementById('pn-s2');
+      const al=p.marcos.filter(m=>m.tipo==='alivio');
+      if(bg2){
+        if(!d.rendaMes){ bg2.className='pn-bg warn'; bg2.textContent='—'; sb2.textContent='Configure sua renda'; }
+        else if(p.marcos.some(m=>m.tipo==='saida'&&m.atrasado)){ bg2.className='pn-bg crit';
+          bg2.textContent='🔴 Atrasado'; sb2.textContent='Tem empréstimo vencido'; }
+        else if(p.ganhoTotal>0.5){ bg2.className='pn-bg ok'; bg2.textContent='+'+fmtM(p.ganhoTotal);
+          sb2.textContent=`${al.length} alívio${al.length>1?'s':''} pela frente`; }
+        else { bg2.className='pn-bg warn'; bg2.textContent='estável';
+          sb2.textContent='Sem mudanças nos próximos 18 meses'; }
+      }
+      if(_op[1]) pnR1();
+      if(_op[2]) pnR2();
+    }catch(e){ console.error('pnHead:',e); }
+  };
+
+  // ══════════ AÇÕES ══════════
+  window.pnModo=function(m){
+    S.diaDiaModo=m;
+    if(m==='manual' && !S.pisoEssencial){ try{ save(); }catch(e){} pnAbrirManual(); return; }
+    try{ save(); }catch(e){ console.error(e); }
+    pnHead();
+  };
+  window.pnAbrirManual=function(){
+    const i=document.getElementById('pn-inp');
+    if(i) i.value=S.pisoEssencial||'';
+    document.getElementById('mbk-pn').classList.add('op');
+  };
+  window.pnSalvarManual=function(){
+    const v=parseFloat(document.getElementById('pn-inp').value);
+    if(isNaN(v)||v<0){ alert('Digite um valor válido.'); return; }
+    S.pisoEssencial=v; S.diaDiaModo='manual';
+    try{ save(); }catch(e){ console.error(e); }
+    document.getElementById('mbk-pn').classList.remove('op');
+    pnHead();
+    if(typeof showToast==='function') showToast('✅ Salvo');
+  };
+
+  // ══════════ PANORAMA PDF ══════════
+  window.pnPanorama=function(){
+    let d,p;
+    try{ d=pnCalc(); p=pnProj(18); }catch(e){ alert('Não foi possível gerar.'); return; }
+    const lin=d.itens.slice().sort((a,b)=>(a.diaVenc||99)-(b.diaVenc||99)).map(x=>
+      `<tr><td>${x.emoji} ${esc(x.nome)}</td>
+       <td style="text-align:center">${x.diaVenc?'dia '+x.diaVenc:'—'}</td>
+       <td style="text-align:center">${x.tipo==='fixo'?'fixo':x.tipo==='parcela'?'parcela':'cartão'}</td>
+       <td style="text-align:right">${fmtM(x.valor)}</td></tr>`).join('');
+    const mk=p.marcos.map(m=>{
+      const dt=`${MESES_L[m.mes-1]}/${m.ano}`;
+      return m.tipo==='alivio'
+        ? `<tr><td><b>${dt}</b></td><td>${esc(m.saiu.join(', ')||'—')} termina</td>
+           <td style="text-align:right;color:#27AE60">+${fmtM(m.ganho)}</td>
+           <td style="text-align:right"><b>${fmtM(m.sobra)}</b></td></tr>`
+        : `<tr><td><b>${dt}</b></td><td>Quitar ${esc(m.pessoa)}</td>
+           <td style="text-align:right;color:#E8637A">−${fmtM(m.valor)}</td>
+           <td style="text-align:right">—</td></tr>`;
+    }).join('');
+
+    const modoTxt = d.modo==='fixo' ? 'Gastos do dia a dia não incluídos nesta conta.'
+      : d.modo==='auto' ? `Dia a dia estimado em ${fmtM(d.diaDia)} pela média das últimas semanas anotadas.`
+      : `Dia a dia informado manualmente: ${fmtM(d.diaDia)}.`;
+
+    const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Panorama FinTrack — ${MESES_L[d.mes-1]} ${d.ano}</title><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;background:#f0f0f0;padding:24px}
+.pg{background:#fff;max-width:700px;margin:0 auto;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+.hd{background:linear-gradient(135deg,#27AE60,#2ecc71);padding:24px 28px;color:#fff;display:flex;align-items:center;gap:14px}
+.lg{width:44px;height:44px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800}
+.hd h1{font-size:20px;font-weight:800;margin-bottom:3px}
+.hd .sb{font-size:12px;opacity:.85}
+.bd{padding:24px 28px}
+.sm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+.sc{background:#f8f9fa;border-radius:10px;padding:12px 14px;border-left:3px solid #27AE60}
+.sc.r{border-color:#E8637A}.sc.y{border-color:#F39C12}
+.sc-l{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
+.sc-v{font-size:17px;font-weight:800;margin-top:3px}
+section{margin-bottom:22px}
+section h2{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:1.5px solid #eee}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;padding:5px 7px;border-bottom:2px solid #eee}
+td{padding:8px 7px;border-bottom:1px solid #f2f2f2;color:#333}
+.tr td{font-weight:700;border-top:2px solid #eee;padding-top:9px}
+.av{background:#fef9ec;border-left:3px solid #F39C12;border-radius:8px;padding:11px 14px;font-size:11px;color:#7d5a00;line-height:1.6;margin-top:6px}
+.ft{background:#f8f9fa;padding:12px 28px;text-align:center;font-size:11px;color:#aaa;border-top:1px solid #eee}
+@media print{body{background:#fff;padding:0}.pg{box-shadow:none;border-radius:0}}
+\u003C/style></head><body><div class="pg">
+<div class="hd"><div class="lg">F</div><div><h1>Panorama financeiro</h1>
+  <div class="sb">${MESES_L[d.mes-1]} de ${d.ano} &nbsp;•&nbsp; gerado em ${new Date().toLocaleDateString('pt-BR')}</div></div></div>
+<div class="bd">
+<div class="sm">
+  <div class="sc"><div class="sc-l">Entra por mês</div><div class="sc-v" style="color:#27AE60">${fmtM(d.rendaMes)}</div></div>
+  <div class="sc r"><div class="sc-l">Já tem dono</div><div class="sc-v" style="color:#E8637A">${fmtM(d.comprometido+d.diaDia)}</div></div>
+  <div class="sc y"><div class="sc-l">Sobra</div><div class="sc-v" style="color:${d.sobra>=0?'#27AE60':'#E8637A'}">${fmtM(d.sobra)}</div></div>
+</div>
+<section><h2>Para onde vai o dinheiro deste mês</h2><table>
+<thead><tr><th>Item</th><th style="text-align:center">Vencimento</th><th style="text-align:center">Tipo</th><th style="text-align:right">Valor</th></tr></thead>
+<tbody>${lin||'<tr><td colspan="4" style="color:#aaa">Nenhuma conta em aberto</td></tr>'}
+${d.diaDia>0?`<tr><td>🛒 Dia a dia</td><td style="text-align:center">—</td><td style="text-align:center">variável</td><td style="text-align:right">${fmtM(d.diaDia)}</td></tr>`:''}
+<tr class="tr"><td colspan="3">Sobra</td><td style="text-align:right">${fmtM(d.sobra)}</td></tr>
+</tbody></table><div class="av">${modoTxt}</div></section>
+${mk?`<section><h2>O que muda pela frente</h2><table>
+<thead><tr><th>Quando</th><th>O que acontece</th><th style="text-align:right">Efeito</th><th style="text-align:right">Nova sobra</th></tr></thead>
+<tbody>${mk}</tbody></table></section>`:''}
+<div class="av">⚠️ A projeção assume renda e gastos constantes e considera só as parcelas
+já cadastradas. Compras novas no cartão não entram nesta conta.</div>
+</div><div class="ft">FinTrack &nbsp;•&nbsp; meufintrack.github.io</div>
+</div></body></html>`;
+    const w=window.open('','_blank');
+    if(!w){ alert('Permita janelas pop-up para gerar o panorama.'); return; }
+    w.document.write(html); w.document.close();
+  };
+
+  // ══════════ GANCHOS (embrulha, não edita) ══════════
+  function wrap(n){
+    const o=window[n]; if(typeof o!=='function') return;
+    window[n]=function(){ const r=o.apply(this,arguments);
+      try{ pnHead(); }catch(e){ console.error('pn/'+n+':',e); } return r; };
+  }
+  ['updKPIs','updAll'].forEach(wrap);
+  setTimeout(()=>{ try{ pnHead(); }catch(e){} },700);
+
+})();
+</script>
+
 </body>
 </html>
