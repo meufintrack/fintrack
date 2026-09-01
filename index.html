@@ -4714,8 +4714,9 @@ loadLocal();
 </script>
 
 <!-- ═══ FinTrack — PANORAMA FINANCEIRO ═══
-     Card 'Onde vai o dinheiro' + 'Quando sobra mais' + panorama em PDF.
-     Módulo aditivo: não altera nenhuma função das outras abas.
+     Cards 'Onde vai o dinheiro' e 'Quando sobra mais' + panorama em PDF.
+     Janela deslizante (7 ou 30 dias a partir de hoje).
+     A Saúde Financeira antiga fica escondida (não apagada).
 -->
 <script>
 (function(){
@@ -4758,6 +4759,7 @@ loadLocal();
   .pn-v{font-size:13.5px;font-weight:800;flex-shrink:0}
   .pn-i.tot{border-top:2px solid var(--border);border-bottom:none;margin-top:4px;padding-top:13px}
   .pn-modo{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0 4px}
+  .pn-per{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0 2px}
   .pn-mb{padding:8px 4px;border:1.5px solid var(--border);border-radius:var(--rs);background:none;
     font-family:var(--font);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s}
   .pn-mb.on{border-color:var(--g1);background:var(--gpale);color:var(--g1)}
@@ -4829,6 +4831,9 @@ loadLocal();
   function inject(){
     const a=document.getElementById('saude-card');
     if(a && !document.getElementById('pn-c1')) a.insertAdjacentHTML('afterend',cards);
+    // Saúde Financeira aposentada: escondida, NÃO apagada.
+    // Para trazer de volta, remova a linha abaixo.
+    if(a) a.style.display='none';
     if(!document.getElementById('mbk-pn')){
       document.body.insertAdjacentHTML('beforeend',modal);
       const m=document.getElementById('mbk-pn');
@@ -4860,6 +4865,20 @@ loadLocal();
     if(isNaN(ini)) return null;
     const d=new Date(ini.getFullYear(), ini.getMonth()+Number(p.total)-1, 1);
     return {ano:d.getFullYear(), mes:d.getMonth()+1};
+  }
+
+  function diasNoMes(y,m){ return new Date(y,m+1,0).getDate(); }
+
+  // Todas as ocorrências de um dia-do-mês dentro de [ini,fim]
+  function ocorrencias(dia,ini,fim){
+    const out=[]; const d0=Number(dia); if(!d0) return out;
+    const y=ini.getFullYear(), m=ini.getMonth();
+    for(let k=0;k<3;k++){
+      const dm=diasNoMes(y,m+k);
+      const d=new Date(y,m+k,Math.min(d0,dm));
+      if(d>=ini && d<=fim) out.push(d);
+    }
+    return out;
   }
 
   // Semanas de gasto registradas → array de totais
@@ -4918,8 +4937,8 @@ loadLocal();
     return {itens,total};
   }
 
-  // ── Tudo que sai num mês ──
-  function saidasDoMes(ano,mes,ehMesAtual){
+  // ── Tudo que sai num mês de calendário (usado pela PROJEÇÃO) ──
+  function saidasMes(ano,mes,ehMesAtual){
     const itens=[]; 
     const idsCartao=new Set((S.cartoes||[]).map(c=>c.id));
 
@@ -4949,21 +4968,99 @@ loadLocal();
     return {itens,total};
   }
 
+
+  // ── Tudo que vence numa JANELA que começa hoje (usado pelo CARD 1) ──
+  function saidasPeriodo(ini,fim){
+    const itens=[];
+    const idsCartao=new Set((S.cartoes||[]).map(c=>c.id));
+
+    (S.fixos||[]).forEach(f=>{
+      const v=Number(f.valor)||0; if(v<=0) return;
+      ocorrencias(f.diaVenc,ini,fim).forEach(d=>{
+        const mm=d.getMonth()+1, yy=d.getFullYear();
+        const pago=(S.fixosPagos||[]).some(x=>x.id===f.id&&parseInt(x.mes)===mm&&parseInt(x.ano)===yy);
+        if(pago) return;
+        itens.push({nome:f.nome||'Conta fixa',emoji:'\uD83D\uDCCC',valor:v,data:d,tipo:'fixo'});
+      });
+    });
+
+    (S.parcelas||[]).forEach(p=>{
+      const v=Number(p.valor)||0; if(v<=0) return;
+      if(p.cartaoId && idsCartao.has(p.cartaoId)) return; // conta dentro da fatura
+      ocorrencias(p.diaVenc,ini,fim).forEach(d=>{
+        const mm=d.getMonth()+1, yy=d.getFullYear();
+        if(!parcAtiva(p,yy,mm)) return;
+        const pago=(p.pagas||[]).some(x=>parseInt(x.mes)===mm&&parseInt(x.ano)===yy);
+        if(pago) return;
+        itens.push({nome:p.desc||'Parcela',emoji:'\uD83D\uDCB3',valor:v,data:d,tipo:'parcela'});
+      });
+    });
+
+    (S.cartoes||[]).forEach(c=>{
+      ocorrencias(c.venc,ini,fim).forEach(d=>{
+        const mm=d.getMonth()+1, yy=d.getFullYear();
+        const f=(c.faturas||[]).find(x=>parseInt(x.mes)===mm&&parseInt(x.ano)===yy);
+        let val=0, prev=false;
+        if(f){
+          val=Math.max(0,(Number(f.valor)||0)+(Number(f.gastosApp)||0)-(Number(f.valorPago)||0));
+        }else{
+          (S.parcelas||[]).forEach(p=>{
+            if(p.cartaoId===c.id && parcAtiva(p,yy,mm)) val+=Number(p.valor)||0;
+          });
+          prev=true;
+        }
+        if(val>0.01) itens.push({nome:'Fatura '+(c.nome||'cart\u00e3o')+(prev?' (previsto)':''),
+          emoji:'\uD83D\uDCB3',valor:val,data:d,tipo:'fatura'});
+      });
+    });
+
+    try{
+      (S.emprestimos||[]).forEach(e=>{
+        if(e.tipo!=='peguei') return;
+        if(typeof empQuitado==='function' && empQuitado(e)) return;
+        const v=(typeof empVenc==='function')?empVenc(e):(e.venc||null);
+        if(!v||typeof v!=='string') return;
+        const [yy,mm,dd]=v.split('-').map(Number); if(!yy||!mm) return;
+        const d=new Date(yy,mm-1,dd||1);
+        const atr=(typeof empAtrasado==='function')?empAtrasado(e):false;
+        if((d>=ini&&d<=fim)||atr){
+          itens.push({nome:e.pessoa||'Empr\u00e9stimo',emoji:'\uD83E\uDD1D',
+            valor:(typeof empRestante==='function')?empRestante(e):(Number(e.valor)||0),
+            data:d,tipo:'emprestimo',atrasado:atr});
+        }
+      });
+    }catch(err){ console.error('pn/emp-periodo:',err); }
+
+    itens.sort((a,b)=>a.data-b.data);
+    return {itens,total:itens.reduce((a,x)=>a+x.valor,0)};
+  }
+
   // ══════════ CÁLCULO PRINCIPAL ══════════
+  function periodo(){ return S.pnPeriodo==='semana' ? 'semana' : 'mes'; }
+
   window.pnCalc=function(){
     const hoje=new Date(); hoje.setHours(0,0,0,0);
     const ano=hoje.getFullYear(), mes=hoje.getMonth()+1;
-    const rm=rendaMes(), dd=diaDiaValor(), md=modo();
-    const s=saidasDoMes(ano,mes,true);
-    const sobra=rm-dd-s.total;
+    const per=periodo(), dias=(per==='semana')?7:30;
+    const fim=new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()+dias-1);
+
+    // renda e dia a dia proporcionais à janela
+    const renda=rendaSem()*(dias/7);
+    const ddMes=diaDiaValor();
+    const dd=ddMes*(dias/30);
+    const md=modo();
+
+    const s=saidasPeriodo(hoje,fim);
+    const sobra=renda-dd-s.total;
 
     let saldo=null;
     try{ saldo=calcSaldoReal(); }catch(e){}
 
     const auto=mediaAuto();
-    const semDados = (md==='auto' && !auto);
+    const semDados=(md==='auto' && !auto);
 
-    return {ano,mes,hoje,rendaMes:rm,diaDia:dd,modo:md,auto,semDados,
+    return {ano,mes,hoje,fim,per,dias,renda,rendaMes:rendaMes(),
+      diaDia:dd,diaDiaMes:ddMes,modo:md,auto,semDados,
       itens:s.itens,comprometido:s.total,sobra,saldo};
   };
 
@@ -4976,7 +5073,7 @@ loadLocal();
     for(let i=0;i<N;i++){
       const d=new Date(hoje.getFullYear(),hoje.getMonth()+i,1);
       const a=d.getFullYear(), m=d.getMonth()+1;
-      const s=saidasDoMes(a,m,i===0);
+      const s=saidasMes(a,m,i===0);
       linha.push({ano:a,mes:m,dt:d,saidas:s.total,sobra:rm-dd-s.total});
     }
     // marcos verdes: mês em que a sobra sobe
@@ -5036,8 +5133,8 @@ loadLocal();
   function txtModo(d){
     if(d.modo==='fixo') return 'antes dos gastos do dia a dia';
     if(d.modo==='manual') return 'já descontando '+fmtM(d.diaDia)+' do dia a dia';
-    if(d.auto) return 'estimado pelas suas últimas '+d.auto.n+' semanas';
-    return 'anote gastos por 2 semanas para estimar';
+    if(d.auto) return 'dia a dia estimado em '+fmtM(d.diaDia)+' pelas suas últimas '+d.auto.n+' semanas';
+    return 'anote gastos por 2 semanas para estimar o dia a dia';
   }
 
   function pnR1(){
@@ -5061,19 +5158,27 @@ loadLocal();
       return;
     }
 
+    const janela = d.per==='semana' ? 'nos próximos 7 dias' : 'nos próximos 30 dias';
+    const ate = `até ${String(d.fim.getDate()).padStart(2,'0')}/${String(d.fim.getMonth()+1).padStart(2,'0')}`;
+
     let h='';
+    h+=`<div class="pn-per">
+      <button class="pn-mb ${d.per==='semana'?'on':''}" onclick="pnPer('semana')">Esta semana</button>
+      <button class="pn-mb ${d.per==='mes'?'on':''}" onclick="pnPer('mes')">Próximos 30 dias</button>
+    </div>`;
+
     if(d.sobra>=0){
-      h+=`<div class="pn-big"><div class="pn-big-l">Sobra no mês</div>
+      h+=`<div class="pn-big"><div class="pn-big-l">Sobra ${janela}</div>
         <div class="pn-big-v" style="color:var(--g1)">${fmtM(d.sobra)}</div>
-        <div class="pn-big-s">${fmtM(d.sobra/4.3)} por semana<br>${txtModo(d)}</div></div>`;
+        <div class="pn-big-s">${ate} · entram ${fmtM(d.renda)}<br>${txtModo(d)}</div></div>`;
     }else{
-      h+=`<div class="pn-big"><div class="pn-big-l">Falta no mês</div>
+      h+=`<div class="pn-big"><div class="pn-big-l">Falta ${janela}</div>
         <div class="pn-big-v" style="color:var(--red)">${fmtM(Math.abs(d.sobra))}</div>
-        <div class="pn-big-s">${txtModo(d)}</div></div>`;
+        <div class="pn-big-s">${ate} · entram ${fmtM(d.renda)}<br>${txtModo(d)}</div></div>`;
     }
 
     // barra
-    const tot=d.rendaMes||1;
+    const tot=d.renda||1;
     const pc=Math.max(0,Math.min(100,d.comprometido/tot*100));
     const pd=Math.max(0,Math.min(100,d.diaDia/tot*100));
     const pl=Math.max(0,Math.min(100,d.sobra/tot*100));
@@ -5106,17 +5211,25 @@ loadLocal();
     }
 
     // lista
-    h+=`<div class="pn-sec">Já tem dono</div>`;
+    h+=`<div class="pn-sec">O que vence ${d.per==='semana'?'nesta semana':'nos próximos 30 dias'}</div>`;
     if(!d.itens.length){
-      h+=`<div class="pn-vaz">Nenhuma conta em aberto neste mês.</div>`;
+      h+=`<div class="pn-vaz">Nada vence neste período.</div>`;
     }else{
-      d.itens.slice().sort((a,b)=>(a.diaVenc||99)-(b.diaVenc||99)).forEach(x=>{
-        const dia=x.diaVenc?`todo dia ${x.diaVenc}`:'sem dia definido';
-        const tp=x.tipo==='fixo'?'conta fixa':x.tipo==='parcela'?'parcela':'cartão';
+      const hj=new Date(); hj.setHours(0,0,0,0);
+      d.itens.forEach(x=>{
+        const dd2=Math.round((x.data-hj)/86400000);
+        let quando = x.atrasado ? 'ATRASADO'
+          : dd2<0 ? 'venceu'
+          : dd2===0 ? 'vence hoje'
+          : dd2===1 ? 'vence amanhã'
+          : `em ${dd2} dias · ${String(x.data.getDate()).padStart(2,'0')}/${String(x.data.getMonth()+1).padStart(2,'0')}`;
+        const tp = x.tipo==='fixo'?'conta fixa' : x.tipo==='parcela'?'parcela'
+                 : x.tipo==='fatura'?'cartão' : 'empréstimo';
+        const cor = (x.atrasado||dd2<=1) ? 'var(--red)' : 'var(--red)';
         h+=`<div class="pn-i"><div class="pn-e">${x.emoji}</div>
           <div class="pn-ii"><div class="pn-n">${esc(x.nome)}</div>
-            <div class="pn-d">${tp} · ${dia}</div></div>
-          <div class="pn-v" style="color:var(--red)">${fmtM(x.valor)}</div></div>`;
+            <div class="pn-d" style="${x.atrasado?'color:var(--red);font-weight:700':''}">${tp} · ${quando}</div></div>
+          <div class="pn-v" style="color:${cor}">${fmtM(x.valor)}</div></div>`;
       });
     }
     if(d.diaDia>0){
@@ -5216,7 +5329,8 @@ loadLocal();
         else if(d.sobra<0){ bg1.className='pn-bg crit'; bg1.textContent='🔴 Falta';
           sb1.textContent='As contas passam do que entra'; }
         else { bg1.className='pn-bg ok'; bg1.textContent='✅ '+fmtM(d.sobra);
-          sb1.textContent=d.modo==='fixo'?'Antes dos gastos do dia a dia':'Cada real com destino'; }
+          sb1.textContent=(d.per==='semana'?'Próximos 7 dias':'Próximos 30 dias')+
+            (d.modo==='fixo'?' · sem o dia a dia':''); }
       }
       const p=pnProj(18);
       const bg2=document.getElementById('pn-b2'), sb2=document.getElementById('pn-s2');
@@ -5236,6 +5350,11 @@ loadLocal();
   };
 
   // ══════════ AÇÕES ══════════
+  window.pnPer=function(p){
+    S.pnPeriodo=p;
+    try{ save(); }catch(e){ console.error(e); }
+    pnHead();
+  };
   window.pnModo=function(m){
     S.diaDiaModo=m;
     if(m==='manual' && !S.pisoEssencial){ try{ save(); }catch(e){} pnAbrirManual(); return; }
@@ -5261,10 +5380,10 @@ loadLocal();
   window.pnPanorama=function(){
     let d,p;
     try{ d=pnCalc(); p=pnProj(18); }catch(e){ alert('Não foi possível gerar.'); return; }
-    const lin=d.itens.slice().sort((a,b)=>(a.diaVenc||99)-(b.diaVenc||99)).map(x=>
+    const lin=d.itens.map(x=>
       `<tr><td>${x.emoji} ${esc(x.nome)}</td>
-       <td style="text-align:center">${x.diaVenc?'dia '+x.diaVenc:'—'}</td>
-       <td style="text-align:center">${x.tipo==='fixo'?'fixo':x.tipo==='parcela'?'parcela':'cartão'}</td>
+       <td style="text-align:center">${String(x.data.getDate()).padStart(2,'0')}/${String(x.data.getMonth()+1).padStart(2,'0')}</td>
+       <td style="text-align:center">${x.tipo==='fixo'?'fixo':x.tipo==='parcela'?'parcela':x.tipo==='fatura'?'cartão':'empréstimo'}</td>
        <td style="text-align:right">${fmtM(x.valor)}</td></tr>`).join('');
     const mk=p.marcos.map(m=>{
       const dt=`${MESES_L[m.mes-1]}/${m.ano}`;
@@ -5310,11 +5429,11 @@ td{padding:8px 7px;border-bottom:1px solid #f2f2f2;color:#333}
   <div class="sb">${MESES_L[d.mes-1]} de ${d.ano} &nbsp;•&nbsp; gerado em ${new Date().toLocaleDateString('pt-BR')}</div></div></div>
 <div class="bd">
 <div class="sm">
-  <div class="sc"><div class="sc-l">Entra por mês</div><div class="sc-v" style="color:#27AE60">${fmtM(d.rendaMes)}</div></div>
+  <div class="sc"><div class="sc-l">Entra no período</div><div class="sc-v" style="color:#27AE60">${fmtM(d.renda)}</div></div>
   <div class="sc r"><div class="sc-l">Já tem dono</div><div class="sc-v" style="color:#E8637A">${fmtM(d.comprometido+d.diaDia)}</div></div>
   <div class="sc y"><div class="sc-l">Sobra</div><div class="sc-v" style="color:${d.sobra>=0?'#27AE60':'#E8637A'}">${fmtM(d.sobra)}</div></div>
 </div>
-<section><h2>Para onde vai o dinheiro deste mês</h2><table>
+<section><h2>O que vence ${d.per==='semana'?'nos próximos 7 dias':'nos próximos 30 dias'}</h2><table>
 <thead><tr><th>Item</th><th style="text-align:center">Vencimento</th><th style="text-align:center">Tipo</th><th style="text-align:right">Valor</th></tr></thead>
 <tbody>${lin||'<tr><td colspan="4" style="color:#aaa">Nenhuma conta em aberto</td></tr>'}
 ${d.diaDia>0?`<tr><td>🛒 Dia a dia</td><td style="text-align:center">—</td><td style="text-align:center">variável</td><td style="text-align:right">${fmtM(d.diaDia)}</td></tr>`:''}
