@@ -1913,12 +1913,31 @@ function setParcFilter(f){
   document.querySelectorAll('.pf-btn').forEach(b=>b.classList.toggle('on',b.dataset.pf===f));
   renderParcelas();
 }
+// Quantas parcelas foram efetivamente pagas (registro real em pagas[]),
+// com fallback para o contador "atual" digitado no cadastro.
+function _parcPagas(p){
+  const reg=(p.pagas&&p.pagas.length)?p.pagas.length:0;
+  const dig=Math.max(0,(Number(p.atual)||1)-1);
+  return Math.min(Number(p.total)||1, Math.max(reg,dig));
+}
+// Número da parcela em curso (1-based)
+function _parcAtual(p){
+  return Math.min(Number(p.total)||1, _parcPagas(p)+1);
+}
+// Está dentro do período de cobrança neste mês?
+function _parcAtivaAgora(p){
+  if(!p.dataIni||!p.total) return true;
+  const di=new Date(p.dataIni+'T12:00:00'); if(isNaN(di)) return true;
+  const h=new Date();
+  const idx=(h.getFullYear()-di.getFullYear())*12+(h.getMonth()-di.getMonth());
+  return idx>=0 && idx<Number(p.total);
+}
 function parcStatus(p){
   // Finalizada = todos os pagamentos confirmados em pagas[]
   if(p.pagas && p.pagas.length >= p.total) return 'finalizada';
-  if(p.atual>p.total && p.pagas && p.pagas.length >= p.total) return 'finalizada';
-  if(p.total-p.atual+1<=2) return 'quitada';
-  if(p.atual<=2) return 'inicio';
+  const at=_parcAtual(p);
+  if(p.total-at+1<=2) return 'quitada';
+  if(at<=2) return 'inicio';
   return 'normal';
 }
 function parcelaPagaHoje(p){
@@ -2104,9 +2123,11 @@ function renderParcelas(){
   }
   el.innerHTML=html||'<div class="empty"><div class="icon">🔍</div>Nenhuma parcela nessa categoria.</div>';
 
-  const allTM=S.parcelas.filter(p=>parcStatus(p)!=='finalizada').reduce((a,p)=>a+p.valor,0);
-  const allTP=S.parcelas.reduce((a,p)=>a+p.valor*(p.atual-1),0);
-  const allTF=S.parcelas.filter(p=>parcStatus(p)!=='finalizada').reduce((a,p)=>a+p.valor*(p.total-p.atual+1),0);
+  const allTM=S.parcelas.filter(p=>parcStatus(p)!=='finalizada'&&_parcAtivaAgora(p))
+    .reduce((a,p)=>a+p.valor,0);
+  const allTP=S.parcelas.reduce((a,p)=>a+p.valor*_parcPagas(p),0);
+  const allTF=S.parcelas.filter(p=>parcStatus(p)!=='finalizada')
+    .reduce((a,p)=>a+p.valor*Math.max(0,(Number(p.total)||0)-_parcPagas(p)),0);
   document.getElementById('s-parc-mes').textContent=fmtM(allTM);
   document.getElementById('s-parc-pago').textContent=fmtM(allTP);
   document.getElementById('s-parc-falta').textContent=fmtM(allTF);
@@ -2145,9 +2166,13 @@ function _diasAteVenc(p){
 }
 function renderCard(p){
   const expanded=_parcExpanded===p.id;
-  const pct=Math.round((p.atual-1)/p.total*100);
-  const rest=p.total-p.atual+1;
-  const barC=pct>=80?'var(--g2)':pct>=40?'var(--yel)':'var(--red)';
+  const _pagas=_parcPagas(p);
+  const _at=_parcAtual(p);
+  const _ultima=(_at===p.total && parcStatus(p)!=='finalizada');
+  const _pctPago=Math.round(_pagas/p.total*100);
+  const pct=_ultima?Math.max(_pctPago,88):_pctPago;
+  const rest=Math.max(0,(Number(p.total)||0)-_pagas);
+  const barC=_ultima?'var(--g1)':(pct>=80?'var(--g2)':pct>=40?'var(--yel)':'var(--red)');
   const pgH=parcelaPagaHoje(p);
   const atrasada=parcelaAtrasada(p);
   const st=parcStatus(p);
@@ -2171,7 +2196,7 @@ function renderCard(p){
       </div>
       <div class="pcc-right">
         <div class="pcc-val">${fmtM(p.valor)}</div>
-        <div class="pcc-prog">${(p.atual===p.total&&st!=='finalizada')?'<span style="color:var(--g1);font-weight:800">🎉 última!</span>':p.atual+'/'+p.total}</div>
+        <div class="pcc-prog">${_ultima?'<span style="color:var(--g1);font-weight:800">🎉 última!</span>':_at+'/'+p.total}</div>
       </div>
       <div class="pcc-arrow">${expanded?'▲':'▼'}</div>
     </div>
@@ -2192,7 +2217,7 @@ function renderCard(p){
       ${atrasada&&!pgH?`<div class="deficit-row">⚠️ Em atraso — ${fmtM(p.valor)} não entra no saldo</div>`:''}
       <div class="proj-card" style="margin-top:8px">
         <div class="proj-title">📈 Projeção</div>
-        <div class="proj-row"><span>Já pago</span><strong>${fmtM(p.valor*(p.atual-1))}</strong></div>
+        <div class="proj-row"><span>Já pago</span><strong>${fmtM(p.valor*_pagas)}</strong></div>
         <div class="proj-row"><span>Ainda falta</span><strong style="color:var(--yel)">${fmtM(p.valor*rest)}</strong></div>
         ${fim?`<div class="proj-row"><span>Quitado em</span><strong>${fmtDate(fim)}</strong></div>`:''}
       </div>
@@ -2238,7 +2263,7 @@ function renderChkList(){
       <div class="chk-check">${done?'✓':''}</div>
       <div class="chk-info">
         <div class="chk-name">${esc(p.desc)}</div>
-        <div class="chk-val">${fmtM(p.valor)} · ${p.atual}ª de ${p.total}</div>
+        <div class="chk-val">${fmtM(p.valor)} · ${_parcAtual(p)}ª de ${p.total}</div>
         ${p.diaVenc===dia?`<div class="chk-due">⚠️ Vence hoje</div>`:''}
       </div>
       <span class="badge ${done?'b-ok':'b-pend'}">${done?'✅':'⏳'}</span>
