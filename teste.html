@@ -1198,6 +1198,36 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
     <div id="lista-cartoes"></div>
   </div>
 
+  <!-- MODAL PARCELAR FATURA -->
+  <div class="mbk" id="mbk-parcelar">
+    <div class="modal">
+      <div class="mhead"><h3 id="pf-title">🧾 Parcelar fatura</h3>
+        <button class="bclose" onclick="fecharParcelarFatura()">✕</button></div>
+      <div style="padding:16px">
+        <div class="fld" style="margin-bottom:12px"><label>Fatura que vai ser parcelada (mês de vencimento)</label>
+          <input type="month" id="pf-mes" oninput="pfPreview()"></div>
+        <p id="pf-resumo" style="color:var(--tx2);margin-bottom:14px;font-size:13px;line-height:1.5"></p>
+        <div id="pf-form">
+          <div class="fld" style="margin-bottom:12px"><label>Entrada paga agora (R$, se houver)</label>
+            <input type="number" id="pf-entrada" placeholder="0,00" step="0.01" min="0" oninput="pfPreview()"></div>
+          <div style="display:flex;gap:10px">
+            <div class="fld" style="flex:1;margin-bottom:12px"><label>Nº de parcelas</label>
+              <input type="number" id="pf-n" placeholder="ex: 6" min="1" step="1" oninput="pfPreview()"></div>
+            <div class="fld" style="flex:1;margin-bottom:12px"><label>Valor de cada parcela (com juros)</label>
+              <input type="number" id="pf-valor" placeholder="0,00" step="0.01" min="0" oninput="pfPreview()"></div>
+          </div>
+          <div class="fld" style="margin-bottom:16px"><label>Fatura em que vem a 1ª parcela</label>
+            <input type="month" id="pf-ini" oninput="pfPreview()"></div>
+          <button class="btnadd" onclick="confirmarParcelarFatura()" style="width:100%">🧾 Confirmar parcelamento</button>
+        </div>
+        <div id="pf-desfazer" style="display:none">
+          <button class="fbtn" onclick="desfazerParcelamentoModal()" style="width:100%">↩︎ Desfazer parcelamento</button>
+        </div>
+        <button class="fbtn" onclick="fecharParcelarFatura()" style="width:100%;margin-top:8px">Agora não</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL FATURA -->
   <div class="mbk" id="mbk-fatura">
     <div class="modal">
@@ -2828,6 +2858,8 @@ function faturaInfo(c, mes, ano){
   const parcelas=fechada?0:_parcelasCartaoMes(c.id, mes, ano);
   const total=manual+gastos+parcelas;
   const pago=f?(Number(f.valorPago)||0):0;
+  // Fatura parcelada: o que faltava virou parcelas nas próximas faturas
+  if(f&&f.parcelada) return {f, fechada, manual, gastos, parcelas, total:pago, pago, falta:0, quitada:true, parcelada:true};
   return {f, fechada, manual, gastos, parcelas, total, pago, falta:Math.max(0,total-pago),
     quitada: total>0 && pago>=total-0.01};
 }
@@ -4001,6 +4033,7 @@ function zerarPagamentosFatura(cartaoId){
   const d=new Date(); const mes=d.getMonth()+1,ano=d.getFullYear();
   const fatura=c.faturas&&c.faturas.find(f=>f.mes===mes&&f.ano===ano);
   if(!fatura)return;
+  if(fatura.parcelada){alert('Essa fatura foi parcelada. Desfaça o parcelamento antes de zerar os pagamentos.');return;}
   // Devolve ao saldoReal o que foi descontado
   // Devolve exatamente o que foi descontado: só pagamentos feitos depois de configurar o saldo
   if(_deveDescontar()&&fatura.valorPago){
@@ -4074,10 +4107,114 @@ function confirmarFatura(){
   const pagamentos=fatExist?fatExist.pagamentos||[]:[];
   const valorPagoExist=fatExist?fatExist.valorPago||0:0;
   c.faturas=(c.faturas||[]).filter(f=>!(f.mes===mes&&f.ano===ano));
-  c.faturas.push({mes,ano,valor:v,fechada:true,pagamentos,valorPago:valorPagoExist,ts:Date.now()});
+  c.faturas.push({mes,ano,valor:v,fechada:true,pagamentos,valorPago:valorPagoExist,ts:Date.now(),
+    ...(fatExist&&fatExist.parcelada?{parcelada:fatExist.parcelada}:{})});
   save();renderCartoes();
   document.getElementById('mbk-fatura').classList.remove('op');
   showToast(`✅ Fatura de ${fmtM(v)} registrada para ${c.nome}`);
+}
+
+// ══ PARCELAR FATURA ══
+// Entrada sai do saldo como pagamento da fatura; o resto vira uma parcela no
+// próprio cartão, e a fatura parcelada passa a contar como quitada.
+let _pfCartaoId=null;
+function _pfMesAno(id){const v=document.getElementById(id).value;if(!v)return null;const[y,m]=v.split('-').map(Number);return(y&&m)?{mes:m,ano:y}:null;}
+function _pfIso(mes,ano){return`${ano}-${String(mes).padStart(2,'0')}`;}
+function abrirParcelarFatura(cartaoId){
+  const c=S.cartoes.find(x=>x.id===cartaoId);if(!c)return;
+  _pfCartaoId=cartaoId;
+  const d=new Date();let mes=d.getMonth()+1,ano=d.getFullYear();
+  // Sugere a fatura do mês; se ela já estiver sem nada em aberto, a do mês seguinte
+  if(faturaInfo(c,mes,ano).falta<=0.01&&!(_faturaRegistro(c,mes,ano)||{}).parcelada){mes++;if(mes>12){mes=1;ano++;}}
+  let m2=mes+1,a2=ano;if(m2>12){m2=1;a2++;}
+  document.getElementById('pf-title').textContent=`🧾 Parcelar fatura — ${c.nome}`;
+  document.getElementById('pf-mes').value=_pfIso(mes,ano);
+  document.getElementById('pf-ini').value=_pfIso(m2,a2);
+  ['pf-entrada','pf-n','pf-valor'].forEach(id=>document.getElementById(id).value='');
+  pfPreview();
+  document.getElementById('mbk-parcelar').classList.add('op');
+}
+function fecharParcelarFatura(){document.getElementById('mbk-parcelar').classList.remove('op');_pfCartaoId=null;}
+function pfPreview(){
+  const c=S.cartoes.find(x=>x.id===_pfCartaoId);if(!c)return;
+  const el=document.getElementById('pf-resumo');
+  const form=document.getElementById('pf-form'), desf=document.getElementById('pf-desfazer');
+  const ma=_pfMesAno('pf-mes');
+  if(!ma){el.textContent='Escolha o mês da fatura.';form.style.display='block';desf.style.display='none';return;}
+  const fi=faturaInfo(c,ma.mes,ma.ano);
+  if(fi.parcelada){
+    const pc=fi.f.parcelada;
+    el.innerHTML=`Esta fatura já foi parcelada em <strong>${pc.n}× de ${fmtM(pc.valor)}</strong>${pc.entrada>0?`, com entrada de ${fmtM(pc.entrada)}`:''}.`;
+    form.style.display='none';desf.style.display='block';return;
+  }
+  form.style.display='block';desf.style.display='none';
+  const ent=parseFloat(document.getElementById('pf-entrada').value)||0;
+  const n=parseInt(document.getElementById('pf-n').value)||0;
+  const v=parseFloat(document.getElementById('pf-valor').value)||0;
+  let txt=`Fatura: ${fmtM(fi.total)} · Pago: ${fmtM(fi.pago)} · Falta: <strong>${fmtM(fi.falta)}</strong>`;
+  if(fi.falta<=0.01) txt+='<br>⚠️ Essa fatura não tem valor em aberto. Registre a fatura fechada antes de parcelar.';
+  else if(n>0&&v>0){
+    const restante=Math.max(0,fi.falta-ent), totalParc=n*v, juros=totalParc-restante;
+    txt+=`<br>${ent>0?`Entrada de ${fmtM(ent)} sai do saldo agora. `:''}O restante, ${fmtM(restante)}, vira ${n}× de ${fmtM(v)} = ${fmtM(totalParc)}`+(juros>0.01?` (juros de ${fmtM(juros)})`:'')+'.';
+  }
+  el.innerHTML=txt;
+}
+function confirmarParcelarFatura(){
+  const c=S.cartoes.find(x=>x.id===_pfCartaoId);if(!c)return;
+  const ma=_pfMesAno('pf-mes'), ini=_pfMesAno('pf-ini');
+  const ent=parseFloat(document.getElementById('pf-entrada').value)||0;
+  const n=parseInt(document.getElementById('pf-n').value)||0;
+  const v=parseFloat(document.getElementById('pf-valor').value)||0;
+  if(!ma||!ini){alert('Informe o mês da fatura e o da 1ª parcela.');return;}
+  if(n<1||v<=0){alert('Informe o número de parcelas e o valor de cada uma.');return;}
+  const fi=faturaInfo(c,ma.mes,ma.ano);
+  if(fi.parcelada){alert('Essa fatura já foi parcelada.');return;}
+  if(fi.falta<=0.01){alert('Essa fatura não tem valor em aberto.');return;}
+  if(ent<0||ent>=fi.falta-0.01){alert('A entrada cobre a fatura toda. Use "Registrar pagamento".');return;}
+  if(ini.ano*12+ini.mes<=ma.ano*12+ma.mes){alert('A 1ª parcela precisa vir numa fatura depois desta.');return;}
+  const f=_faturaGarante(c,ma.mes,ma.ano);
+  const ts=Date.now();
+  // 1. Entrada: pagamento normal da fatura (sai do saldo)
+  const descontouEntrada=ent>0&&_deveDescontar();
+  if(ent>0){
+    f.valorPago=(Number(f.valorPago)||0)+ent;
+    if(!f.pagamentos)f.pagamentos=[];
+    f.pagamentos.push({valor:ent,data:todayISO(),ts,parcelamento:true});
+    if(descontouEntrada)S.saldoReal-=ent;
+  }
+  // 2. Parcela no próprio cartão, a partir da fatura escolhida
+  const dia=diaVencNoMes(c.venc||1,ini.ano,ini.mes-1)||1;
+  const p={id:uid(),desc:`Parcelamento fatura ${c.nome} ${String(ma.mes).padStart(2,'0')}/${ma.ano}`,valor:v,atual:1,total:n,
+    dataIni:`${ini.ano}-${String(ini.mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`,diaVenc:c.venc||null,pagas:[],cartaoId:c.id};
+  S.parcelas.push(p);
+  // 3. A fatura fica quitada: o que faltava virou parcelas (o saldo não muda)
+  f.parcelada={n,valor:v,entrada:ent,falta:fi.falta,parcelaId:p.id,ts,descontouEntrada};
+  save();renderCartoes();renderParcelas();updKPIs();
+  if(getTab()==='agenda')renderAgenda();
+  fecharParcelarFatura();
+  showToast(`🧾 Fatura parcelada em ${n}× de ${fmtM(v)}`);
+}
+function desfazerParcelamento(cartaoId,mes,ano){
+  const c=S.cartoes.find(x=>x.id===cartaoId);if(!c)return;
+  const f=_faturaRegistro(c,mes,ano);if(!f||!f.parcelada)return;
+  if(!confirm('Desfazer o parcelamento desta fatura? A parcela criada é removida e a entrada volta para o saldo.'))return;
+  const pc=f.parcelada;
+  S.parcelas=S.parcelas.filter(p=>p.id!==pc.parcelaId);
+  if(pc.entrada>0){
+    const i=(f.pagamentos||[]).findIndex(x=>x.parcelamento&&x.ts===pc.ts);
+    if(i>=0)f.pagamentos.splice(i,1);
+    f.valorPago=Math.max(0,(Number(f.valorPago)||0)-pc.entrada);
+    if(pc.descontouEntrada&&S.saldoReal!==null)S.saldoReal+=pc.entrada;
+  }
+  delete f.parcelada;
+  save();renderCartoes();renderParcelas();updKPIs();
+  if(getTab()==='agenda')renderAgenda();
+  if(_pfCartaoId)pfPreview();
+  showToast('↩︎ Parcelamento desfeito');
+}
+function desfazerParcelamentoModal(){
+  const ma=_pfMesAno('pf-mes');if(!ma||!_pfCartaoId)return;
+  desfazerParcelamento(_pfCartaoId,ma.mes,ma.ano);
 }
 
 function renderCartoes(){
@@ -4118,7 +4255,8 @@ function renderCartoes(){
         <div style="font-size:11px;color:var(--tx2);text-align:center">${pctPago}% pago${faltaPagar===0?' ✅':''}</div>
         ${histPag}
         ${faltaPagar>0?`<button onclick="abrirPagamentoFatura('${c.id}')" style="width:100%;margin-top:8px;padding:7px;border-radius:8px;border:1px solid #27AE60;background:rgba(39,174,96,.1);color:#27AE60;font-size:13px;font-weight:600;cursor:pointer">💰 Registrar pagamento</button>`:''}
-        ${valorPago>0?`<button onclick="zerarPagamentosFatura('${c.id}')" style="width:100%;margin-top:6px;padding:6px;border-radius:8px;border:1px solid var(--brd);background:none;color:var(--tx2);font-size:12px;cursor:pointer">🔄 Zerar pagamentos e redigitar</button>`:''}
+        ${fatura&&fatura.parcelada?`<div style="margin-top:8px;font-size:12px;color:var(--tx2);text-align:center">🧾 Parcelada em ${fatura.parcelada.n}× de ${fmtM(fatura.parcelada.valor)} <button onclick="desfazerParcelamento('${c.id}',${mes},${ano})" style="background:none;border:none;color:var(--g1);font-size:12px;cursor:pointer;padding:0;font-weight:600">↩︎ desfazer</button></div>`:''}
+        ${valorPago>0&&!(fatura&&fatura.parcelada)?`<button onclick="zerarPagamentosFatura('${c.id}')" style="width:100%;margin-top:6px;padding:6px;border-radius:8px;border:1px solid var(--brd);background:none;color:var(--tx2);font-size:12px;cursor:pointer">🔄 Zerar pagamentos e redigitar</button>`:''}
       </div>`:'';
     return `<div class="fcard" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
@@ -4145,6 +4283,7 @@ function renderCartoes(){
       ${faturaBlock}
       <div style="display:flex;gap:8px">
         <button class="btnadd" onclick="abrirFatura('${c.id}')" style="flex:1;padding:8px;font-size:13px">📋 Registrar fatura</button>
+        <button onclick="abrirParcelarFatura('${c.id}')" style="padding:8px 12px;border-radius:10px;border:1px solid var(--brd);background:none;color:var(--tx1);font-size:12px;cursor:pointer">🧾 Parcelar</button>
         <button onclick="toggleAlertaCartao('${c.id}')" style="padding:8px 12px;border-radius:10px;border:1px solid var(--brd);background:${c.alertaFatura===false?'var(--bg2)':'var(--g1)'};color:${c.alertaFatura===false?'var(--tx2)':'#fff'};font-size:12px;cursor:pointer" title="${c.alertaFatura===false?'Aviso desativado':'Aviso ativado'}">
           ${c.alertaFatura===false?'\uD83D\uDD15 Aviso off':'\uD83D\uDD14 Aviso on'}
         </button>
