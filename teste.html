@@ -1973,6 +1973,12 @@ function _parcDoMes(p){
 function _parcPendenteMes(p){
   return _parcDoMes(p) && !parcelaPagaHoje(p) && parcStatus(p)!=='finalizada';
 }
+// Dia de vencimento efetivo no mês (dia 29/30/31 vira o último dia em meses mais curtos)
+function diaVencNoMes(dia,ano,mes0){
+  dia=parseInt(dia); if(!dia) return null;
+  return Math.min(dia,new Date(ano,mes0+1,0).getDate());
+}
+function venceEm(dia,data){ return diaVencNoMes(dia,data.getFullYear(),data.getMonth())===data.getDate(); }
 function parcelaAtrasada(p){
   if(!_parcPendenteMes(p)) return false;
   if(!p.diaVenc) return false;
@@ -1981,7 +1987,7 @@ function parcelaAtrasada(p){
   const dataIni = p.dataIni ? new Date(p.dataIni+'T12:00:00') : null;
   if(dataIni && dataIni > hoje) return false; // ainda nem começou
   // Vencimento deste mês
-  const vencMesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), p.diaVenc);
+  const vencMesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), diaVencNoMes(p.diaVenc,hoje.getFullYear(),hoje.getMonth()));
   if(vencMesAtual > hoje) return false; // ainda não venceu
   return !parcelaPagaHoje(p);
 }
@@ -2263,8 +2269,8 @@ function renderGrupo(titulo,lista,cor){
 // ══ CHECKLIST ══
 function checkChkBanner(){
   const area=document.getElementById('chk-banner-area');if(!area)return;
-  const d=new Date().getDate();
-  const pend=S.parcelas.filter(p=>p.diaVenc===d&&_parcPendenteMes(p));
+  const hj=new Date();
+  const pend=S.parcelas.filter(p=>venceEm(p.diaVenc,hj)&&_parcPendenteMes(p));
   if(!pend.length){area.innerHTML='';return;}
   area.innerHTML=`<div class="chk-banner">
     <div class="chk-banner-text">
@@ -2278,7 +2284,7 @@ function openCHK(){renderChkList();document.getElementById('mbk-chk').classList.
 function closeCHK(){document.getElementById('mbk-chk').classList.remove('op');checkChkBanner();}
 function renderChkList(){
   const hoje=new Date();const mes=hoje.getMonth()+1,ano=hoje.getFullYear(),dia=hoje.getDate();
-  const lista=S.parcelas.filter(p=>_parcDoMes(p)&&(p.diaVenc===dia||_parcPendenteMes(p)));
+  const lista=S.parcelas.filter(p=>_parcDoMes(p)&&(venceEm(p.diaVenc,hoje)||_parcPendenteMes(p)));
   const el=document.getElementById('chk-list');
   if(!lista.length){el.innerHTML='<div class="empty"><div class="icon">✅</div>Todos os pagamentos em dia!</div>';return;}
   el.innerHTML=lista.map(p=>{
@@ -2288,7 +2294,7 @@ function renderChkList(){
       <div class="chk-info">
         <div class="chk-name">${esc(p.desc)}</div>
         <div class="chk-val">${fmtM(p.valor)} · ${_parcAtual(p)}ª de ${p.total}</div>
-        ${p.diaVenc===dia?`<div class="chk-due">⚠️ Vence hoje</div>`:''}
+        ${venceEm(p.diaVenc,hoje)?`<div class="chk-due">⚠️ Vence hoje</div>`:''}
       </div>
       <span class="badge ${done?'b-ok':'b-pend'}">${done?'✅':'⏳'}</span>
     </div>`;
@@ -2298,8 +2304,8 @@ function renderChkList(){
 // ══ NOTIFICAÇÕES ══
 function checkNotifications(){
   if(!('Notification' in window)||Notification.permission!=='granted')return;
-  const hoje=new Date().getDate();
-  const pend=S.parcelas.filter(p=>p.diaVenc===hoje&&_parcPendenteMes(p));
+  const hoje=new Date();
+  const pend=S.parcelas.filter(p=>venceEm(p.diaVenc,hoje)&&_parcPendenteMes(p));
   if(pend.length){
     new Notification('💳 FinTrack — Parcelas hoje',{
       body:`${pend.length} parcela${pend.length>1?'s':''} vencem hoje: ${pend.map(p=>p.desc).join(', ')}`,
@@ -2307,7 +2313,7 @@ function checkNotifications(){
     });
   }
   // aviso de fixos
-  const fixosHoje=S.fixos.filter(f=>f.diaVenc===hoje);
+  const fixosHoje=S.fixos.filter(f=>venceEm(f.diaVenc,hoje));
   if(fixosHoje.length){
     new Notification('📌 FinTrack — Conta fixa hoje',{
       body:`${fixosHoje.map(f=>f.nome).join(', ')} vence${fixosHoje.length>1?'m':''} hoje`,
@@ -2514,7 +2520,7 @@ function renderHistorico(){
   S.fixosPagos.forEach(fp=>{
     const f=S.fixos.find(x=>x.id===fp.id);
     if(!f) return;
-    const dataStr=`${fp.ano}-${String(fp.mes).padStart(2,'0')}-${String(f.diaVenc||15).padStart(2,'0')}`;
+    const dataStr=`${fp.ano}-${String(fp.mes).padStart(2,'0')}-${String(diaVencNoMes(f.diaVenc||15,fp.ano,fp.mes-1)).padStart(2,'0')}`;
     allG.push({data:dataStr,valor:f.valor,tipo:'fixo'});
   });
 
@@ -2666,9 +2672,9 @@ function checkAlertas(){
   // Alerta de fixos
   if(S.alertasConfig.fixos){
     const mes=d.getMonth()+1, ano=d.getFullYear();
-    const fixosPixHoje=S.fixos.filter(f=>f.diaVenc===diaNum&&(f.tipo||'pix')==='pix'&&
+    const fixosPixHoje=S.fixos.filter(f=>venceEm(f.diaVenc,d)&&(f.tipo||'pix')==='pix'&&
       !S.fixosPagos.some(fp=>fp.id===f.id&&fp.mes===mes&&fp.ano===ano));
-    const fixosCartaoHoje=S.fixos.filter(f=>f.diaVenc===diaNum&&f.tipo==='cartao');
+    const fixosCartaoHoje=S.fixos.filter(f=>venceEm(f.diaVenc,d)&&f.tipo==='cartao');
     const fixosHoje=[...fixosPixHoje,...fixosCartaoHoje];
     if(fixosHoje.length){
       if(S.alertasConfig.debitoAutoFixos){
@@ -2694,7 +2700,7 @@ function checkAlertas(){
     S.cartoes.forEach(c=>{
       if(!c.venc)return;
       if(c.alertaFatura===false)return;
-      const diasAte=c.venc-diaNum;
+      const diasAte=diaVencNoMes(c.venc,ano,mes-1)-diaNum;
       if(diasAte===2||diasAte===1||diasAte===0){
         const jaRegistrou=c.faturas&&c.faturas.some(f=>f.mes===mes&&f.ano===ano);
         if(!jaRegistrou){
@@ -2898,11 +2904,13 @@ function contasEstaSemana(){
   if(S.rendaMode!=='semanal') return 0;
   const ini=new Date((S.semanaAtual.inicioISO||semaIni(new Date(),S.rendaDiaSemana??5))+'T12:00:00');
   const fim=new Date(ini); fim.setDate(fim.getDate()+6);
-  const dIni=ini.getDate(), dFim=fim.getDate(), cruzaMes=dFim<dIni;
   function dentroSemana(dia){
     if(!dia) return false;
-    if(cruzaMes) return dia>=dIni||dia<=dFim;
-    return dia>=dIni&&dia<=dFim;
+    for(let k=0;k<7;k++){
+      const dt=new Date(ini); dt.setDate(ini.getDate()+k);
+      if(venceEm(dia,dt)) return true;
+    }
+    return false;
   }
   const fx=S.fixos.filter(f=>dentroSemana(f.diaVenc)).reduce((a,f)=>a+f.valor,0);
   const pa=S.parcelas.filter(p=>dentroSemana(p.diaVenc)&&_parcPendenteMes(p)).reduce((a,p)=>a+p.valor,0);
@@ -3043,7 +3051,7 @@ function contasDoDia(dia, mes, ano){
   dia=parseInt(dia); mes=parseInt(mes); ano=parseInt(ano);
 
   S.fixos.forEach(f=>{
-    if(parseInt(f.diaVenc)!==dia) return;
+    if(diaVencNoMes(f.diaVenc,ano,mes-1)!==dia) return;
     if(f.dataIni){
       const ini=new Date(f.dataIni+'T12:00:00');
       if(ano<ini.getFullYear()) return;
@@ -3055,7 +3063,7 @@ function contasDoDia(dia, mes, ano){
   });
 
   S.parcelas.forEach(p=>{
-    if(parseInt(p.diaVenc)!==dia) return;
+    if(diaVencNoMes(p.diaVenc,ano,mes-1)!==dia) return;
     if(p.dataIni){
       const ini=new Date(p.dataIni+'T12:00:00');
       if(ano<ini.getFullYear()) return;
@@ -3095,7 +3103,7 @@ function contasDoDia(dia, mes, ano){
     (S.cartoes||[]).forEach(c=>{
       try{
         if(!c.venc) return;
-        if(parseInt(c.venc)!==dia) return;
+        if(diaVencNoMes(c.venc,ano,mes-1)!==dia) return;
         // Considera a fatura do mês corrente
         const fi=faturaInfo(c, mes, ano);
         if(fi.total<=0) return; // sem fatura nem gastos, não mostra
@@ -4371,8 +4379,8 @@ function calcSaude(){
     const jaPago = S.fixosPagos.some(fp => fp.id===f.id && parseInt(fp.mes)===mesHoje && parseInt(fp.ano)===anoHoje);
     // Dia de vencimento no mês atual ou próximo
     let diaVenc = f.diaVenc;
-    let vencDate = new Date(anoHoje, mesHoje-1, diaVenc);
-    if(vencDate < hoje) vencDate = new Date(anoHoje, mesHoje, diaVenc); // próximo mês
+    let vencDate = new Date(anoHoje, mesHoje-1, diaVencNoMes(diaVenc,anoHoje,mesHoje-1));
+    if(vencDate < hoje) vencDate = new Date(anoHoje, mesHoje, diaVencNoMes(diaVenc,anoHoje,mesHoje)); // próximo mês
     const diasRestantes = Math.round((vencDate - hoje) / 86400000);
     contas.push({
       id: f.id, nome: f.nome, valor: f.valor, tipo: 'fixo',
@@ -4388,12 +4396,12 @@ function calcSaude(){
       const fimMes=ini.getMonth()+p.total;
       const fimAno=ini.getFullYear()+Math.floor(fimMes/12);
       const fimMesReal=fimMes%12;
-      const fimDate=new Date(fimAno,fimMesReal,p.diaVenc);
+      const fimDate=new Date(fimAno,fimMesReal,diaVencNoMes(p.diaVenc,fimAno,fimMesReal));
       if(fimDate<hoje) return; // terminou
     }
     const jaPago = p.pagas && p.pagas.some(pg => pg.mes===mesHoje && pg.ano===anoHoje);
-    let vencDate = new Date(anoHoje, mesHoje-1, p.diaVenc);
-    if(vencDate < hoje && jaPago) vencDate = new Date(anoHoje, mesHoje, p.diaVenc);
+    let vencDate = new Date(anoHoje, mesHoje-1, diaVencNoMes(p.diaVenc,anoHoje,mesHoje-1));
+    if(vencDate < hoje && jaPago) vencDate = new Date(anoHoje, mesHoje, diaVencNoMes(p.diaVenc,anoHoje,mesHoje));
     if(p.dataIni){
       const dataIni = new Date(p.dataIni+'T12:00:00');
       if(dataIni > hoje) vencDate = dataIni;
