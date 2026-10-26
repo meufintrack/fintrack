@@ -4663,6 +4663,8 @@ function gerarExtratoPDF(){
   }).map(p=>({
     nome:p.desc,valor:p.valor,diaVenc:p.diaVenc||'—',
     pago:p.pagas&&p.pagas.some(x=>parseInt(x.mes)===mes&&parseInt(x.ano)===ano),
+    // Parcela num cartão cadastrado já está dentro da fatura: não entra nos totais
+    naFatura:!!(p.cartaoId&&(S.cartoes||[]).some(c=>c.id===p.cartaoId)),
     parcAtual:(()=>{
       if(!p.dataIni) return _parcAtual(p);
       const di=new Date(p.dataIni+'T12:00:00');
@@ -4736,8 +4738,8 @@ function gerarExtratoPDF(){
   const totalRenda=rendaBase+totalExtras;
   const totalFixos=fixosMes.filter(f=>!f.naFatura).reduce((a,f)=>a+f.valor,0);
   const fixosPagosVal=fixosMes.filter(f=>f.pago&&!f.naFatura).reduce((a,f)=>a+f.valor,0);
-  const totalParcelas=parcelasMes.reduce((a,p)=>a+p.valor,0);
-  const parcelasPagasVal=parcelasMes.filter(p=>p.pago).reduce((a,p)=>a+p.valor,0);
+  const totalParcelas=parcelasMes.filter(p=>!p.naFatura).reduce((a,p)=>a+p.valor,0);
+  const parcelasPagasVal=parcelasMes.filter(p=>p.pago&&!p.naFatura).reduce((a,p)=>a+p.valor,0);
   const totalFaturas=faturasMes.reduce((a,f)=>a+f.total,0);
   const faturasPagasVal=faturasMes.reduce((a,f)=>a+Math.min(f.valorPago,f.total),0);
   const totalVariaveis=gastosVariaveis.reduce((a,g)=>a+g.valor,0);
@@ -4770,7 +4772,7 @@ function gerarExtratoPDF(){
     <td style="text-align:center;color:${e.pago?'#27AE60':'#E8637A'};font-weight:700">${e.pago?'✅ Quitado':'⏳ Pendente'}</td></tr>`;
   const rowP=p=>`<tr>
     <td>${p.nome} <span style="color:#999;font-size:11px">(${p.parcAtual}/${p.parcTotal})</span></td>
-    <td style="text-align:center">${p.diaVenc}</td><td style="text-align:center">💳 Parcela</td>
+    <td style="text-align:center">${p.diaVenc}</td><td style="text-align:center">${p.naFatura?'💳 Na fatura':'💳 Parcela'}</td>
     <td style="text-align:right;font-weight:600">${fmt(p.valor)}</td>
     <td style="text-align:center;color:${p.pago?'#27AE60':'#E8637A'};font-weight:700">${p.pago?'✅ Pago':'⏳ Pendente'}</td></tr>`;
   const rowG=g=>`<tr>
