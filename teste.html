@@ -1536,6 +1536,7 @@ document.dispatchEvent(new Event('fb-ready'));
 <script>
 // ══ STATE ══
 const KEY='fintrack_v2';
+const SEM_MES=52/12; // semanas por mês (≈4,33)
 let S={
   rendaBase:0,rendaMode:'semanal',rendaDiaSemana:5,
   rendaBaseSemanal:0,    // salário semanal (independente)
@@ -1637,7 +1638,7 @@ async function loadFB(){
 function startSync(){
   if(_unsub) _unsub();
   _unsub=window._fb.onSnapshot(perfilRef(),snap=>{
-    if(snap.exists()&&!_saving){
+    if(snap.exists()&&!snap.metadata?.hasPendingWrites){
       const r=snap.data();
       if(r.ultimaAt&&S.ultimaAt&&r.ultimaAt>S.ultimaAt){
         S=Object.assign(S,r); migrate(); updAll(); showToast('🔄 Atualizado');
@@ -1653,7 +1654,7 @@ async function saveFB(){
     await window._fb.setDoc(perfilRef(),JSON.parse(JSON.stringify(S)));
     showToast('✓ Salvo');
   }catch(e){showToast('⚠️ Erro ao salvar');}
-  setTimeout(()=>{_saving=false;},5000); // 5s para garantir que snapshot não sobrescreve
+  _saving=false; // o próprio eco do salvamento tem a mesma ultimaAt e é ignorado no startSync
 }
 function showToast(msg){
   const el=document.getElementById('sync-toast');
@@ -1819,7 +1820,7 @@ function setRM(mode,silent){
 }
 function rendaMensal(){
   const base=S.rendaMode==='semanal'?(S.rendaBaseSemanal||0):(S.rendaBaseMensal||0);
-  const bm=S.rendaMode==='semanal'?base*4.3:base;
+  const bm=S.rendaMode==='semanal'?base*SEM_MES:base;
   return bm+_extrasDoMes();
 }
 // Extras recebidos no mês atual (pela data do extra)
@@ -1834,7 +1835,7 @@ function _extrasDoMes(){
 function rendaSemanal(){
   // Sempre retorna o equivalente semanal
   if(S.rendaMode==='semanal') return (S.rendaBaseSemanal||0);
-  return (S.rendaBaseMensal||0)/4.3;
+  return (S.rendaBaseMensal||0)/SEM_MES;
 }
 function updRendaTot(){
   const sr=calcSaldoReal();
@@ -1996,7 +1997,7 @@ function calcFimPrev(){
   const tot=parseInt(document.getElementById('p-total').value)||0;
   document.getElementById('p-fim-prev').value=(ini&&tot)?fmtDate(fimParc(ini,tot)):'';
 }
-function fimParc(ini,tot){const d=new Date(ini+'T12:00:00');d.setMonth(d.getMonth()+tot-1);return d.toISOString().slice(0,10);}
+function fimParc(ini,tot){const i=new Date(ini+'T12:00:00');const y=i.getFullYear(),m=i.getMonth()+tot-1;const d=new Date(y,m,diaVencNoMes(i.getDate(),y,m),12);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function addParcela(desc,valor,atual,total,dataIni,diaVenc){
   desc=desc||document.getElementById('p-desc').value.trim();
   valor=valor||parseFloat(document.getElementById('p-val').value)||0;
@@ -2360,7 +2361,7 @@ function renderPizza(){
   document.getElementById('pizza-wrap').style.display='block';
   const fx=S.fixos.reduce((a,f)=>a+f.valor,0);
   const pa=S.parcelas.filter(_parcDoMes).reduce((a,p)=>a+p.valor,0);
-  const va=S.semanaAtual.gastos.reduce((a,g)=>a+g.valor,0)*4.3;
+  const va=S.semanaAtual.gastos.reduce((a,g)=>a+g.valor,0)*SEM_MES;
   const sl=Math.max(0,rm-fx-pa-va);
   const meta=Math.min(S.metaMensal||0,sl);
   const livre=Math.max(0,sl-meta);
@@ -2455,7 +2456,7 @@ function renderSemana(){
   // Saldo da semana — usa saldo real se disponível, senão usa projeção
   const sr=calcSaldoReal();
   const usandoReal=sr!==null && sr>=0; // só usa saldo real se for positivo
-  const rendaSem=S.rendaMode==='semanal'?(S.rendaBaseSemanal||0):rendaMensal()/4.3;
+  const rendaSem=S.rendaMode==='semanal'?(S.rendaBaseSemanal||0):rendaMensal()/SEM_MES;
   const contasSem=contasEstaSemana();
   const saldoSem=usandoReal ? sr : Math.max(0, rendaSem - tot - contasSem);
   const lim=usandoReal ? Math.max(sr+tot, tot) : rendaSem;
@@ -2604,7 +2605,7 @@ function delExtra(id){
   if(!confirm('Excluir?'))return;
   const ex=S.extras.find(e=>e.id===id);
   // Só desconta se esse extra foi marcado como somado ao saldo
-  if(ex&&ex.noSaldo&&S.saldoReal!==null){ S.saldoReal=Math.max(0,S.saldoReal-ex.valor); S.saldoRealData=todayISO(); }
+  if(ex&&ex.noSaldo&&S.saldoReal!==null){ S.saldoReal=S.saldoReal-ex.valor; S.saldoRealData=todayISO(); }
   S.extras=S.extras.filter(e=>e.id!==id);
   save();renderExtras();updRendaTot();updKPIs();
 }
@@ -2810,6 +2811,14 @@ function _parcAtivaMes(p, mes, ano){
   const idx=(ano-di.getFullYear())*12+(mes-1-di.getMonth());
   return idx>=0 && idx<Number(p.total);
 }
+// Fixo de cartão já entra na fatura do mês quando foi marcado como pago
+// (soma no valor da fatura) ou quando a fatura fechada do banco foi registrada.
+function fixoNaFatura(f, mes, ano){
+  if(!f||!f.cartaoId) return false;
+  const c=(S.cartoes||[]).find(x=>x.id===f.cartaoId); if(!c) return false;
+  const pago=(S.fixosPagos||[]).some(fp=>fp.id===f.id&&parseInt(fp.mes)===mes&&parseInt(fp.ano)===ano);
+  return pago || _faturaFechada(_faturaRegistro(c, mes, ano));
+}
 // Total, pago e falta da fatura de um mês
 function faturaInfo(c, mes, ano){
   const f=_faturaRegistro(c, mes, ano);
@@ -2856,7 +2865,7 @@ function _aplicaDesconto(fixoId, valor, descontar){
       const d=new Date(); const mes=d.getMonth()+1,ano=d.getFullYear();
       let fat=c.faturas&&c.faturas.find(x=>x.mes===mes&&x.ano===ano);
       if(!fat){fat={mes,ano,valor:0,fechada:false,ts:Date.now()};if(!c.faturas)c.faturas=[];c.faturas.push(fat);}
-      fat.valor=Math.max(0,fat.valor+(descontar?valor:-valor));
+      if(!_faturaFechada(fat)) fat.valor=Math.max(0,fat.valor+(descontar?valor:-valor));
     }
   } else if(_deveDescontar()){
     S.saldoReal+=descontar?-valor:valor;
@@ -2922,12 +2931,12 @@ function limSemana(){
     const contasSem=contasEstaSemana();
     return Math.max(0, rendaSem - contasSem);
   }
-  return Math.max(0,calcSaldo()/4.3);
+  return Math.max(0,calcSaldo()/SEM_MES);
 }
 function calcSaldo(){
   const fx=S.fixos.reduce((a,f)=>a+f.valor,0);
   const pa=S.parcelas.filter(_parcDoMes).reduce((a,p)=>a+p.valor,0);
-  const va=S.semanaAtual.gastos.reduce((a,g)=>a+g.valor,0)*4.3;
+  const va=S.semanaAtual.gastos.reduce((a,g)=>a+g.valor,0)*SEM_MES;
   return rendaMensal()-fx-pa-va;
 }
 function updKPIs(){
@@ -2959,7 +2968,16 @@ function updKPIs(){
     if(p.cartaoId) return a;
     return a+p.valor;
   },0);
-  const totalPendente=fixosPendentes+parcelasPendentes;
+  // Faturas de cartão do mês ainda não pagas (o pagamento sai do saldoReal)
+  const faturasPendentes=(S.cartoes||[]).reduce((a,c)=>a+faturaInfo(c,mesHoje,anoHoje).falta,0);
+  // Empréstimos que você deve, vencidos ou vencendo até o fim do mês
+  const fimMesISO=`${anoHoje}-${String(mesHoje).padStart(2,'0')}-${String(new Date(anoHoje,mesHoje,0).getDate()).padStart(2,'0')}`;
+  const empPendentes=(S.emprestimos||[]).reduce((a,e)=>{
+    if(e.tipo!=='peguei'||empQuitado(e)) return a;
+    const v=empVenc(e); if(!v||v>fimMesISO) return a;
+    return a+empRestante(e);
+  },0);
+  const totalPendente=fixosPendentes+parcelasPendentes+faturasPendentes+empPendentes;
   const srCalc=calcSaldoReal(); // usa o valor calculado automaticamente
   const disponivel=srCalc!==null ? srCalc-totalPendente : null;
 
@@ -2975,7 +2993,7 @@ function updKPIs(){
     else kb.innerHTML='<span class="kbadge bg-grn">NO AZUL 🟢</span>';
   } else {
     // Sem saldo real: usa projeção antiga como fallback
-    const saldoProj=S.rendaMode==='semanal'?(S.rendaBaseSemanal||0)*4.3-fx-pa-sg*4.3:(S.rendaBaseMensal||0)-fx-pa;
+    const saldoProj=S.rendaMode==='semanal'?(S.rendaBaseSemanal||0)*SEM_MES-fx-pa-sg*SEM_MES:(S.rendaBaseMensal||0)-fx-pa;
     se.textContent=fmtM(saldoProj);
     se.className='kval '+(saldoProj>0?'grn':'red');
     if(explEl) explEl.textContent='Configure o saldo real para ver o disponível exato';
@@ -3010,7 +3028,7 @@ function updKPIs(){
     document.getElementById('k-dia').textContent=fmtM(Math.max(0,saldoSem/7));
   } else {
     const rendaMes=S.rendaBaseMensal||0;
-    const saldoSemEst=Math.max(0,(rendaMes-fx-pa-(sgReal*4.3))/4.3);
+    const saldoSemEst=Math.max(0,(rendaMes-fx-pa-(sgReal*SEM_MES))/SEM_MES);
     document.getElementById('k-renda').textContent=totalRecebMes>0?fmtM(totalRecebMes):'—';
     const nRec=S.recebimentos.filter(r=>{if(!r.data)return false;const[y,m]=r.data.split('-').map(Number);return y===anoHojeR&&m===mesHojeR;}).length;
     document.getElementById('k-renda-sub').textContent=totalRecebMes>0?`${nRec} recebimento(s) este mês`+(extrasMes>0?` + ${fmtM(extrasMes)} extras`:''):'nenhum recebimento registrado este mês';
@@ -3745,9 +3763,10 @@ function confirmEmpAdiar(){
   const nova=document.getElementById('emp-adiar-data').value;
   if(!nova){ alert('Informe a nova data.'); return; }
   if(nova <= (empVenc(e)||'')){ alert('A nova data deve ser posterior ao vencimento atual.'); return; }
+  const de=empVenc(e);
   e.adiado=nova;
   if(!e.adiamentos) e.adiamentos=[];
-  e.adiamentos.push({ de: empVenc(e), para: nova, ts: Date.now() });
+  e.adiamentos.push({ de, para: nova, ts: Date.now() });
   save(); closeEmpAdiar(); renderEmprestimos(); renderAgenda();
   showToast('📅 Vencimento adiado para '+fmtDate(nova));
 }
@@ -3983,7 +4002,15 @@ function zerarPagamentosFatura(cartaoId){
   const fatura=c.faturas&&c.faturas.find(f=>f.mes===mes&&f.ano===ano);
   if(!fatura)return;
   // Devolve ao saldoReal o que foi descontado
-  if(_deveDescontar()&&fatura.valorPago)S.saldoReal+=fatura.valorPago;
+  // Devolve exatamente o que foi descontado: só pagamentos feitos depois de configurar o saldo
+  if(_deveDescontar()&&fatura.valorPago){
+    const pags=fatura.pagamentos||[];
+    const soma=pags.reduce((a,x)=>a+(Number(x.valor)||0),0);
+    const devolver=Math.abs(soma-fatura.valorPago)<0.01
+      ? pags.filter(x=>(x.ts||0)>=(S.saldoRealTs||0)).reduce((a,x)=>a+(Number(x.valor)||0),0)
+      : fatura.valorPago;
+    S.saldoReal+=devolver;
+  }
   fatura.valorPago=0;
   fatura.pagamentos=[];
   save();renderCartoes();updKPIs();
@@ -4364,8 +4391,8 @@ function calcSaude(){
   const anoHoje = hoje.getFullYear();
 
   // Renda disponível para cálculo
-  const rendaSem = S.rendaMode === 'semanal' ? (S.rendaBaseSemanal||0) : (S.rendaBaseMensal||0)/4.3;
-  const rendaMes = rendaSem * 4.3;
+  const rendaSem = S.rendaMode === 'semanal' ? (S.rendaBaseSemanal||0) : (S.rendaBaseMensal||0)/SEM_MES;
+  const rendaMes = rendaSem * SEM_MES;
 
   // Saldo atual de referência (usa saldo real se disponível, senão projeta)
   const saldoAtual = calcSaldoReal();
@@ -4452,7 +4479,7 @@ function calcSaude(){
   const totalPago = contas.filter(c=>c.jaPago).reduce((a,c)=>a+c.valor,0);
 
   // Quanto guardar por semana para cobrir tudo
-  const semanasMes = 4.3;
+  const semanasMes = SEM_MES;
   const guardarPorSemana = totalDevido > 0 ? totalDevido / semanasMes : 0;
 
   // Renda mínima mensal para cobrir fixos + parcelas
@@ -4547,7 +4574,7 @@ function renderSaude(){
   // Quanto guardar por semana
   if(d.totalDevido > 0){
     const semanas = d.guardarPorSemana;
-    const rendaSem = S.rendaMode==='semanal' ? (S.rendaBaseSemanal||0) : (S.rendaBaseMensal||0)/4.3;
+    const rendaSem = S.rendaMode==='semanal' ? (S.rendaBaseSemanal||0) : (S.rendaBaseMensal||0)/SEM_MES;
     const pctRenda = rendaSem > 0 ? Math.round((semanas/rendaSem)*100) : 0;
     html += `<div class="saude-guardar">
       <div class="saude-guardar-lbl">🎯 Guardar por semana para cobrir tudo</div>
@@ -4616,7 +4643,8 @@ function gerarExtratoPDF(){
   // Fixos
   const fixosMes=S.fixos.map(f=>({
     nome:f.nome,valor:f.valor,tipo:f.tipo||'pix',diaVenc:f.diaVenc||'—',
-    pago:S.fixosPagos.some(fp=>fp.id===f.id&&parseInt(fp.mes)===mes&&parseInt(fp.ano)===ano)
+    pago:S.fixosPagos.some(fp=>fp.id===f.id&&parseInt(fp.mes)===mes&&parseInt(fp.ano)===ano),
+    naFatura:fixoNaFatura(f,mes,ano) // já somado na fatura do cartão: não entra nos totais
   }));
 
   // Parcelas do mês
@@ -4635,7 +4663,11 @@ function gerarExtratoPDF(){
   }).map(p=>({
     nome:p.desc,valor:p.valor,diaVenc:p.diaVenc||'—',
     pago:p.pagas&&p.pagas.some(x=>parseInt(x.mes)===mes&&parseInt(x.ano)===ano),
-    parcAtual:p.atual||1,parcTotal:p.total||1
+    parcAtual:(()=>{
+      if(!p.dataIni) return _parcAtual(p);
+      const di=new Date(p.dataIni+'T12:00:00');
+      return Math.max(1,Math.min(Number(p.total)||1,(ano-di.getFullYear())*12+(mes-1-di.getMonth())+1));
+    })(),parcTotal:p.total||1
   }));
 
   // Faturas de cartão do mês
@@ -4696,26 +4728,33 @@ function gerarExtratoPDF(){
   gastosVariaveis.sort(_sortData);
   extrasMes.sort(_sortData);
 
-  const rendaBase=S.rendaMode==='semanal'?(S.rendaBaseSemanal||0)*4.3:(S.rendaBaseMensal||0);
+  // Renda semanal × número real de dias de pagamento no mês (4 ou 5)
+  let nPag=0; const dmExt=new Date(ano,mes,0).getDate();
+  for(let d=1;d<=dmExt;d++) if(new Date(ano,mes-1,d).getDay()===(S.rendaDiaSemana??5)) nPag++;
+  const rendaBase=S.rendaMode==='semanal'?(S.rendaBaseSemanal||0)*nPag:(S.rendaBaseMensal||0);
   const totalExtras=extrasMes.reduce((a,e)=>a+e.valor,0);
   const totalRenda=rendaBase+totalExtras;
-  const totalFixos=fixosMes.reduce((a,f)=>a+f.valor,0);
-  const fixosPagosVal=fixosMes.filter(f=>f.pago).reduce((a,f)=>a+f.valor,0);
+  const totalFixos=fixosMes.filter(f=>!f.naFatura).reduce((a,f)=>a+f.valor,0);
+  const fixosPagosVal=fixosMes.filter(f=>f.pago&&!f.naFatura).reduce((a,f)=>a+f.valor,0);
   const totalParcelas=parcelasMes.reduce((a,p)=>a+p.valor,0);
   const parcelasPagasVal=parcelasMes.filter(p=>p.pago).reduce((a,p)=>a+p.valor,0);
   const totalFaturas=faturasMes.reduce((a,f)=>a+f.total,0);
-  const faturasPagasVal=faturasMes.filter(f=>f.pago).reduce((a,f)=>a+f.valorPago,0);
+  const faturasPagasVal=faturasMes.reduce((a,f)=>a+Math.min(f.valorPago,f.total),0);
   const totalVariaveis=gastosVariaveis.reduce((a,g)=>a+g.valor,0);
   const totalPago=fixosPagosVal+parcelasPagasVal+faturasPagasVal;
   const totalAPagar=(totalFixos-fixosPagosVal)+(totalParcelas-parcelasPagasVal)+(totalFaturas-faturasPagasVal);
-  const saldo=S.saldoReal!==null?S.saldoReal:(totalRenda-totalFixos-totalParcelas-totalVariaveis);
+  // Saldo da conta só faz sentido no mês atual; nos outros meses mostra o resultado estimado do mês
+  const _hj=new Date(), extMesAtual=(mes===_hj.getMonth()+1&&ano===_hj.getFullYear());
+  const usaSaldoReal=extMesAtual&&S.saldoReal!==null&&S.saldoReal!==undefined;
+  const saldo=usaSaldoReal?Number(S.saldoReal):(totalRenda-totalFixos-totalParcelas-totalFaturas-totalVariaveis);
+  const saldoLbl=usaSaldoReal?'🏦 Saldo na conta':'📊 Resultado do mês (estimado)';
 
   const fmt=v=>'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const fmtD=iso=>{ if(!iso) return '—'; const p=iso.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
 
   const rowF=f=>`<tr>
     <td>${f.nome}</td><td style="text-align:center">${f.diaVenc}</td>
-    <td style="text-align:center">${f.tipo==='cartao'?'💳 Cartão':'📌 PIX'}</td>
+    <td style="text-align:center">${f.naFatura?'💳 Na fatura':f.tipo==='cartao'?'💳 Cartão':'📌 PIX'}</td>
     <td style="text-align:right;font-weight:600">${fmt(f.valor)}</td>
     <td style="text-align:center;color:${f.pago?'#27AE60':'#E8637A'};font-weight:700">${f.pago?'✅ Pago':'⏳ Pendente'}</td></tr>`;
   const rowFC=f=>`<tr>
@@ -4777,7 +4816,7 @@ tr:last-child td{border-bottom:none}
 <div class="body">
 <div class="summary">
   <div class="sc g"><div class="sc-lbl">💰 Renda do mês</div><div class="sc-val" style="color:#27AE60">${fmt(totalRenda)}</div></div>
-  <div class="sc ${saldo>=0?'g':'r'}"><div class="sc-lbl">🏦 Saldo na conta</div><div class="sc-val" style="color:${saldo>=0?'#27AE60':'#E8637A'}">${fmt(saldo)}</div></div>
+  <div class="sc ${saldo>=0?'g':'r'}"><div class="sc-lbl">${saldoLbl}</div><div class="sc-val" style="color:${saldo>=0?'#27AE60':'#E8637A'}">${fmt(saldo)}</div></div>
   <div class="sc r"><div class="sc-lbl">⏳ A pagar</div><div class="sc-val" style="color:#E8637A">${fmt(totalAPagar)}</div></div>
   <div class="sc y"><div class="sc-lbl">🛒 Gastos variáveis</div><div class="sc-val" style="color:#F39C12">${fmt(totalVariaveis)}</div></div>
   <div class="sc g"><div class="sc-lbl">✅ Total pago</div><div class="sc-val" style="color:#27AE60">${fmt(totalPago)}</div></div>
@@ -4846,7 +4885,7 @@ function importJ(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();
   r.onload=e=>{try{const imp=JSON.parse(e.target.result);if(!confirm('Substituir todos os dados?'))return;
-    S=Object.assign(S,imp);save();
+    S=imp;migrate();save();
     setRM(S.rendaMode||'semanal',true);
     updAll();alert('Importado!');}catch{alert('Arquivo inválido.');}};
   r.readAsText(f);ev.target.value='';
@@ -4859,7 +4898,7 @@ function fmtM(n){return'R$ '+(n||0).toLocaleString('pt-BR',{minimumFractionDigit
 function fmtDate(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}/${m}/${y}`;}
 function fmtDT(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
 function todayISO(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function semaIni(date,dia){const d=new Date(date);let diff=d.getDay()-dia;if(diff<0)diff+=7;d.setDate(d.getDate()-diff);return d.toISOString().slice(0,10);}
+function semaIni(date,dia){const d=new Date(date);let diff=d.getDay()-dia;if(diff<0)diff+=7;d.setDate(d.getDate()-diff);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function addDays(iso,n){const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
 function clearF(...ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
 
@@ -5000,9 +5039,9 @@ loadLocal();
   // ══════════ HELPERS ══════════
   function rendaSem(){
     return S.rendaMode==='semanal' ? (Number(S.rendaBaseSemanal)||0)
-                                   : (Number(S.rendaBaseMensal)||0)/4.3;
+                                   : (Number(S.rendaBaseMensal)||0)/SEM_MES;
   }
-  function rendaMes(){ return rendaSem()*4.3; }
+  function rendaMes(){ return rendaSem()*SEM_MES; }
 
   // Parcela ativa num mês (mes 1-12)
   function parcAtiva(p,ano,mes){
@@ -5039,12 +5078,11 @@ loadLocal();
   function semanasGasto(){
     const out=[];
     try{
+      // Só semanas fechadas (a atual ainda está em andamento), inclusive as sem gastos.
+      // Gastos no cartão ficam de fora: já entram na fatura.
       (S.semanasHist||[]).forEach(s=>{
-        if(s.gastos&&s.gastos.length) out.push(s.gastos.reduce((a,g)=>a+(Number(g.valor)||0),0));
+        out.push((s.gastos||[]).reduce((a,g)=>a+(g.cartaoId?0:(Number(g.valor)||0)),0));
       });
-      const at=S.semanaAtual;
-      if(at&&at.gastos&&at.gastos.length)
-        out.push(at.gastos.reduce((a,g)=>a+(Number(g.valor)||0),0));
     }catch(e){}
     return out;
   }
@@ -5053,7 +5091,7 @@ loadLocal();
     if(w.length<2) return null;
     const use=w.slice(-6); // últimas 6 semanas
     const med=use.reduce((a,b)=>a+b,0)/use.length;
-    return {mes:med*4.3, min:Math.min(...use)*4.3, max:Math.max(...use)*4.3, n:use.length};
+    return {mes:med*SEM_MES, min:Math.min(...use)*SEM_MES, max:Math.max(...use)*SEM_MES, n:use.length};
   }
 
   function modo(){ return S.diaDiaModo || 'fixo'; }
@@ -5094,6 +5132,7 @@ loadLocal();
       let pago=false;
       if(ehMesAtual) pago=(S.fixosPagos||[]).some(x=>x.id===f.id&&parseInt(x.mes)===mes&&parseInt(x.ano)===ano);
       if(pago) return;
+      if(fixoNaFatura(f,mes,ano)) return; // já está dentro da fatura do cartão
       itens.push({nome:f.nome||'Conta fixa',emoji:'📌',valor:v,diaVenc:f.diaVenc||null,tipo:'fixo'});
     });
 
@@ -5121,36 +5160,40 @@ loadLocal();
     if(incAtrasados===undefined) incAtrasados=true;
     const itens=[];
     const idsCartao=new Set((S.cartoes||[]).map(c=>c.id));
+    // Com atrasados: começa no dia 1 do mês, e o que venceu antes de "ini" sem pagar entra como atrasado
+    const ini0=incAtrasados?new Date(ini.getFullYear(),ini.getMonth(),1):ini;
+    const atrasou=d=>d<ini;
 
     (S.fixos||[]).forEach(f=>{
       const v=Number(f.valor)||0; if(v<=0) return;
-      ocorrencias(f.diaVenc,ini,fim).forEach(d=>{
+      ocorrencias(f.diaVenc,ini0,fim).forEach(d=>{
         const mm=d.getMonth()+1, yy=d.getFullYear();
         const pago=(S.fixosPagos||[]).some(x=>x.id===f.id&&parseInt(x.mes)===mm&&parseInt(x.ano)===yy);
         if(pago) return;
-        itens.push({nome:f.nome||'Conta fixa',emoji:'\uD83D\uDCCC',valor:v,data:d,tipo:'fixo'});
+        if(fixoNaFatura(f,mm,yy)) return; // já está dentro da fatura do cartão
+        itens.push({nome:f.nome||'Conta fixa',emoji:'\uD83D\uDCCC',valor:v,data:d,tipo:'fixo',atrasado:atrasou(d)});
       });
     });
 
     (S.parcelas||[]).forEach(p=>{
       const v=Number(p.valor)||0; if(v<=0) return;
       if(p.cartaoId && idsCartao.has(p.cartaoId)) return; // conta dentro da fatura
-      ocorrencias(p.diaVenc,ini,fim).forEach(d=>{
+      ocorrencias(p.diaVenc,ini0,fim).forEach(d=>{
         const mm=d.getMonth()+1, yy=d.getFullYear();
         if(!parcAtiva(p,yy,mm)) return;
         const pago=(p.pagas||[]).some(x=>parseInt(x.mes)===mm&&parseInt(x.ano)===yy);
         if(pago) return;
-        itens.push({nome:p.desc||'Parcela',emoji:'\uD83D\uDCB3',valor:v,data:d,tipo:'parcela'});
+        itens.push({nome:p.desc||'Parcela',emoji:'\uD83D\uDCB3',valor:v,data:d,tipo:'parcela',atrasado:atrasou(d)});
       });
     });
 
     (S.cartoes||[]).forEach(c=>{
-      ocorrencias(c.venc,ini,fim).forEach(d=>{
+      ocorrencias(c.venc,ini0,fim).forEach(d=>{
         const mm=d.getMonth()+1, yy=d.getFullYear();
         const fi=faturaInfo(c,mm,yy);
         const val=fi.falta, prev=!fi.fechada;
         if(val>0.01) itens.push({nome:'Fatura '+(c.nome||'cart\u00e3o')+(prev?' (previsto)':''),
-          emoji:'\uD83D\uDCB3',valor:val,data:d,tipo:'fatura'});
+          emoji:'\uD83D\uDCB3',valor:val,data:d,tipo:'fatura',atrasado:atrasou(d)});
       });
     });
 
