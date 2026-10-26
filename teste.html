@@ -2818,13 +2818,37 @@ function _faturaFechada(f){
   if(f.fechada!==undefined) return !!f.fechada;
   return (Number(f.valor)||0)>0;
 }
-// Gastos da semana lançados no cartão, pelo mês da compra
+// Dia em que a fatura fechada do banco foi registrada (registros antigos: pelo ts)
+function _faturaDataReg(f){
+  if(f.dataReg) return f.dataReg;
+  if(!f.ts) return null;
+  const d=new Date(f.ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+// Em qual fatura cai um gasto lançado no cartão: a do mês da compra. Se essa fatura
+// já foi registrada com o valor do banco, o gasto feito até o dia do registro já está
+// dentro dela (retorna null, não soma de novo) e o feito depois vai para a seguinte.
+function _faturaDoGasto(c, data){
+  let [y,m]=data.split('-').map(Number);
+  for(let k=0;k<12;k++){
+    const f=_faturaRegistro(c, m, y);
+    // Fatura parcelada conta como fechada no dia do parcelamento
+    const parc=f&&f.parcelada&&!_faturaFechada(f);
+    if(!_faturaFechada(f)&&!parc) return {mes:m, ano:y};
+    const reg=parc?_faturaDataReg({ts:f.parcelada.ts}):_faturaDataReg(f);
+    if(!reg || data<=reg) return null;
+    m++; if(m>12){m=1;y++;}
+  }
+  return null;
+}
+// Gastos da semana lançados no cartão que caem na fatura do mês
 function _gastosCartaoMes(cartaoId, mes, ano){
   let t=0;
+  const c=(S.cartoes||[]).find(x=>x.id===cartaoId);
   const soma=g=>{
     if(g.cartaoId!==cartaoId||!g.data) return;
-    const [y,m]=g.data.split('-').map(Number);
-    if(y===ano&&m===mes) t+=Number(g.valor)||0;
+    const alvo=c?_faturaDoGasto(c, g.data):null;
+    if(alvo&&alvo.ano===ano&&alvo.mes===mes) t+=Number(g.valor)||0;
   };
   ((S.semanaAtual&&S.semanaAtual.gastos)||[]).forEach(soma);
   (S.semanasHist||[]).forEach(s=>(s.gastos||[]).forEach(soma));
@@ -2877,6 +2901,11 @@ function limiteUsado(c){
     const rest=Number(p.total)-Math.max(0,idxHoje+1); // meses depois do atual
     if(rest>0) futuro+=v*Math.min(rest, Number(p.total));
   });
+  // Gastos lançados depois do registro da fatura já usam o limite, mas caem nas próximas
+  for(let k=1;k<=2;k++){
+    const dm=new Date(ano, mes-1+k, 1);
+    futuro+=_gastosCartaoMes(c.id, dm.getMonth()+1, dm.getFullYear());
+  }
   return fi.falta+futuro;
 }
 // Garante que existe o registro da fatura do mês (para guardar pagamentos)
@@ -4107,7 +4136,7 @@ function confirmarFatura(){
   const pagamentos=fatExist?fatExist.pagamentos||[]:[];
   const valorPagoExist=fatExist?fatExist.valorPago||0:0;
   c.faturas=(c.faturas||[]).filter(f=>!(f.mes===mes&&f.ano===ano));
-  c.faturas.push({mes,ano,valor:v,fechada:true,pagamentos,valorPago:valorPagoExist,ts:Date.now(),
+  c.faturas.push({mes,ano,valor:v,fechada:true,pagamentos,valorPago:valorPagoExist,ts:Date.now(),dataReg:todayISO(),
     ...(fatExist&&fatExist.parcelada?{parcelada:fatExist.parcelada}:{})});
   save();renderCartoes();
   document.getElementById('mbk-fatura').classList.remove('op');
