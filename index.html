@@ -622,6 +622,27 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
 .deficit-row{background:var(--redp);border-radius:var(--rs);padding:8px 12px;
   margin-top:6px;font-size:11px;color:var(--red);font-weight:600}
 
+/* ── PASTAS ── */
+.pasta-bar{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.pasta-chip{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:8px 12px;border-radius:12px;
+  border:1.5px solid var(--border);background:var(--card);font-family:var(--font);font-size:12px;
+  font-weight:700;color:var(--text);cursor:pointer;white-space:nowrap}
+.pasta-chip small{font-size:10px;color:var(--muted);font-weight:600}
+.pasta-chip.on{background:var(--g1);border-color:var(--g1);color:#fff}
+.pasta-chip.on small{color:rgba(255,255,255,.85)}
+.pasta-chip.nova{border-style:dashed;color:var(--muted)}
+.pasta-resumo{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--card);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;
+  box-shadow:0 1px 6px rgba(0,0,0,.05);font-size:12px}
+.pasta-resumo .pr-nums{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-weight:600}
+.pasta-resumo .pr-nums b{color:var(--text)}
+.pasta-resumo button{border:none;background:var(--bg);border-radius:8px;padding:6px 9px;
+  font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;color:var(--text)}
+.pasta-tag{font-size:9px;font-weight:700;color:var(--muted);background:var(--bg);
+  padding:1px 6px;border-radius:8px}
+.nova-parc-toggle{width:100%;margin-bottom:12px}
+.parc-grupo-title.clic{cursor:pointer}
+
 /* ── PARCELA GROUPS ── */
 .parc-grupo{margin-bottom:16px}
 .parc-grupo-title{font-size:11px;font-weight:800;text-transform:uppercase;
@@ -1017,7 +1038,10 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
       <button class="pf-btn" data-pf="pago" onclick="setParcFilter('pago')">✅ Pagas</button>
       <button class="pf-btn" data-pf="quitado" onclick="setParcFilter('quitado')">⚡ Quitando</button>
     </div>
-    <div class="fcard">
+    <div id="pasta-bar" class="pasta-bar"></div>
+    <div id="pasta-resumo"></div>
+    <button class="btnadd nova-parc-toggle" id="nova-parc-btn" onclick="toggleNovaParc()">➕ Nova Parcela</button>
+    <div class="fcard" id="nova-parc-card" style="display:none">
       <h3>➕ Nova Parcela</h3>
       <div class="frow s1"><div class="fld"><label>Produto / compra</label>
         <input type="text" id="p-desc" placeholder="Ex: Notebook, Tênis..."></div></div>
@@ -1042,6 +1066,10 @@ footer{max-width:680px;margin:20px auto 0;padding:0 14px 16px;
           <select id="p-cartao-id">
             <option value="">— Não (débito no saldo real) —</option>
           </select></div>
+      </div>
+      <div class="frow s1" style="margin-bottom:8px">
+        <div class="fld"><label>📁 Pasta</label>
+          <select id="p-pasta" onchange="_pastaSelChange(this)"></select></div>
       </div>
       <button class="btnadd" onclick="addParcela()">Adicionar Parcela</button>
     </div>
@@ -1730,6 +1758,7 @@ function migrate(){
   if(!S.rendaBaseMensal)S.rendaBaseMensal=0;
   S.fixos.forEach(f=>{if(f.diaVenc===undefined)f.diaVenc=null;});
   S.parcelas.forEach(p=>{if(!p.pagas)p.pagas=[];});
+  if(!Array.isArray(S.pastas))S.pastas=[];
   if(S.ultimaAt) document.getElementById('ftime').textContent='Última atualização: '+fmtDT(S.ultimaAt);
 }
 function loadLocal(){
@@ -1757,6 +1786,7 @@ function updAll(){
   try{ renderEmprestimos(); }catch(err){ console.error('updAll/empréstimos:', err); }
   _populaCartaoSel('s-cartao-id');
   _populaCartaoSel('p-cartao-id');
+  _populaPastaSel('p-pasta');
 }
 
 function setupUI(){
@@ -2028,32 +2058,47 @@ function calcFimPrev(){
   document.getElementById('p-fim-prev').value=(ini&&tot)?fmtDate(fimParc(ini,tot)):'';
 }
 function fimParc(ini,tot){const i=new Date(ini+'T12:00:00');const y=i.getFullYear(),m=i.getMonth()+tot-1;const d=new Date(y,m,diaVencNoMes(i.getDate(),y,m),12);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function addParcela(desc,valor,atual,total,dataIni,diaVenc){
+function addParcela(desc,valor,atual,total,dataIni,diaVenc,pastaId,cartaoIdArg){
   desc=desc||document.getElementById('p-desc').value.trim();
   valor=valor||parseFloat(document.getElementById('p-val').value)||0;
   atual=atual||parseInt(document.getElementById('p-atual').value)||1;
   total=total||parseInt(document.getElementById('p-total').value)||1;
   dataIni=dataIni||document.getElementById('p-ini').value;
   diaVenc=diaVenc||parseInt(document.getElementById('p-dia-venc').value)||null;
-  const cartaoId=document.getElementById('p-cartao-id')?.value||null;
+  const cartaoId=cartaoIdArg!==undefined?(cartaoIdArg||null):(document.getElementById('p-cartao-id')?.value||null);
+  if(pastaId===undefined) pastaId=document.getElementById('p-pasta')?.value||null;
+  if(pastaId&&!_pastaPorId(pastaId)) pastaId=null;
   if(!desc||!valor){alert('Preencha descrição e valor.');return;}
   if(atual>total){alert('Parcela atual não pode ser maior que o total.');return;}
   // Parcelas restantes (da atual até o fim) é o que ainda compromete o limite
   const parcelasRestantes=Math.max(0,total-atual+1);
   const valorComprometido=valor*parcelasRestantes;
   // No cartão, cada mês entra só a parcela daquele mês; o limite é calculado em limiteUsado()
-  S.parcelas.push({id:uid(),desc,valor,atual,total,dataIni,diaVenc,pagas:[],cartaoId:cartaoId||null});
+  S.parcelas.push({id:uid(),desc,valor,atual,total,dataIni,diaVenc,pagas:[],cartaoId:cartaoId||null,pastaId:pastaId||null});
   save();clearF('p-desc','p-val','p-atual','p-total','p-ini','p-dia-venc');
   if(document.getElementById('p-cartao-id'))document.getElementById('p-cartao-id').value='';
   document.getElementById('p-fim-prev').value='';
+  _fecharNovaParc();
   closeModal();renderParcelas();updKPIs();
   if(cartaoId)showToast(`💳 -${fmtM(valorComprometido)} comprometido no limite do cartão`);
 }
 function delParcela(id){
-  if(!confirm('Excluir?'))return;
+  const _p=S.parcelas.find(x=>x.id===id);
+  if(!confirm(_p?`Excluir a parcela "${_p.desc}"?`:'Excluir?'))return;
   S.parcelas=S.parcelas.filter(p=>p.id!==id);
   if(_parcExpanded===id)_parcExpanded=null;
   save();renderParcelas();updKPIs();
+}
+// O pagamento dessa parcela saiu do saldo real? Se a parcela trocou de cartão,
+// cada pagamento antigo guarda em pg.deb o que valia na época (ver saveEditParcela).
+function _pgDebitouSaldo(p,pg){
+  if(!pg||!pg.ts||pg.ts<(S.saldoRealTs||0)) return false;
+  if(pg.deb!==undefined) return !!pg.deb && _deveDescontar();
+  return !p.cartaoId&&_deveDescontar();
+}
+// Parcela criada por "Parcelar fatura": o cartão fica travado (está ligada à fatura)
+function _parcDeFatura(p){
+  return (S.cartoes||[]).some(c=>(c.faturas||[]).some(f=>f.parcelada&&f.parcelada.parcelaId===p.id));
 }
 function togglePagaBtn(pid){
   const n=new Date();const mes=n.getMonth()+1,ano=n.getFullYear();
@@ -2062,7 +2107,7 @@ function togglePagaBtn(pid){
   if(idx>=0){
     const pg=p.pagas[idx];
     // Parcela de cartão: o limite já foi comprometido na criação, "pago" é só controle visual
-    if(!p.cartaoId&&_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
+    if(_pgDebitouSaldo(p,pg))S.saldoReal+=p.valor;
     p.pagas.splice(idx,1);
   } else {
     const ts=Date.now();
@@ -2076,7 +2121,7 @@ function togglePaga(pid,mes,ano){
   const idx=p.pagas.findIndex(x=>x.mes===mes&&x.ano===ano);
   if(idx>=0){
     const pg=p.pagas[idx];
-    if(!p.cartaoId&&_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
+    if(_pgDebitouSaldo(p,pg))S.saldoReal+=p.valor;
     p.pagas.splice(idx,1);
   } else {
     const ts=Date.now();
@@ -2112,7 +2157,18 @@ function openEditParcela(id){
     </div>
     <div class="frow s1" style="margin-bottom:13px"><div class="fld"><label>Dia de vencimento</label>
       <input type="number" id="ep-dv" value="${p.diaVenc||''}" min="1" max="31" placeholder="ex: 15"></div></div>
+    <div class="frow s1" style="margin-bottom:9px"><div class="fld"><label>💳 Pagar com cartão?</label>
+      <select id="ep-cartao" ${_parcDeFatura(p)?'disabled':''}></select>
+      ${_parcDeFatura(p)?'<div style="font-size:10px;color:var(--muted);margin-top:4px">Parcelamento de fatura: o cartão não pode ser trocado.</div>':''}</div></div>
+    <div class="frow s1" style="margin-bottom:13px"><div class="fld"><label>📁 Pasta</label>
+      <select id="ep-pasta" onchange="_pastaSelChange(this)"></select></div></div>
     <button class="btnadd" onclick="saveEditParcela('${id}')">💾 Salvar alterações</button>`;
+  _populaPastaSel('ep-pasta', p.pastaId||'');
+  _populaCartaoSel('ep-cartao');
+  { const sc=document.getElementById('ep-cartao');
+    if(sc){ sc.value=p.cartaoId||'';
+      // cartão que foi apagado: mantém a opção para não trocar sem querer
+      if(p.cartaoId&&sc.value!==p.cartaoId){ sc.insertAdjacentHTML('beforeend',`<option value="${esc(p.cartaoId)}">(cartão removido)</option>`); sc.value=p.cartaoId; } } }
   document.getElementById('mbk').classList.add('op');
 }
 function mEditCalcFim(id){
@@ -2129,10 +2185,23 @@ function saveEditParcela(id){
   p.total=parseInt(document.getElementById('ep-total').value)||p.total;
   p.dataIni=document.getElementById('ep-ini').value||p.dataIni;
   p.diaVenc=parseInt(document.getElementById('ep-dv').value)||null;
+  const _ps=document.getElementById('ep-pasta');
+  if(_ps){const v=_ps.value; p.pastaId=(v&&_pastaPorId(v))?v:null;}
+  const _sc=document.getElementById('ep-cartao');
+  if(_sc&&!_sc.disabled){
+    const novo=_sc.value||null, antigo=p.cartaoId||null;
+    if(novo!==antigo){
+      // Congela, em cada pagamento já feito, se ele saiu ou não do saldo,
+      // para que desmarcar depois devolva o valor certo.
+      (p.pagas||[]).forEach(pg=>{ if(pg.deb===undefined) pg.deb=!antigo; });
+      p.cartaoId=novo;
+    }
+  }
   save();closeModal();renderParcelas();updKPIs();
 }
 function renderParcelas(){
   const el=document.getElementById('list-parcelas');
+  renderPastaBar();
   if(!S.parcelas.length){
     el.innerHTML='<div class="empty"><div class="icon">💳</div>Nenhuma parcela cadastrada.</div>';
     ['s-parc-mes','s-parc-pago','s-parc-falta'].forEach(id=>document.getElementById(id).textContent=fmtM(0));
@@ -2143,7 +2212,7 @@ function renderParcelas(){
     const d=_proxCobranca(p);
     return d||new Date(9999,0,1);
   }
-  const sorted=[...S.parcelas].sort((a,b)=>proximoVenc(a)-proximoVenc(b));
+  const sorted=_parcDaPasta(S.parcelas).sort((a,b)=>proximoVenc(a)-proximoVenc(b));
   function diasAteVenc(p){ return _diasAteVenc(p); }
 
   // Aplica filtro da aba selecionada
@@ -2170,7 +2239,7 @@ function renderParcelas(){
       renderGrupo('⚠️ Vencem esta semana', grupos.urgente, 'var(--red)')+
       renderGrupo('📋 Outras parcelas', grupos.outras, 'var(--muted)')+
       renderGrupo('✅ Pagas este mês', grupos.pagas, 'var(--g1)')+
-      (grupos.finalizadas.length?renderGrupo('🏁 Finalizadas', grupos.finalizadas, '#aaa'):'');
+      _renderFinalizadas(grupos.finalizadas);
   } else if(_parcFilter==='pendente'){
     html=
       renderGrupo('⚠️ Vencem esta semana', grupos.urgente, 'var(--red)')+
@@ -2180,7 +2249,7 @@ function renderParcelas(){
   } else if(_parcFilter==='quitado'){
     html=
       renderGrupo('⚡ Quase quitadas', filtrado.filter(p=>parcStatus(p)==='quitada'), 'var(--g1)')+
-      renderGrupo('🏁 Finalizadas', filtrado.filter(p=>parcStatus(p)==='finalizada'), '#aaa');
+      _renderFinalizadas(filtrado.filter(p=>parcStatus(p)==='finalizada'));
   }
   el.innerHTML=html||'<div class="empty"><div class="icon">🔍</div>Nenhuma parcela nessa categoria.</div>';
 
@@ -2253,7 +2322,7 @@ function renderCard(p){
     <div class="pcc-row">
       <div class="pcc-info">
         <div class="pcc-name">${esc(p.desc)}</div>
-        <div class="pcc-meta">${vencLabel}${stBadge}${pgH?'<span class="badge b-ok">✅</span>':atrasada?'<span class="badge b-red">Atrasado</span>':''}</div>
+        <div class="pcc-meta">${_pastaTag(p)}${vencLabel}${stBadge}${pgH?'<span class="badge b-ok">✅</span>':atrasada?'<span class="badge b-red">Atrasado</span>':''}</div>
       </div>
       <div class="pcc-right">
         <div class="pcc-val">${fmtM(p.valor)}</div>
@@ -2287,6 +2356,126 @@ function renderCard(p){
         <button class="fbtn" style="flex:1;padding:9px;text-align:center;color:var(--red)" onclick="delParcela('${p.id}')">🗑️ Excluir</button>
       </div>
     </div>`:''}
+  </div>`;
+}
+// ══ PASTAS DE PARCELAS ══
+// S.pastas=[{id,nome}]; cada parcela guarda pastaId (null = sem pasta).
+// Excluir uma pasta NUNCA exclui parcelas: elas voltam para "Sem pasta".
+let _pastaAtual=(()=>{try{return localStorage.getItem('ft_pasta_atual')||'todas';}catch(e){return 'todas';}})();
+let _finalAberto=false;
+function _pastaPorId(id){return (S.pastas||[]).find(x=>x.id===id)||null;}
+function _setPastaAtual(id){
+  _pastaAtual=id;
+  try{localStorage.setItem('ft_pasta_atual',id);}catch(e){}
+}
+function _parcDaPasta(lista){
+  if(_pastaAtual==='todas') return [...lista];
+  if(_pastaAtual==='sem') return lista.filter(p=>!p.pastaId||!_pastaPorId(p.pastaId));
+  return lista.filter(p=>p.pastaId===_pastaAtual);
+}
+function _pastaTag(p){
+  if(_pastaAtual!=='todas') return '';
+  const pa=p.pastaId&&_pastaPorId(p.pastaId);
+  return pa?`<span class="pasta-tag">📁 ${esc(pa.nome)}</span>`:'';
+}
+function selPasta(id){
+  _setPastaAtual(id);
+  // Nova parcela já vem com a pasta aberta selecionada
+  const sel=document.getElementById('p-pasta');
+  if(sel) sel.value=(id!=='todas'&&id!=='sem')?id:'';
+  renderParcelas();
+}
+function renderPastaBar(){
+  const bar=document.getElementById('pasta-bar'), res=document.getElementById('pasta-resumo');
+  if(!bar) return;
+  if(_pastaAtual!=='todas'&&_pastaAtual!=='sem'&&!_pastaPorId(_pastaAtual)) _setPastaAtual('todas');
+  const ativa=p=>parcStatus(p)!=='finalizada';
+  const conta=fn=>S.parcelas.filter(p=>ativa(p)&&fn(p)).length;
+  const semN=conta(p=>!p.pastaId||!_pastaPorId(p.pastaId));
+  const chip=(id,label,n)=>`<button class="pasta-chip ${_pastaAtual===id?'on':''}" onclick="selPasta('${id}')">${label} <small>${n}</small></button>`;
+  let h=chip('todas','📋 Todas',conta(()=>true));
+  (S.pastas||[]).forEach(pa=>{ h+=chip(pa.id,'📁 '+esc(pa.nome),conta(p=>p.pastaId===pa.id)); });
+  if((S.pastas||[]).length && semN) h+=chip('sem','📂 Sem pasta',semN);
+  h+=`<button class="pasta-chip nova" onclick="novaPasta()">＋ Nova pasta</button>`;
+  bar.innerHTML=h;
+  if(!res) return;
+  if(_pastaAtual==='todas'){ res.innerHTML=''; return; }
+  const lista=_parcDaPasta(S.parcelas);
+  const mes=lista.filter(p=>ativa(p)&&_parcAtivaAgora(p)).reduce((a,p)=>a+p.valor,0);
+  const falta=lista.filter(ativa).reduce((a,p)=>a+p.valor*Math.max(0,(Number(p.total)||0)-_parcPagas(p)),0);
+  const pa=_pastaPorId(_pastaAtual);
+  res.innerHTML=`<div class="pasta-resumo">
+    <div class="pr-nums"><span>Por mês <b>${fmtM(mes)}</b></span><span>Falta <b>${fmtM(falta)}</b></span></div>
+    ${pa?`<div style="display:flex;gap:5px;flex-shrink:0"><button onclick="renomearPasta('${pa.id}')">✏️</button><button onclick="excluirPasta('${pa.id}')">🗑️</button></div>`:''}
+  </div>`;
+}
+function _criarPasta(){
+  const nome=(prompt('Nome da nova pasta:')||'').trim();
+  if(!nome) return null;
+  const ja=(S.pastas||[]).find(x=>x.nome.toLowerCase()===nome.toLowerCase());
+  if(ja) return ja.id;
+  if(!Array.isArray(S.pastas)) S.pastas=[];
+  const pa={id:uid(),nome:nome.slice(0,40)};
+  S.pastas.push(pa);
+  save();
+  return pa.id;
+}
+function novaPasta(){
+  const id=_criarPasta(); if(!id) return;
+  selPasta(id); _populaPastaSel('p-pasta', id);
+  showToast('📁 Pasta criada');
+}
+function renomearPasta(id){
+  const pa=_pastaPorId(id); if(!pa) return;
+  const nome=(prompt('Novo nome da pasta:',pa.nome)||'').trim();
+  if(!nome||nome===pa.nome) return;
+  pa.nome=nome.slice(0,40); save(); renderParcelas(); _populaPastaSel('p-pasta');
+}
+function excluirPasta(id){
+  const pa=_pastaPorId(id); if(!pa) return;
+  const n=S.parcelas.filter(p=>p.pastaId===id).length;
+  if(!confirm(`Excluir a pasta "${pa.nome}"?\n\nAs ${n} parcela(s) dela NÃO serão apagadas — só voltam para "Sem pasta".`)) return;
+  S.parcelas.forEach(p=>{ if(p.pastaId===id) p.pastaId=null; });
+  S.pastas=S.pastas.filter(x=>x.id!==id);
+  _setPastaAtual('todas');
+  save(); renderParcelas(); _populaPastaSel('p-pasta');
+}
+function _populaPastaSel(selId, valor){
+  const sel=document.getElementById(selId); if(!sel) return;
+  const cur=valor!==undefined?valor:sel.value;
+  sel.innerHTML='<option value="">— Sem pasta —</option>'+
+    (S.pastas||[]).map(pa=>`<option value="${pa.id}">📁 ${esc(pa.nome)}</option>`).join('')+
+    '<option value="__nova">＋ Criar nova pasta…</option>';
+  let v=cur;
+  if(v===undefined||v==='') v=(selId==='p-pasta'||selId==='mp-pasta')&&_pastaPorId(_pastaAtual)?_pastaAtual:'';
+  sel.value=_pastaPorId(v)?v:'';
+}
+function _pastaSelChange(sel){
+  if(sel.value!=='__nova') return;
+  const id=_criarPasta();
+  renderPastaBar();
+  _populaPastaSel(sel.id, id||'');
+  if(sel.id!=='p-pasta') _populaPastaSel('p-pasta');
+}
+function toggleNovaParc(){
+  const c=document.getElementById('nova-parc-card'), b=document.getElementById('nova-parc-btn');
+  if(!c) return;
+  const abrir=c.style.display==='none';
+  c.style.display=abrir?'':'none';
+  if(b) b.textContent=abrir?'✕ Fechar':'➕ Nova Parcela';
+  if(abrir){ _populaPastaSel('p-pasta'); document.getElementById('p-desc')?.focus(); }
+}
+function _fecharNovaParc(){
+  const c=document.getElementById('nova-parc-card'), b=document.getElementById('nova-parc-btn');
+  if(c) c.style.display='none'; if(b) b.textContent='➕ Nova Parcela';
+}
+function toggleFinalizadas(){ _finalAberto=!_finalAberto; renderParcelas(); }
+function _renderFinalizadas(lista){
+  if(!lista.length) return '';
+  if(!_finalAberto) return `<div class="parc-grupo"><div class="parc-grupo-title clic" style="color:#aaa" onclick="toggleFinalizadas()">🏁 Finalizadas <span>(${lista.length})</span> ▼ mostrar</div></div>`;
+  return `<div class="parc-grupo">
+    <div class="parc-grupo-title clic" style="color:#aaa" onclick="toggleFinalizadas()">🏁 Finalizadas <span>(${lista.length})</span> ▲ esconder</div>
+    ${lista.map(renderCard).join('')}
   </div>`;
 }
 function renderGrupo(titulo,lista,cor){
@@ -3488,7 +3677,7 @@ function togglePagaCalendario(pid, mes, ano){
   const idx=p.pagas.findIndex(x=>x.mes===mes&&x.ano===ano);
   if(idx>=0){
     const pg=p.pagas[idx];
-    if(!p.cartaoId&&_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
+    if(_pgDebitouSaldo(p,pg))S.saldoReal+=p.valor;
     p.pagas.splice(idx,1);
   } else {
     const ts=Date.now();
@@ -4373,13 +4562,21 @@ function openModal(){
           <input type="text" id="mp-f" readonly placeholder="—"></div></div>
       <div class="frow s1" style="margin-bottom:13px"><div class="fld"><label>Dia de vencimento</label>
         <input type="number" id="mp-dv" placeholder="ex: 15" min="1" max="31"></div></div>
+      <div class="frow s1" style="margin-bottom:9px"><div class="fld"><label>💳 Pagar com cartão? (opcional)</label>
+        <select id="mp-cartao"></select></div></div>
+      <div class="frow s1" style="margin-bottom:13px"><div class="fld"><label>📁 Pasta</label>
+        <select id="mp-pasta" onchange="_pastaSelChange(this)"></select></div></div>
       <button class="btnadd" onclick="addParcela(
         document.getElementById('mp-d').value,
         parseFloat(document.getElementById('mp-v').value),
         parseInt(document.getElementById('mp-a').value)||1,
         parseInt(document.getElementById('mp-t').value)||1,
         document.getElementById('mp-i').value,
-        parseInt(document.getElementById('mp-dv').value)||null)">Adicionar</button>`;
+        parseInt(document.getElementById('mp-dv').value)||null,
+        document.getElementById('mp-pasta').value||null,
+        document.getElementById('mp-cartao').value||null)">Adicionar</button>`;
+    _populaCartaoSel('mp-cartao');
+    _populaPastaSel('mp-pasta');
   } else {
     body.innerHTML=`
       <div class="frow s1" style="margin-bottom:9px"><div class="fld"><label>Descrição</label>
