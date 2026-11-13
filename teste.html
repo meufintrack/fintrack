@@ -2089,6 +2089,17 @@ function delParcela(id){
   if(_parcExpanded===id)_parcExpanded=null;
   save();renderParcelas();updKPIs();
 }
+// O pagamento dessa parcela saiu do saldo real? Se a parcela trocou de cartão,
+// cada pagamento antigo guarda em pg.deb o que valia na época (ver saveEditParcela).
+function _pgDebitouSaldo(p,pg){
+  if(!pg||!pg.ts||pg.ts<(S.saldoRealTs||0)) return false;
+  if(pg.deb!==undefined) return !!pg.deb && _deveDescontar();
+  return !p.cartaoId&&_deveDescontar();
+}
+// Parcela criada por "Parcelar fatura": o cartão fica travado (está ligada à fatura)
+function _parcDeFatura(p){
+  return (S.cartoes||[]).some(c=>(c.faturas||[]).some(f=>f.parcelada&&f.parcelada.parcelaId===p.id));
+}
 function togglePagaBtn(pid){
   const n=new Date();const mes=n.getMonth()+1,ano=n.getFullYear();
   const p=S.parcelas.find(x=>x.id===pid);if(!p)return;
@@ -2096,7 +2107,7 @@ function togglePagaBtn(pid){
   if(idx>=0){
     const pg=p.pagas[idx];
     // Parcela de cartão: o limite já foi comprometido na criação, "pago" é só controle visual
-    if(!p.cartaoId&&_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
+    if(_pgDebitouSaldo(p,pg))S.saldoReal+=p.valor;
     p.pagas.splice(idx,1);
   } else {
     const ts=Date.now();
@@ -2110,7 +2121,7 @@ function togglePaga(pid,mes,ano){
   const idx=p.pagas.findIndex(x=>x.mes===mes&&x.ano===ano);
   if(idx>=0){
     const pg=p.pagas[idx];
-    if(!p.cartaoId&&_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
+    if(_pgDebitouSaldo(p,pg))S.saldoReal+=p.valor;
     p.pagas.splice(idx,1);
   } else {
     const ts=Date.now();
@@ -2146,10 +2157,18 @@ function openEditParcela(id){
     </div>
     <div class="frow s1" style="margin-bottom:13px"><div class="fld"><label>Dia de vencimento</label>
       <input type="number" id="ep-dv" value="${p.diaVenc||''}" min="1" max="31" placeholder="ex: 15"></div></div>
+    <div class="frow s1" style="margin-bottom:9px"><div class="fld"><label>💳 Pagar com cartão?</label>
+      <select id="ep-cartao" ${_parcDeFatura(p)?'disabled':''}></select>
+      ${_parcDeFatura(p)?'<div style="font-size:10px;color:var(--muted);margin-top:4px">Parcelamento de fatura: o cartão não pode ser trocado.</div>':''}</div></div>
     <div class="frow s1" style="margin-bottom:13px"><div class="fld"><label>📁 Pasta</label>
       <select id="ep-pasta" onchange="_pastaSelChange(this)"></select></div></div>
     <button class="btnadd" onclick="saveEditParcela('${id}')">💾 Salvar alterações</button>`;
   _populaPastaSel('ep-pasta', p.pastaId||'');
+  _populaCartaoSel('ep-cartao');
+  { const sc=document.getElementById('ep-cartao');
+    if(sc){ sc.value=p.cartaoId||'';
+      // cartão que foi apagado: mantém a opção para não trocar sem querer
+      if(p.cartaoId&&sc.value!==p.cartaoId){ sc.insertAdjacentHTML('beforeend',`<option value="${esc(p.cartaoId)}">(cartão removido)</option>`); sc.value=p.cartaoId; } } }
   document.getElementById('mbk').classList.add('op');
 }
 function mEditCalcFim(id){
@@ -2168,6 +2187,16 @@ function saveEditParcela(id){
   p.diaVenc=parseInt(document.getElementById('ep-dv').value)||null;
   const _ps=document.getElementById('ep-pasta');
   if(_ps){const v=_ps.value; p.pastaId=(v&&_pastaPorId(v))?v:null;}
+  const _sc=document.getElementById('ep-cartao');
+  if(_sc&&!_sc.disabled){
+    const novo=_sc.value||null, antigo=p.cartaoId||null;
+    if(novo!==antigo){
+      // Congela, em cada pagamento já feito, se ele saiu ou não do saldo,
+      // para que desmarcar depois devolva o valor certo.
+      (p.pagas||[]).forEach(pg=>{ if(pg.deb===undefined) pg.deb=!antigo; });
+      p.cartaoId=novo;
+    }
+  }
   save();closeModal();renderParcelas();updKPIs();
 }
 function renderParcelas(){
@@ -3648,7 +3677,7 @@ function togglePagaCalendario(pid, mes, ano){
   const idx=p.pagas.findIndex(x=>x.mes===mes&&x.ano===ano);
   if(idx>=0){
     const pg=p.pagas[idx];
-    if(!p.cartaoId&&_deveDescontar()&&pg.ts&&pg.ts>=(S.saldoRealTs||0))S.saldoReal+=p.valor;
+    if(_pgDebitouSaldo(p,pg))S.saldoReal+=p.valor;
     p.pagas.splice(idx,1);
   } else {
     const ts=Date.now();
