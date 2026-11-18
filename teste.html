@@ -1239,6 +1239,41 @@ html[data-tema="escuro"] .ft-lim-btn{color:var(--g3)}
 .ft-lim-form .ft-lim-row span{flex:1;font-size:13.5px;font-weight:600}
 .ft-lim-form .ft-lim-row input{width:130px;flex:0 0 130px;padding:10px 12px;text-align:right;font-family:var(--fd);font-weight:700}
 
+
+/* ═════════ FT2 — Lote 5: topo fininho ═════════ */
+.hdr{padding:max(10px,env(safe-area-inset-top,0px)) 16px 10px;
+  background:linear-gradient(150deg,rgba(10,82,54,.94),rgba(14,122,78,.94) 60%,rgba(20,150,96,.94));
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 8px 22px -14px rgba(10,82,54,.7)}
+html[data-tema="escuro"] .hdr{background:linear-gradient(150deg,rgba(11,42,31,.92),rgba(15,61,44,.92) 60%,rgba(18,92,64,.92));box-shadow:0 8px 22px -14px rgba(0,0,0,.7)}
+.hdr-in{align-items:center}
+.hdr-sub{display:none}
+.hdr-in>div:first-child{display:flex;align-items:center;gap:10px;width:100%}
+.hdr-brand{flex:1;min-width:0}
+.hdr-in>.rp{display:none} /* só até o script mover para a folha */
+@media(min-width:601px){
+  .ft-acts{margin:0!important}
+  #perfil-selector[style*="flex"]{margin-top:0!important}
+}
+
+/* linha da renda no cartão de saldo */
+.ft-renda-chip{position:relative;display:inline-flex;align-items:center;gap:7px;margin-top:10px;max-width:100%;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.26);color:#fff;border-radius:999px;
+  padding:6px 12px;font-family:var(--font);font-size:11.5px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ft-renda-chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ft-renda-chip svg{width:13px;height:13px;flex-shrink:0;opacity:.85}
+.ft-renda-chip:active{transform:scale(.97)}
+
+/* folha "Sua renda" com os campos originais */
+.ft-renda-box{background:var(--hdr-grad);border-radius:18px;padding:14px;color:#fff}
+.ft-renda-box .rp{width:100%;min-width:0;background:transparent;border:none;padding:0;-webkit-backdrop-filter:none;backdrop-filter:none;gap:9px}
+.ft-renda-box .rp-row{background:rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;justify-content:space-between}
+.ft-renda-box .rp-row input,.ft-renda-box .rp-row select{font-size:17px;width:auto;flex:1;min-width:0;text-align:right}
+.ft-renda-box .rp-btn{padding:8px 6px;font-size:11px}
+.ft-renda-box .rp-bot>div:first-child{display:none} /* "Na conta" já está grande no cartão de saldo */
+.ft-renda-box .rp-bot{justify-content:stretch}
+.ft-renda-box .btn-extra{flex:1;padding:10px;font-size:12.5px;border-radius:10px}
+.ft-renda-nota{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+
 </style>
 </head>
 <body>
@@ -1310,8 +1345,8 @@ html[data-tema="escuro"] .ft-lim-btn{color:var(--g3)}
     </div>
     <div class="rp">
       <div class="rp-modes">
-        <button class="rp-btn" id="rm-mensal" onclick="setRM('mensal')">📅 Salário Mensal</button>
-        <button class="rp-btn on" id="rm-semanal" onclick="setRM('semanal')">📆 Semanal</button>
+        <button class="rp-btn" id="rm-mensal" onclick="setRM('mensal')">Salário mensal</button>
+        <button class="rp-btn on" id="rm-semanal" onclick="setRM('semanal')">Semanal</button>
       </div>
       <div class="rp-row" id="rp-val-row">
         <label id="rl">Semana R$</label>
@@ -1347,6 +1382,7 @@ html[data-tema="escuro"] .ft-lim-btn{color:var(--g3)}
     <div class="ft-hero-top"><span>Saldo na conta</span><button type="button" class="ft-hero-btn" onclick="openSaldoModal()">Atualizar</button></div>
     <div class="ft-hero-v ft-val" id="ft-h-saldo">—</div>
     <div class="ft-hero-sub" id="ft-h-sub"></div>
+    <button type="button" class="ft-renda-chip" id="ft-renda-chip" onclick="ftRendaAbrir()"><span id="ft-renda-chip-t">Sua renda</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
     <div class="ft-hero-pills">
       <div><b class="ft-val" id="ft-h-disp">—</b><span>livre depois das contas</span></div>
       <div><b class="ft-val" id="ft-h-dia">—</b><span>livre por dia</span></div>
@@ -6853,13 +6889,14 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
       const sr=$('k-saldo-real'), disp=$('k-saldo'), dia=$('k-dia');
       if(!sr) return;
       const hs=$('ft-h-saldo'), hsub=$('ft-h-sub'), hd=$('ft-h-disp'), hdia=$('ft-h-dia');
-      hs.textContent=sr.textContent;
+      const neg=t=>String(t).replace(/^R\$\s*-\s*/,'−R$ '); // "R$ -909,86" → "−R$ 909,86" (só na tela)
+      hs.textContent=neg(sr.textContent);
       hs.classList.toggle('neg',/\bred\b/.test(sr.className));
       const semSaldo=sr.textContent.trim()==='—';
       hsub.textContent=semSaldo?($('k-saldo-real-sub')||{}).textContent||'':($('k-saldo-explicacao')||{}).textContent||'';
-      hd.textContent=disp?disp.textContent:'—';
+      hd.textContent=disp?neg(disp.textContent):'—';
       hd.classList.toggle('neg',!!disp&&/\bred\b/.test(disp.className));
-      hdia.textContent=dia?dia.textContent:'—';
+      hdia.textContent=dia?neg(dia.textContent):'—';
     }catch(e){console.error('FT2 espelhar',e);}
   }
   function observar(){
@@ -7130,7 +7167,7 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
     const v=$('ft-pg-v')?$('ft-pg-v').value:'';
     el.innerHTML=`<div class="ft-card-h"><span>Previsão até receber</span><small>${p.pr.nome}, ${dd}</small></div>
       <div class="ft-prev-frase">Se nada mudar, você chega lá com</div>
-      <div class="ft-prev-big ft-val" style="color:${cor}">${fmtM(p.fim)}</div>
+      <div class="ft-prev-big ft-val" style="color:${cor}">${p.fim<0?'−'+fmtM(-p.fim):fmtM(p.fim)}</div>
       <div class="ft-prev-linhas">
         <div><span>Na conta agora</span><b class="ft-val">${fmtM(p.sr)}</b></div>
         <div><span>Contas até lá (${p.contas.n})</span><b class="ft-val">− ${fmtM(p.contas.total)}</b></div>
@@ -7704,6 +7741,49 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
   envolver('renderSemana',()=>ftRenderLimites());
   envolver('updAll',()=>ftRenderLimites());
   ftRenderLimites();
+})();
+</script>
+
+<script>
+// ═════════ FT2 — Lote 5: topo fininho. O painel de renda original é MOVIDO para uma folha (mesmos ids e funções). ═════════
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const DSN=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  const curto=v=>{ const n=Number(v)||0; return Number.isInteger(n)?'R$ '+n.toLocaleString('pt-BR'):fmtM(n); };
+
+  // folha "Sua renda"
+  const bk=document.createElement('div'); bk.id='ft-renda-bk'; bk.className='ft-sheet-bk';
+  bk.innerHTML=`<div class="ft-sheet" role="dialog" aria-label="Sua renda">
+    <div class="ft-sheet-h"><b>Sua renda</b><button type="button" class="bclose" aria-label="Fechar">✕</button></div>
+    <div class="ft-renda-box" id="ft-renda-box"></div>
+    <div class="ft-renda-nota">Muda na hora e salva sozinho, igual antes. "+ Extra" é para dinheiro que entrou fora do salário.</div></div>`;
+  document.body.appendChild(bk);
+  const rp=document.querySelector('.hdr .rp');
+  if(rp) $('ft-renda-box').appendChild(rp); // move o painel original (nada é recriado)
+
+  window.ftRendaFechar=function(){ bk.classList.remove('op'); try{ ftRendaChip(); }catch(e){} };
+  window.ftRendaAbrir=function(){ bk.classList.add('op'); };
+  bk.addEventListener('click',e=>{ if(e.target===bk) ftRendaFechar(); });
+  bk.querySelector('.bclose').onclick=ftRendaFechar;
+  // "+ Extra" abre outra janela do app: fecha a folha antes (o clique original continua funcionando)
+  $('ft-renda-box').addEventListener('click',e=>{
+    if(e.target.closest('.btn-extra')||e.target.closest('[onclick*="openSaldoModal"]')) bk.classList.remove('op');
+  },true);
+
+  window.ftRendaChip=function(){
+    const t=$('ft-renda-chip-t'); if(!t) return;
+    const sem=(S.rendaMode||'semanal')==='semanal';
+    const v=sem?S.rendaBaseSemanal:S.rendaBaseMensal;
+    if(!(Number(v)>0)){ t.textContent='Definir minha renda'; return; }
+    t.textContent=sem?`Recebo ${curto(v)} toda ${DSN[S.rendaDiaSemana==null?5:Number(S.rendaDiaSemana)]}`:`Recebo ${curto(v)} por mês`;
+  };
+  const orig=window.updKPIs;
+  if(typeof orig==='function'&&!orig._ft5){
+    const novo=function(){ const r=orig.apply(this,arguments); try{ ftRendaChip(); }catch(e){} return r; };
+    novo._ft5=true; window.updKPIs=novo;
+  }
+  ftRendaChip();
 })();
 </script>
 
