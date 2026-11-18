@@ -28,6 +28,7 @@
   apply();
   try{if(localStorage.getItem('ft_hide')==='1')document.documentElement.classList.add('ft-hide');}catch(e){}
 })();
+window.ftConfirm=window.ftConfirm||function(m){return Promise.resolve(window.confirm(m));};
 window._ftCss=function(n,fb){try{var v=getComputedStyle(document.documentElement).getPropertyValue(n).trim();return v||fb;}catch(e){return fb;}};
 </script>
 
@@ -969,6 +970,120 @@ html.ft-hide :is(.emp-nums b,.proj-row strong,.pasta-resumo .pr-nums b,.cal-deta
   #perfil-selector[style*="flex"]{display:inline-flex!important;vertical-align:middle;margin-top:10px}
 }
 
+
+/* ═════════ FT2 — Lote 2: início, barra de abas, lista, confirmações, ícones ═════════ */
+.ft-ic{width:15px;height:15px;flex-shrink:0;vertical-align:-3px}
+.tbtn{display:inline-flex;align-items:center;gap:6px}
+.klbl{display:flex;align-items:center;gap:5px}
+.klbl .ft-ic{width:13px;height:13px;opacity:.85}
+.meta-title,.pizza-title{display:flex;align-items:center;gap:7px}
+.meta-title .ft-ic,.pizza-title .ft-ic{color:var(--g1);width:16px;height:16px}
+
+/* H1 cartão de saldo */
+.ft-hero{position:relative;overflow:hidden;border-radius:24px;padding:18px 18px 16px;margin-bottom:12px;color:#fff;
+  background:var(--hdr-grad);box-shadow:0 18px 36px -18px rgba(10,82,54,.7);animation:popIn .4s cubic-bezier(.34,1.4,.64,1) both}
+.ft-hero-spark{position:absolute;right:-6px;top:22px;opacity:.35;pointer-events:none}
+.ft-hero-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;opacity:.92}
+.ft-hero-btn{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;font-family:var(--font);
+  font-size:11px;font-weight:700;padding:6px 12px;border-radius:10px;cursor:pointer}
+.ft-hero-v{font-size:38px;font-weight:800;line-height:1.05;margin-top:4px;position:relative}
+.ft-hero-v.neg{color:#FFC2CB}
+.ft-hero-sub{font-size:11px;opacity:.78;margin-top:3px;position:relative}
+.ft-hero-pills{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;position:relative}
+.ft-hero-pills div{background:rgba(255,255,255,.13);border-radius:14px;padding:9px 11px;min-width:0}
+.ft-hero-pills b{display:block;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ft-hero-pills b.neg{color:#FFC2CB}
+.ft-hero-pills span{font-size:10px;opacity:.8}
+/* os dois cartões antigos viraram o cartão novo (continuam na página, escondidos, alimentando os números) */
+.kpi-grid>.saldo-real-card,.kpi-grid>.kcard.hi:nth-child(2){display:none}
+.kpi-grid.ft-fechado{display:none}
+.ft-kpi-toggle{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;margin:0 0 14px;padding:10px;
+  background:transparent;border:1.5px dashed var(--border);border-radius:var(--rs);color:var(--muted);
+  font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer}
+.ft-kpi-toggle svg{width:15px;height:15px;transition:transform .25s}
+.ft-kpi-toggle.aberto svg{transform:rotate(180deg)}
+
+/* H2 próximas contas */
+.ft-prox{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:12px 14px;margin-bottom:12px}
+.ft-prox-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;margin-bottom:4px}
+.ft-prox-h button{border:none;background:none;color:var(--g1);font-family:var(--font);font-size:11px;font-weight:800;cursor:pointer;padding:4px 0}
+html[data-tema="escuro"] .ft-prox-h button{color:var(--g3)}
+.ft-up{display:flex;align-items:center;gap:10px;padding:8px 0;width:100%;border:none;background:none;font-family:var(--font);color:var(--text);text-align:left;cursor:pointer}
+.ft-up+.ft-up{border-top:1px solid var(--border)}
+.ft-up-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:800;flex-shrink:0}
+.ft-up-ic svg{width:16px;height:16px}
+.ft-up-tx{flex:1;min-width:0}
+.ft-up-tx b{display:block;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ft-up-tx span{font-size:11px;color:var(--muted)}
+.ft-up-tx span.late{color:var(--red);font-weight:700}
+.ft-up-v{font-size:13.5px;font-weight:800;flex-shrink:0}
+.ft-prox-vazio{font-size:12px;color:var(--muted);padding:6px 0 2px}
+
+/* H3 barra de abas embaixo */
+.fab{display:none!important}
+body{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+.ft-nav{position:fixed;left:0;right:0;bottom:0;z-index:250;display:flex;justify-content:space-around;align-items:flex-end;
+  padding:8px max(10px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));
+  background:color-mix(in srgb,var(--card) 88%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border)}
+.ft-nav button{flex:1;max-width:120px;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-family:var(--font);font-size:10px;font-weight:700;color:var(--muted);cursor:pointer;padding:4px 0;-webkit-tap-highlight-color:transparent}
+.ft-nav button svg{width:22px;height:22px}
+.ft-nav button.on{color:var(--g1)}
+html[data-tema="escuro"] .ft-nav button.on{color:var(--g3)}
+.ft-nav .ft-nav-add{flex:0 0 auto;width:52px;height:52px;border-radius:18px;margin:-26px 6px 2px;color:#fff;justify-content:center;
+  background:linear-gradient(135deg,var(--g1),var(--g2));box-shadow:var(--shlg)}
+.ft-nav .ft-nav-add svg{width:24px;height:24px}
+.ft-nav button:active{transform:scale(.94)}
+#sync-toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+@media(min-width:700px){.ft-nav{left:50%;right:auto;transform:translateX(-50%);width:520px;bottom:14px;border-radius:22px;border:1px solid var(--border);box-shadow:var(--sh)}}
+
+/* folha "Contas" e confirmações */
+.ft-sheet-bk{position:fixed;inset:0;z-index:900;background:rgba(5,12,9,.45);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
+  display:none;align-items:flex-end;justify-content:center}
+.ft-sheet-bk.op{display:flex}
+.ft-sheet{background:var(--card);color:var(--text);width:100%;max-width:520px;border-radius:24px 24px 0 0;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));animation:sum .28s ease;box-shadow:0 -10px 40px -10px rgba(0,0,0,.35)}
+.ft-sheet-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.ft-sheet-h b{font-family:var(--fd);font-size:18px}
+.ft-contas-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ft-contas-grid button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px;border-radius:16px;
+  border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font);text-align:left;cursor:pointer}
+.ft-contas-grid button svg{width:20px;height:20px;color:var(--g1);margin-bottom:4px}
+html[data-tema="escuro"] .ft-contas-grid button svg{color:var(--g3)}
+.ft-contas-grid b{font-size:13.5px}
+.ft-contas-grid span{font-size:10.5px;color:var(--muted)}
+.ft-cf{text-align:center}
+.ft-cf-ic{width:46px;height:46px;border-radius:16px;margin:2px auto 10px;display:grid;place-items:center;background:var(--gpale);color:var(--g1)}
+.ft-cf-ic.perigo{background:var(--redp);color:var(--red)}
+.ft-cf-ic svg{width:22px;height:22px}
+.ft-cf-t{font-family:var(--fd);font-size:17px;font-weight:700;line-height:1.3}
+.ft-cf-m{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5;white-space:pre-line}
+.ft-cf-b{display:flex;gap:8px;margin-top:16px}
+.ft-cf-b button{flex:1;padding:13px;border-radius:14px;border:none;font-family:var(--font);font-size:14px;font-weight:800;cursor:pointer}
+.ft-cf-b .nao{background:var(--bg);color:var(--text)}
+.ft-cf-b .sim{background:var(--g1);color:#fff}
+.ft-cf-b .sim.perigo{background:var(--red)}
+.ft-cf-b button:focus-visible{outline:2px solid var(--yel);outline-offset:2px}
+
+/* A5 lista + A6 pagar tudo */
+.ft-seg{display:flex;background:var(--border);border-radius:12px;padding:3px;gap:3px;margin-bottom:12px}
+.ft-seg button{flex:1;border:none;background:transparent;font-family:var(--font);font-size:12px;font-weight:700;color:var(--muted);
+  padding:8px;border-radius:9px;cursor:pointer}
+.ft-seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.ft-ag-lista{display:none}
+#panel-agenda.ft-modo-lista .ft-ag-lista{display:block}
+#panel-agenda.ft-modo-lista .cal-grid,#panel-agenda.ft-modo-lista .ft-legend,#panel-agenda.ft-modo-lista #cal-day-detail{display:none}
+.ft-ld{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:space-between;padding:10px 4px 5px}
+.ft-ld.hoje{color:var(--g1)}
+.ft-lcard{background:var(--card);border-radius:var(--rs);box-shadow:var(--sh);padding:2px 12px}
+.ft-up.pago{opacity:.5}
+.ft-up.pago b{text-decoration:line-through}
+.ft-lista-vazia{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:28px 16px;text-align:center;color:var(--muted);font-size:13px}
+.ft-pagar-tudo{width:100%;margin-top:12px;padding:12px;border:none;border-radius:var(--rs);font-family:var(--font);font-size:13px;font-weight:800;
+  color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));box-shadow:var(--shlg);cursor:pointer}
+.ft-pagar-tudo small{display:block;font-size:10.5px;font-weight:600;opacity:.85;margin-top:2px}
+
 </style>
 </head>
 <body>
@@ -1068,6 +1183,19 @@ html.ft-hide :is(.emp-nums b,.proj-row strong,.pasta-resumo .pr-nums b,.cal-deta
 </header>
 
 <div class="main">
+  <!-- FT2: cartão de saldo (espelha os números originais, não calcula nada) -->
+  <div class="ft-hero" id="ft-hero">
+    <svg class="ft-hero-spark" width="140" height="56" viewBox="0 0 140 56" aria-hidden="true"><path d="M0 48 L24 40 L44 44 L68 26 L92 31 L114 12 L140 17" fill="none" stroke="#fff" stroke-width="2.5"/></svg>
+    <div class="ft-hero-top"><span>Saldo na conta</span><button type="button" class="ft-hero-btn" onclick="openSaldoModal()">Atualizar</button></div>
+    <div class="ft-hero-v ft-val" id="ft-h-saldo">—</div>
+    <div class="ft-hero-sub" id="ft-h-sub"></div>
+    <div class="ft-hero-pills">
+      <div><b class="ft-val" id="ft-h-disp">—</b><span>livre depois das contas</span></div>
+      <div><b class="ft-val" id="ft-h-dia">—</b><span>livre por dia</span></div>
+    </div>
+  </div>
+  <div class="ft-prox" id="ft-prox"></div>
+  <button type="button" class="ft-kpi-toggle" id="ft-kpi-toggle" onclick="ftToggleKpis()"><span id="ft-kpi-toggle-t">Ver todos os números</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
   <!-- KPIs -->
   <div class="kpi-grid">
     <!-- Saldo Real — HERO CARD no topo -->
@@ -1092,18 +1220,18 @@ html.ft-hide :is(.emp-nums b,.proj-row strong,.pasta-resumo .pr-nums b,.cal-deta
         <div id="k-badge"></div>
       </div>
     </div>
-    <div class="kcard"><div class="klbl">💰 Renda Total</div><div class="kval" id="k-renda">R$ 0,00</div><div class="ksub" id="k-renda-sub"></div></div>
-    <div class="kcard"><div class="klbl">🔴 Fixos</div><div class="kval red" id="k-fixos">R$ 0,00</div></div>
-    <div class="kcard"><div class="klbl">💳 Parcelas</div><div class="kval red" id="k-parc">R$ 0,00</div></div>
-    <div class="kcard"><div class="klbl">🛒 Variáveis (semana)</div><div class="kval yel" id="k-var">R$ 0,00</div></div>
-    <div class="kcard"><div class="klbl" id="k-sem-lbl">📅 Livre esta semana</div><div class="kval grn" id="k-sem">R$ 0,00</div></div>
-    <div class="kcard"><div class="klbl">📆 Livre por dia</div><div class="kval grn" id="k-dia">R$ 0,00</div></div>
+    <div class="kcard"><div class="klbl"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Renda Total</div><div class="kval" id="k-renda">R$ 0,00</div><div class="ksub" id="k-renda-sub"></div></div>
+    <div class="kcard"><div class="klbl"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/></svg>Fixos</div><div class="kval red" id="k-fixos">R$ 0,00</div></div>
+    <div class="kcard"><div class="klbl"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>Parcelas</div><div class="kval red" id="k-parc">R$ 0,00</div></div>
+    <div class="kcard"><div class="klbl"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2l2.5 11h11L21 7H6.2"/></svg>Variáveis (semana)</div><div class="kval yel" id="k-var">R$ 0,00</div></div>
+    <div class="kcard"><div class="klbl" id="k-sem-lbl">Livre esta semana</div><div class="kval grn" id="k-sem">R$ 0,00</div></div>
+    <div class="kcard"><div class="klbl"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Livre por dia</div><div class="kval grn" id="k-dia">R$ 0,00</div></div>
   </div>
 
   <!-- META DE ECONOMIA -->
   <div class="meta-card" id="meta-card">
     <div class="meta-head">
-      <div class="meta-title">🎯 Meta de Economia</div>
+      <div class="meta-title"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Meta de Economia</div>
       <div style="display:flex;align-items:center;gap:8px">
         <div class="meta-vals">
           <span class="meta-current" id="meta-current">R$ 0</span>
@@ -1121,7 +1249,7 @@ html.ft-hide :is(.emp-nums b,.proj-row strong,.pasta-resumo .pr-nums b,.cal-deta
 
   <!-- GRÁFICO PIZZA -->
   <div class="pizza-wrap" id="pizza-wrap">
-    <div class="pizza-title">📊 Distribuição da Renda</div>
+    <div class="pizza-title"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>Distribuição da Renda</div>
     <div class="pizza-inner">
       <canvas id="pizza-canvas" width="110" height="110" style="flex-shrink:0"></canvas>
       <div class="pizza-legend" id="pizza-legend"></div>
@@ -1150,13 +1278,13 @@ html.ft-hide :is(.emp-nums b,.proj-row strong,.pasta-resumo .pr-nums b,.cal-deta
 
   <!-- TABS -->
   <div class="tabs">
-    <button class="tbtn on" data-tab="fixos">📌 Fixos</button>
-    <button class="tbtn" data-tab="parcelas">💳 Parcelas</button>
-    <button class="tbtn" data-tab="semana">📅 Semana</button>
-    <button class="tbtn" data-tab="agenda">🗓️ Agenda</button>
-    <button class="tbtn" data-tab="cartoes">💳 Cartões</button>
-    <button class="tbtn" data-tab="emprestimos">🤝 Empréstimos</button>
-    <button class="tbtn" data-tab="historico">📊 Histórico</button>
+    <button class="tbtn on" data-tab="fixos"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/></svg>Fixos</button>
+    <button class="tbtn" data-tab="parcelas"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>Parcelas</button>
+    <button class="tbtn" data-tab="semana"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M7 14h2M11 14h2M15 14h2"/></svg>Semana</button>
+    <button class="tbtn" data-tab="agenda"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>Agenda</button>
+    <button class="tbtn" data-tab="cartoes"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>Cartões</button>
+    <button class="tbtn" data-tab="emprestimos"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg>Empréstimos</button>
+    <button class="tbtn" data-tab="historico"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Histórico</button>
   </div>
 
   <!-- FIXOS -->
@@ -1306,6 +1434,11 @@ html.ft-hide :is(.emp-nums b,.proj-row strong,.pasta-resumo .pr-nums b,.cal-deta
       <button class="cal-nav" onclick="calNav(1)">›</button>
     </div>
     <div id="ft-ag-sum"></div>
+    <div class="ft-seg" role="tablist" aria-label="Modo da agenda">
+      <button type="button" data-agmodo="cal" onclick="ftAgModo('cal')">Calendário</button>
+      <button type="button" data-agmodo="lista" onclick="ftAgModo('lista')">Lista</button>
+    </div>
+    <div id="ft-ag-lista" class="ft-ag-lista"></div>
     <div class="cal-grid" id="cal-grid"></div>
     <div class="ft-legend" aria-hidden="true">
       <span><i style="background:var(--g1)"></i>tudo pago</span>
@@ -1476,6 +1609,25 @@ html.ft-hide :is(.emp-nums b,.proj-row strong,.pasta-resumo .pr-nums b,.cal-deta
 </footer>
 
 <button class="fab" onclick="openModal()">+</button>
+<nav class="ft-nav" id="ft-nav" aria-label="Navegação">
+  <button type="button" data-ftnav="inicio" onclick="ftNav('inicio')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Início</span></button>
+  <button type="button" data-ftnav="agenda" onclick="ftNav('agenda')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg><span>Agenda</span></button>
+  <button type="button" class="ft-nav-add" onclick="openModal()" aria-label="Lançar"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button type="button" data-ftnav="contas" onclick="ftNav('contas')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Contas</span></button>
+  <button type="button" data-ftnav="historico" onclick="ftNav('historico')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Histórico</span></button>
+</nav>
+<div class="ft-sheet-bk" id="ft-contas-bk" onclick="if(event.target===this)ftContasFechar()">
+  <div class="ft-sheet" role="dialog" aria-label="Contas">
+    <div class="ft-sheet-h"><b>Contas</b><button type="button" class="bclose" onclick="ftContasFechar()">✕</button></div>
+    <div class="ft-contas-grid">
+      <button type="button" onclick="ftAbrirAba('fixos')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/></svg><b>Fixos</b><span>contas do mês</span></button>
+      <button type="button" onclick="ftAbrirAba('parcelas')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg><b>Parcelas</b><span>compras parceladas</span></button>
+      <button type="button" onclick="ftAbrirAba('semana')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M7 14h2M11 14h2M15 14h2"/></svg><b>Semana</b><span>gastos do dia a dia</span></button>
+      <button type="button" onclick="ftAbrirAba('cartoes')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg><b>Cartões</b><span>faturas e limites</span></button>
+      <button type="button" onclick="ftAbrirAba('emprestimos')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg><b>Empréstimos</b><span>quem deve a quem</span></button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL GERAL -->
 <div class="mbk" id="mbk">
@@ -1847,8 +1999,8 @@ function fbLogin(){
   if(!window._fb){alert('Firebase carregando, aguarde.');return;}
   window._fb.signIn().catch(e=>alert('Erro: '+e.message));
 }
-function confirmLogout(){
-  if(confirm('Sair da conta?')) window._fb.signOut().then(()=>location.reload());
+async function confirmLogout(){
+  if(await ftConfirm('Sair da conta?')) window._fb.signOut().then(()=>location.reload());
 }
 function perfilRef(){
   return window._fb.doc(window._fb.db,'users',_uid,'perfis',_perfilAtual);
@@ -2132,7 +2284,7 @@ function addFixo(nome,valor,cat,tipo,diaVenc){
   if(document.getElementById('f-ini')) document.getElementById('f-ini').value='';
   closeModal();renderFixos();updKPIs();
 }
-function delFixo(id){if(!confirm('Excluir?'))return;S.fixos=S.fixos.filter(f=>f.id!==id);save();renderFixos();updKPIs();}
+async function delFixo(id){if(!await ftConfirm('Excluir?'))return;S.fixos=S.fixos.filter(f=>f.id!==id);save();renderFixos();updKPIs();}
 function renderFixos(){
   const el=document.getElementById('list-fixos');
   if(!S.fixos.length){
@@ -2266,9 +2418,9 @@ function addParcela(desc,valor,atual,total,dataIni,diaVenc,pastaId,cartaoIdArg){
   closeModal();renderParcelas();updKPIs();
   if(cartaoId)showToast(`💳 -${fmtM(valorComprometido)} comprometido no limite do cartão`);
 }
-function delParcela(id){
+async function delParcela(id){
   const _p=S.parcelas.find(x=>x.id===id);
-  if(!confirm(_p?`Excluir a parcela "${_p.desc}"?`:'Excluir?'))return;
+  if(!await ftConfirm(_p?`Excluir a parcela "${_p.desc}"?`:'Excluir?'))return;
   S.parcelas=S.parcelas.filter(p=>p.id!==id);
   if(_parcExpanded===id)_parcExpanded=null;
   save();renderParcelas();updKPIs();
@@ -2615,10 +2767,10 @@ function renomearPasta(id){
   if(!nome||nome===pa.nome) return;
   pa.nome=nome.slice(0,40); save(); renderParcelas(); _populaPastaSel('p-pasta');
 }
-function excluirPasta(id){
+async function excluirPasta(id){
   const pa=_pastaPorId(id); if(!pa) return;
   const n=S.parcelas.filter(p=>p.pastaId===id).length;
-  if(!confirm(`Excluir a pasta "${pa.nome}"?\n\nAs ${n} parcela(s) dela NÃO serão apagadas — só voltam para "Sem pasta".`)) return;
+  if(!await ftConfirm(`Excluir a pasta "${pa.nome}"?\n\nAs ${n} parcela(s) dela NÃO serão apagadas — só voltam para "Sem pasta".`)) return;
   S.parcelas.forEach(p=>{ if(p.pastaId===id) p.pastaId=null; });
   S.pastas=S.pastas.filter(x=>x.id!==id);
   _setPastaAtual('todas');
@@ -2826,8 +2978,8 @@ function addGasto(desc,valor,cat,data){
   if(document.getElementById('s-cartao-id'))document.getElementById('s-cartao-id').value='';
   closeModal();renderSemana();updKPIs();
 }
-function delGasto(id){
-  if(!confirm('Excluir?'))return;
+async function delGasto(id){
+  if(!await ftConfirm('Excluir?'))return;
   const g=S.semanaAtual.gastos.find(x=>x.id===id);
   if(g){
     if(!g.cartaoId && S.saldoReal!==null)S.saldoReal+=g.valor;
@@ -2895,8 +3047,8 @@ function renderHistSemanas(){
   }).join('');
 }
 function togAcc(i){const el=document.getElementById('acc-'+i);if(el)el.classList.toggle('op');}
-function novaSemana(){
-  if(!confirm('Arquivar semana atual?'))return;
+async function novaSemana(){
+  if(!await ftConfirm('Arquivar semana atual?'))return;
   S.semanasHist.push({inicioISO:S.semanaAtual.inicioISO,gastos:[...S.semanaAtual.gastos]});
   S.semanaAtual={gastos:[],inicioISO:semaIni(new Date(),S.rendaDiaSemana??5)};
   save();renderSemana();updKPIs();
@@ -3004,8 +3156,8 @@ function addExtra(){
   renderExtras();updRendaTot();updKPIs();
   showToast(`✅ +${fmtM(valor)} adicionado ao saldo`);
 }
-function delExtra(id){
-  if(!confirm('Excluir?'))return;
+async function delExtra(id){
+  if(!await ftConfirm('Excluir?'))return;
   const ex=S.extras.find(e=>e.id===id);
   // Só desconta se esse extra foi marcado como somado ao saldo
   if(ex&&ex.noSaldo&&S.saldoReal!==null){ S.saldoReal=S.saldoReal-ex.valor; S.saldoRealData=todayISO(); }
@@ -3458,7 +3610,7 @@ function updKPIs(){
     const nRec=S.recebimentos.filter(r=>{if(!r.data)return false;const[y,m]=r.data.split('-').map(Number);return y===anoHojeR&&m===mesHojeR;}).length;
     document.getElementById('k-renda-sub').textContent=totalRecebMes>0?`${nRec} recebimento(s) este mês`+(extrasMes>0?` + ${fmtM(extrasMes)} extras`:''):'nenhum recebimento registrado este mês';
     document.getElementById('k-sem').textContent=fmtM(saldoSem);
-    document.getElementById('k-sem-lbl').textContent='📅 Livre esta semana';
+    document.getElementById('k-sem-lbl').textContent='Livre esta semana';
     document.getElementById('k-dia').textContent=fmtM(Math.max(0,saldoSem/7));
   } else {
     const rendaMes=S.rendaBaseMensal||0;
@@ -3467,7 +3619,7 @@ function updKPIs(){
     const nRec=S.recebimentos.filter(r=>{if(!r.data)return false;const[y,m]=r.data.split('-').map(Number);return y===anoHojeR&&m===mesHojeR;}).length;
     document.getElementById('k-renda-sub').textContent=totalRecebMes>0?`${nRec} recebimento(s) este mês`+(extrasMes>0?` + ${fmtM(extrasMes)} extras`:''):'nenhum recebimento registrado este mês';
     document.getElementById('k-sem').textContent=fmtM(saldoSemEst);
-    document.getElementById('k-sem-lbl').textContent='📅 Est. livre/semana';
+    document.getElementById('k-sem-lbl').textContent='Est. livre/semana';
     document.getElementById('k-dia').textContent=fmtM(Math.max(0,saldoSemEst/7));
   }
   document.getElementById('k-fixos').textContent=fmtM(fx);
@@ -4122,7 +4274,7 @@ function _empAplicaSaldo(valor, entrada){
   S.saldoRealData=todayISO();
 }
 
-function addEmprestimo(){
+async function addEmprestimo(){
   const pessoa=document.getElementById('e-pessoa').value.trim();
   const valor=parseFloat(document.getElementById('e-valor').value)||0;
   const data=document.getElementById('e-data').value||todayISO();
@@ -4132,7 +4284,7 @@ function addEmprestimo(){
   if(!pessoa){ alert('Informe a pessoa.'); return; }
   if(valor<=0){ alert('Informe um valor válido.'); return; }
   if(_empJuros!=='nenhum' && taxa<=0){ alert('Informe a taxa de juros.'); return; }
-  if(taxa>100 && !confirm(`Taxa de ${taxa}% ao mês é muito alta.\nConfirma que está correta?`)) return;
+  if(taxa>100 && !await ftConfirm(`Taxa de ${taxa}% ao mês é muito alta.\nConfirma que está correta?`)) return;
   if(venc && venc < data){ alert('O vencimento não pode ser antes da data do empréstimo.'); return; }
 
   const e={
@@ -4156,9 +4308,9 @@ function addEmprestimo(){
   showToast(_empTipo==='emprestei'?'📤 Empréstimo registrado':'📥 Empréstimo recebido');
 }
 
-function delEmprestimo(id){
+async function delEmprestimo(id){
   const e=_empArr().find(x=>x.id===id); if(!e) return;
-  if(!confirm(`Excluir empréstimo de ${e.pessoa}?\nO saldo será revertido.`)) return;
+  if(!await ftConfirm(`Excluir empréstimo de ${e.pessoa}?\nO saldo será revertido.`)) return;
   // Reverte principal
   _empAplicaSaldo(Number(e.valor)||0, e.tipo==='emprestei');
   // Reverte pagamentos lançados após a base do saldo
@@ -4203,13 +4355,13 @@ function empPagTotal(){
   document.getElementById('emp-pag-valor').value=empRestante(e).toFixed(2);
   confirmEmpPag();
 }
-function confirmEmpPag(){
+async function confirmEmpPag(){
   const e=_empArr().find(x=>x.id===_empPagId); if(!e) return;
   const valor=parseFloat(document.getElementById('emp-pag-valor').value)||0;
   const data=document.getElementById('emp-pag-data').value||todayISO();
   if(valor<=0){ alert('Informe um valor válido.'); return; }
   const rest=empRestante(e);
-  if(valor>rest+0.01 && !confirm(`Valor maior que o restante (${fmtM(rest)}). Registrar mesmo assim?`)) return;
+  if(valor>rest+0.01 && !await ftConfirm(`Valor maior que o restante (${fmtM(rest)}). Registrar mesmo assim?`)) return;
 
   e.pagamentos.push({ id:uid(), valor, data, ts:Date.now() });
   // emprestei → me pagaram → entra | peguei → eu pago → sai
@@ -4220,10 +4372,10 @@ function confirmEmpPag(){
   save(); closeEmpPag(); renderEmprestimos(); updKPIs(); renderAgenda();
   showToast(empQuitado(e)?'✅ Empréstimo quitado!':'💵 Pagamento registrado');
 }
-function delEmpPag(eid, pid){
+async function delEmpPag(eid, pid){
   const e=_empArr().find(x=>x.id===eid); if(!e) return;
   const idx=e.pagamentos.findIndex(p=>p.id===pid); if(idx<0) return;
-  if(!confirm('Remover este pagamento?')) return;
+  if(!await ftConfirm('Remover este pagamento?')) return;
   const p=e.pagamentos[idx];
   if(_deveDescontar() && p.ts && p.ts>=(S.saldoRealTs||0))
     _empAplicaSaldo(Number(p.valor)||0, e.tipo!=='emprestei');
@@ -4450,8 +4602,8 @@ function addCartao(){
   document.getElementById('c-venc').value='';
 }
 
-function delCartao(id){
-  if(!confirm('Excluir cartão?'))return;
+async function delCartao(id){
+  if(!await ftConfirm('Excluir cartão?'))return;
   S.cartoes=S.cartoes.filter(c=>c.id!==id);
   save();renderCartoes();
 }
@@ -4494,8 +4646,8 @@ function confirmarEdicaoLimite(){
   showToast(`✅ Limite atualizado para ${fmtM(v)}`);
 }
 
-function zerarPagamentosFatura(cartaoId){
-  if(!confirm('Zerar todos os pagamentos desta fatura?'))return;
+async function zerarPagamentosFatura(cartaoId){
+  if(!await ftConfirm('Zerar todos os pagamentos desta fatura?'))return;
   const c=S.cartoes.find(x=>x.id===cartaoId);if(!c)return;
   const d=new Date(); const mes=d.getMonth()+1,ano=d.getFullYear();
   const fatura=c.faturas&&c.faturas.find(f=>f.mes===mes&&f.ano===ano);
@@ -4661,10 +4813,10 @@ function confirmarParcelarFatura(){
   fecharParcelarFatura();
   showToast(`🧾 Fatura parcelada em ${n}× de ${fmtM(v)}`);
 }
-function desfazerParcelamento(cartaoId,mes,ano){
+async function desfazerParcelamento(cartaoId,mes,ano){
   const c=S.cartoes.find(x=>x.id===cartaoId);if(!c)return;
   const f=_faturaRegistro(c,mes,ano);if(!f||!f.parcelada)return;
-  if(!confirm('Desfazer o parcelamento desta fatura? A parcela criada é removida e a entrada volta para o saldo.'))return;
+  if(!await ftConfirm('Desfazer o parcelamento desta fatura? A parcela criada é removida e a entrada volta para o saldo.'))return;
   const pc=f.parcelada;
   S.parcelas=S.parcelas.filter(p=>p.id!==pc.parcelaId);
   if(pc.entrada>0){
@@ -4913,7 +5065,7 @@ async function criarPerfil(){
   showToast(`✅ Perfil "${nome}" criado`);
 }
 async function deletarPerfil(id){
-  if(!confirm('Excluir este perfil e todos os dados dele?')) return;
+  if(!await ftConfirm('Excluir este perfil e todos os dados dele?')) return;
   _perfis = _perfis.filter(p=>p.id!==id);
   await savePerfis();
   // Deleta os dados do perfil no Firebase
@@ -4957,7 +5109,7 @@ async function trocarPerfil(id){
 let _saudeOpen = false;
 
 async function recuperarDadosAntigos(){
-  if(!confirm('Vai buscar seus dados salvos anteriormente. Continuar?')) return;
+  if(!await ftConfirm('Vai buscar seus dados salvos anteriormente. Continuar?')) return;
   try{
     showToast('⏳ Buscando dados...');
     const oldRef=window._fb.doc(window._fb.db,'users',_uid,'data','state');
@@ -5500,7 +5652,7 @@ function exportJ(){
 function importJ(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=e=>{try{const imp=JSON.parse(e.target.result);if(!confirm('Substituir todos os dados?'))return;
+  r.onload=async e=>{try{const imp=JSON.parse(e.target.result);if(!await ftConfirm('Substituir todos os dados?'))return;
     S=imp;migrate();save();
     setRM(S.rendaMode||'semanal',true);
     updAll();alert('Importado!');}catch{alert('Arquivo inválido.');}};
@@ -6466,6 +6618,265 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
     window.updKPIs=novo;
   }
   envolver();
+})();
+</script>
+
+<script>
+// ═════════ FT2 — Lote 2. Só lê dados; pagar usa as MESMAS funções dos botões que já existem. ═════════
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}};
+  const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+  const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const DS=['dom','seg','ter','qua','qui','sex','sáb'];
+  const SVG=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const IC={
+    alerta:SVG('<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>'),
+    lixo:SVG('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>'),
+    ok:SVG('<path d="M20 6L9 17l-5-5"/>'),
+    sair:SVG('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'),
+    fixo:SVG('<path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/>'),
+    cartao:SVG('<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>'),
+    troca:SVG('<path d="M7 7h12l-3-3M17 17H5l3 3"/>')
+  };
+
+  // ── D5: confirmação bonita (devolve true/false, como a caixinha antiga) ──
+  let cfAberto=null;
+  window.ftConfirm=function(msg){
+    return new Promise(resolve=>{
+      try{
+        if(cfAberto){cfAberto(false);}
+        const txt=String(msg==null?'':msg);
+        const [titulo,...resto]=txt.split('\n');
+        const perigo=/^(Excluir|Remover|Zerar|Substituir|Desfazer)/i.test(titulo);
+        const sair=/^Sair/i.test(titulo);
+        const rot=sair?'Sair':(perigo?(titulo.match(/^(Excluir|Remover|Zerar|Substituir|Desfazer)/i)[1]):'Confirmar');
+        const bk=document.createElement('div');
+        bk.className='ft-sheet-bk op'; bk.style.zIndex='1000';
+        bk.innerHTML=`<div class="ft-sheet ft-cf" role="alertdialog" aria-modal="true">
+          <div class="ft-cf-ic ${perigo||sair?'perigo':''}">${perigo?IC.lixo:(sair?IC.sair:IC.alerta)}</div>
+          <div class="ft-cf-t"></div>${resto.join('\n').trim()?'<div class="ft-cf-m"></div>':''}
+          <div class="ft-cf-b"><button type="button" class="nao">Cancelar</button><button type="button" class="sim ${perigo||sair?'perigo':''}"></button></div></div>`;
+        bk.querySelector('.ft-cf-t').textContent=titulo;
+        const m=bk.querySelector('.ft-cf-m'); if(m) m.textContent=resto.join('\n').trim();
+        bk.querySelector('.sim').textContent=rot.charAt(0).toUpperCase()+rot.slice(1).toLowerCase();
+        let feito=false;
+        const fechar=v=>{ if(feito) return; feito=true; cfAberto=null; document.removeEventListener('keydown',tecla); bk.remove(); resolve(v); };
+        const tecla=e=>{ if(e.key==='Escape') fechar(false); };
+        cfAberto=fechar;
+        bk.addEventListener('click',e=>{ if(e.target===bk) fechar(false); });
+        bk.querySelector('.nao').onclick=()=>fechar(false);
+        bk.querySelector('.sim').onclick=()=>fechar(true);
+        document.addEventListener('keydown',tecla);
+        document.body.appendChild(bk);
+        setTimeout(()=>{try{bk.querySelector('.sim').focus();}catch(e){}},50);
+      }catch(err){
+        console.error('ftConfirm',err);
+        resolve(window.confirm(msg)); // reserva: caixinha normal
+      }
+    });
+  };
+
+  // ── H1: cartão de saldo espelha os números que o app já calcula ──
+  function espelhar(){
+    try{
+      const sr=$('k-saldo-real'), disp=$('k-saldo'), dia=$('k-dia');
+      if(!sr) return;
+      const hs=$('ft-h-saldo'), hsub=$('ft-h-sub'), hd=$('ft-h-disp'), hdia=$('ft-h-dia');
+      hs.textContent=sr.textContent;
+      hs.classList.toggle('neg',/\bred\b/.test(sr.className));
+      const semSaldo=sr.textContent.trim()==='—';
+      hsub.textContent=semSaldo?($('k-saldo-real-sub')||{}).textContent||'':($('k-saldo-explicacao')||{}).textContent||'';
+      hd.textContent=disp?disp.textContent:'—';
+      hd.classList.toggle('neg',!!disp&&/\bred\b/.test(disp.className));
+      hdia.textContent=dia?dia.textContent:'—';
+    }catch(e){console.error('FT2 espelhar',e);}
+  }
+  function observar(){
+    const alvo=['k-saldo-real','k-saldo','k-dia','k-saldo-explicacao','k-saldo-real-sub'].map($).filter(Boolean);
+    const mo=new MutationObserver(espelhar);
+    alvo.forEach(el=>mo.observe(el,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['class']}));
+    espelhar();
+  }
+
+  // números detalhados: recolhidos por padrão, lembra a escolha
+  window.ftToggleKpis=function(forcar){
+    const g=document.querySelector('.kpi-grid'); if(!g) return;
+    const aberto=typeof forcar==='boolean'?forcar:g.classList.contains('ft-fechado');
+    g.classList.toggle('ft-fechado',!aberto);
+    $('ft-kpi-toggle').classList.toggle('aberto',aberto);
+    $('ft-kpi-toggle-t').textContent=aberto?'Esconder números':'Ver todos os números';
+    lsSet('ft_kpis',aberto?'1':'0');
+  };
+
+  // ── H2: próximas contas (atrasadas do mês + próximos 7 dias) ──
+  const ehReceber=c=>c.tipo==='emprestimo'&&c.empTipo==='emprestei';
+  function icone(c){
+    if(c.tipo==='parcela') return ['var(--bluep)','var(--blue)',IC.cartao];
+    if(c.tipo==='fatura-cartao') return ['var(--purp)','var(--pur)',IC.cartao];
+    if(c.tipo==='emprestimo') return ['var(--gpale)','var(--g1)',IC.troca];
+    return ['var(--yelp)','var(--yel)',IC.fixo];
+  }
+  function linha(c,d,m,a,quando,late){
+    const [bg,fg,svg]=icone(c);
+    const rec=ehReceber(c);
+    return `<button type="button" class="ft-up${c.pago?' pago':''}" onclick="ftIrAgenda(${d},${m},${a})">
+      <div class="ft-up-ic" style="background:${late?'var(--redp)':bg};color:${late?'var(--red)':fg}">${late?IC.alerta:svg}</div>
+      <div class="ft-up-tx"><b>${esc(c.nome)}</b><span class="${late?'late':''}">${quando}</span></div>
+      <div class="ft-up-v ft-val" style="${rec?'color:var(--g1)':''}">${rec?'+':''}${fmtM(Number(c.valor)||0)}</div></button>`;
+  }
+  function quandoTxt(dt,hoje){
+    const dif=Math.round((dt-hoje)/86400000);
+    if(dif===0) return 'hoje'; if(dif===1) return 'amanhã';
+    return `${DS[dt.getDay()]}, ${dt.getDate()}`;
+  }
+  window.ftRenderProx=function(){
+    const el=$('ft-prox'); if(!el||typeof contasDoDia!=='function') return;
+    try{
+      const agora=new Date(); const hoje=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate());
+      const itens=[];
+      // atrasadas deste mês
+      for(let d=1;d<hoje.getDate();d++){
+        (contasDoDia(d,hoje.getMonth()+1,hoje.getFullYear())||[]).forEach(c=>{
+          if(!c.pago&&!ehReceber(c)&&(Number(c.valor)||0)>0) itens.push({c,dt:new Date(hoje.getFullYear(),hoje.getMonth(),d),late:true});
+        });
+      }
+      // próximos 7 dias
+      for(let k=0;k<7;k++){
+        const dt=new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()+k);
+        (contasDoDia(dt.getDate(),dt.getMonth()+1,dt.getFullYear())||[]).forEach(c=>{
+          if(!c.pago&&(Number(c.valor)||0)>0) itens.push({c,dt,late:false});
+        });
+      }
+      const late=itens.filter(i=>i.late).length;
+      const mostrar=itens.slice(0,4);
+      let h=`<div class="ft-prox-h"><span>Próximas contas · 7 dias${late?` · <span style="color:var(--red)">${late} atrasada${late>1?'s':''}</span>`:''}</span><button type="button" onclick="ftNav('agenda')">Ver agenda</button></div>`;
+      if(!mostrar.length) h+='<div class="ft-prox-vazio">Nada vencendo nos próximos 7 dias. 🎉</div>';
+      mostrar.forEach(i=>{
+        const q=i.late?`venceu dia ${i.dt.getDate()} · atrasada`:quandoTxt(i.dt,hoje)+(i.c.tipo==='parcela'?' · parcela':i.c.tipo==='fatura-cartao'?' · fatura':ehReceber(i.c)?' · a receber':'');
+        h+=linha(i.c,i.dt.getDate(),i.dt.getMonth()+1,i.dt.getFullYear(),q,i.late);
+      });
+      if(itens.length>4) h+=`<div class="ft-prox-vazio">+ ${itens.length-4} outra${itens.length-4>1?'s':''} na agenda</div>`;
+      el.innerHTML=h;
+    }catch(e){console.error('FT2 próximas',e); el.innerHTML='';}
+  };
+
+  // ── navegação ──
+  function abaBtn(t){return document.querySelector(`.tabs [data-tab="${t}"]`);}
+  function rolarAbas(){
+    const t=document.querySelector('.tabs'); if(!t) return;
+    const hdr=document.querySelector('.hdr'); const off=(hdr&&getComputedStyle(hdr).position==='sticky')?hdr.offsetHeight:0;
+    window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY-off-8,behavior:'smooth'});
+  }
+  window.ftAbrirAba=function(t){ ftContasFechar(); const b=abaBtn(t); if(b){b.click(); setTimeout(rolarAbas,30);} marcarNav(); };
+  window.ftContasFechar=function(){ const s=$('ft-contas-bk'); if(s) s.classList.remove('op'); };
+  window.ftNav=function(q){
+    if(q==='inicio'){ window.scrollTo({top:0,behavior:'smooth'}); setTimeout(marcarNav,400); return; }
+    if(q==='contas'){ $('ft-contas-bk').classList.add('op'); return; }
+    ftAbrirAba(q);
+  };
+  window.ftIrAgenda=function(d,m,a){
+    const b=abaBtn('agenda'); if(!b) return;
+    b.click();                         // abre a aba como sempre
+    ftAgModo('cal',true);
+    _calDate=new Date(a,m-1,1); _calSelected=d; renderAgenda();
+    setTimeout(()=>{ const det=$('cal-day-detail'); if(det&&det.firstElementChild) det.scrollIntoView({behavior:'smooth',block:'center'}); else rolarAbas(); },60);
+    marcarNav();
+  };
+  function marcarNav(){
+    const tab=(typeof getTab==='function')?getTab():'fixos';
+    const t=document.querySelector('.tabs'); const topo=t?t.getBoundingClientRect().top>window.innerHeight*0.6:true;
+    const q=topo?'inicio':(tab==='agenda'?'agenda':tab==='historico'?'historico':'contas');
+    document.querySelectorAll('#ft-nav [data-ftnav]').forEach(b=>b.classList.toggle('on',b.dataset.ftnav===q));
+  }
+  let rolT=null; window.addEventListener('scroll',()=>{clearTimeout(rolT);rolT=setTimeout(marcarNav,120);},{passive:true});
+
+  // ── A5: modo lista ──
+  window.ftAgModo=function(modo,semRender){
+    const p=$('panel-agenda'); if(!p) return;
+    p.classList.toggle('ft-modo-lista',modo==='lista');
+    document.querySelectorAll('[data-agmodo]').forEach(b=>{const on=b.dataset.agmodo===modo;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+    lsSet('ft_agmodo',modo);
+    if(modo==='lista'&&!semRender) renderLista();
+  };
+  function renderLista(){
+    const el=$('ft-ag-lista'); if(!el) return;
+    try{
+      const mes=_calDate.getMonth(), ano=_calDate.getFullYear(), dias=new Date(ano,mes+1,0).getDate();
+      const agora=new Date(); const hd=agora.getDate(), hm=agora.getMonth(), hy=agora.getFullYear();
+      const passou=d=>(ano<hy)||(ano===hy&&mes<hm)||(ano===hy&&mes===hm&&d<hd);
+      let h='';
+      for(let d=1;d<=dias;d++){
+        const cs=contasDoDia(d,mes+1,ano)||[]; if(!cs.length) continue;
+        const dt=new Date(ano,mes,d); const ehHoje=d===hd&&mes===hm&&ano===hy;
+        const tot=cs.filter(c=>!c.pago&&!ehReceber(c)).reduce((s,c)=>s+(Number(c.valor)||0),0);
+        h+=`<div class="ft-ld${ehHoje?' hoje':''}"><span>${DS[dt.getDay()]}, ${d}${ehHoje?' · hoje':''}</span><span class="ft-val">${tot>0?fmtM(tot):'tudo pago'}</span></div><div class="ft-lcard">`;
+        cs.forEach(c=>{
+          const late=!c.pago&&!ehReceber(c)&&passou(d);
+          const sub=(c.tipo==='parcela'?'Parcela':c.tipo==='fatura-cartao'?'Fatura do cartão':c.tipo==='emprestimo'?(ehReceber(c)?'Empréstimo · a receber':'Empréstimo · a pagar'):(c.tipoPagamento==='cartao'?'Fixo · cartão':'Fixo · PIX'))+(c.pago?' · pago':late?' · atrasada':'');
+          h+=linha(c,d,mes+1,ano,sub,late);
+        });
+        h+='</div>';
+      }
+      el.innerHTML=h||`<div class="ft-lista-vazia">Nenhuma conta em ${MESES[mes]}.</div>`;
+    }catch(e){console.error('FT2 lista',e); el.innerHTML='';}
+  }
+
+  // ── A6: pagar tudo do dia (só fixos e parcelas; usa as funções dos botões "Pagar") ──
+  function pagaveis(dia,mes,ano){
+    return (contasDoDia(dia,mes,ano)||[]).filter(c=>!c.pago&&(c.tipo==='fixo'||c.tipo==='parcela'));
+  }
+  function pagarUm(c,mes,ano){
+    if(c.tipo==='parcela') togglePagaCalendario(c.pid,mes,ano);
+    else if(c.tipoPagamento==='cartao') toggleFaturaCartao(c.id,mes,ano);
+    else toggleFixoPagoCal(c.id,mes,ano);
+  }
+  window.ftPagarTudo=async function(dia,mes,ano){
+    const lista=pagaveis(dia,mes,ano); if(!lista.length) return;
+    const tot=lista.reduce((s,c)=>s+(Number(c.valor)||0),0);
+    const ok=await ftConfirm(`Pagar ${lista.length} contas do dia ${dia}?\n${lista.map(c=>'• '+c.nome+' — '+fmtM(Number(c.valor)||0)).join('\n')}\n\nTotal: ${fmtM(tot)}`);
+    if(!ok) return;
+    let n=0;
+    lista.forEach(alvo=>{
+      // confere de novo, na hora, se ainda está pendente (nunca desmarca algo pago)
+      const atual=pagaveis(dia,mes,ano).find(c=>c.tipo===alvo.tipo&&c.id===alvo.id&&c.pid===alvo.pid);
+      if(!atual) return;
+      try{ pagarUm(atual,mes,ano); n++; }catch(e){ console.error('FT2 pagar tudo',e); }
+    });
+    try{ renderAgenda(); updKPIs(); }catch(e){}
+    try{ showToast(`✅ ${n} conta${n>1?'s':''} paga${n>1?'s':''}`); }catch(e){}
+  };
+  function botaoPagarTudo(dia,mes,ano){
+    try{
+      const det=$('cal-day-detail'); const alvo=det&&det.firstElementChild; if(!alvo) return;
+      const lista=pagaveis(dia,mes,ano); if(lista.length<2) return;
+      const tot=lista.reduce((s,c)=>s+(Number(c.valor)||0),0);
+      const outros=(contasDoDia(dia,mes,ano)||[]).some(c=>!c.pago&&!(c.tipo==='fixo'||c.tipo==='parcela'));
+      const b=document.createElement('button'); b.type='button'; b.className='ft-pagar-tudo';
+      b.innerHTML=`Pagar tudo do dia · ${lista.length} contas<small>${fmtM(tot)}${outros?' · faturas e empréstimos ficam de fora':''}</small>`;
+      b.onclick=()=>ftPagarTudo(dia,mes,ano);
+      alvo.appendChild(b);
+    }catch(e){console.error('FT2 botão pagar tudo',e);}
+  }
+
+  // ── ganchos (envolvem funções do app sem mudar o que elas fazem) ──
+  function envolver(nome,depois){
+    const orig=window[nome]; if(typeof orig!=='function'||orig['_ft2_'+nome]) return;
+    const novo=function(){ const r=orig.apply(this,arguments); try{depois.apply(this,arguments);}catch(e){console.error('FT2 gancho '+nome,e);} return r; };
+    novo['_ft2_'+nome]=true; window[nome]=novo;
+  }
+  envolver('updKPIs',()=>ftRenderProx());
+  envolver('renderAgenda',()=>{ if($('panel-agenda').classList.contains('ft-modo-lista')) renderLista(); });
+  envolver('renderCalDetail',(d,m,a)=>botaoPagarTudo(d,m,a));
+
+  // início
+  observar();
+  ftToggleKpis(lsGet('ft_kpis','0')==='1');
+  ftAgModo(lsGet('ft_agmodo','cal')==='lista'?'lista':'cal',true);
+  try{ ftRenderProx(); }catch(e){}
+  marcarNav();
+  document.querySelectorAll('.tabs [data-tab]').forEach(b=>b.addEventListener('click',()=>setTimeout(marcarNav,50)));
 })();
 </script>
 
