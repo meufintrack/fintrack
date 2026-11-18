@@ -1156,8 +1156,15 @@ html[data-tema="escuro"] .ft-busca-in button{color:var(--g3)}
 .ft-undo button{border:none;background:rgba(255,255,255,.12);color:#7FE3AF;font-family:var(--font);font-weight:800;font-size:13px;padding:7px 11px;border-radius:9px;cursor:pointer;flex-shrink:0}
 
 /* D2 deslizar pra pagar */
-.cal-conta-item.ft-sw{position:relative;transition:transform .2s}
+.cal-conta-item{touch-action:pan-y}
+.cal-conta-item.ft-sw{position:relative;z-index:1;transition:transform .26s cubic-bezier(.2,.8,.2,1);will-change:transform}
+.cal-conta-item.ft-sw-on{background:var(--card)!important;border-radius:14px}
 .cal-conta-item.ft-arrastando{transition:none}
+.ft-sw-fundo{position:absolute;z-index:0;border-radius:14px;background:var(--heat1);color:var(--g1);display:flex;align-items:center;padding-left:16px;
+  font-weight:800;font-size:13px;transition:background .15s,color .15s;pointer-events:none}
+.ft-sw-fundo span{opacity:.55;transition:opacity .15s,transform .15s}
+.ft-sw-fundo.ok{background:var(--g1);color:#fff}
+.ft-sw-fundo.ok span{opacity:1;transform:scale(1.08)}
 .ft-sw-dica{font-size:10.5px;color:var(--muted);text-align:center;margin-top:8px}
 
 /* D3 teclado de valor */
@@ -7424,27 +7431,47 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
   embrulharExcluir('delGasto',()=>S.semanaAtual.gastos,c=>c.desc,c=>{ if(!c.cartaoId&&S.saldoReal!==null) S.saldoReal-=c.valor; });
 
   // ════ D2 deslizar pra pagar (no detalhe do dia da agenda) ════
+  // Só a conta se move (a página não rola de lado); fundo verde "Pago" aparece por baixo;
+  // no app do iPhone, vibra ao chegar no ponto. Pagar continua sendo o clique no botão "Pagar" original.
   (function(){
     const det=$('cal-day-detail'); if(!det) return;
-    let item=null,x0=0,y0=0,dx=0,horiz=null;
+    const LIMITE=90, MAX=150;
+    let item=null,fundo=null,x0=0,y0=0,dx=0,horiz=null,passou=false;
     const botaoPagar=it=>[...it.querySelectorAll('.pago-btn')].find(b=>b.textContent.trim()==='Pagar'&&/toggle/.test(b.getAttribute('onclick')||''));
+    const vibrar=tipo=>{ try{ window.webkit.messageHandlers.ftHaptic.postMessage(tipo); }catch(e){} };
+    function criarFundo(it){
+      const f=document.createElement('div'); f.className='ft-sw-fundo';
+      f.innerHTML='<span>✓ Pago</span>';
+      f.style.top=it.offsetTop+'px'; f.style.left=it.offsetLeft+'px'; f.style.width=it.offsetWidth+'px'; f.style.height=it.offsetHeight+'px';
+      it.parentNode.insertBefore(f,it); return f;
+    }
+    function limpar(it,f){ it.classList.remove('ft-sw-on','ft-arrastando'); it.style.transform=''; if(f) setTimeout(()=>f.remove(),260); }
     det.addEventListener('touchstart',e=>{
       const it=e.target.closest('.cal-conta-item'); if(!it||e.target.closest('button')||!botaoPagar(it)){ item=null; return; }
-      item=it; const t=e.touches[0]; x0=t.clientX; y0=t.clientY; dx=0; horiz=null;
+      item=it; const t=e.touches[0]; x0=t.clientX; y0=t.clientY; dx=0; horiz=null; passou=false; fundo=null;
     },{passive:true});
     det.addEventListener('touchmove',e=>{
       if(!item) return; const t=e.touches[0]; const ddx=t.clientX-x0, ddy=t.clientY-y0;
-      if(horiz===null&&(Math.abs(ddx)>8||Math.abs(ddy)>8)) horiz=Math.abs(ddx)>Math.abs(ddy);
+      if(horiz===null&&(Math.abs(ddx)>8||Math.abs(ddy)>8)) horiz=Math.abs(ddx)>Math.abs(ddy)&&ddx>0;
       if(!horiz) return;
-      dx=Math.max(0,Math.min(140,ddx));
-      item.classList.add('ft-sw','ft-arrastando'); item.style.transform=`translateX(${dx}px)`;
-      item.style.background=dx>90?'var(--gpale)':'';
-    },{passive:true});
-    det.addEventListener('touchend',()=>{
-      if(!item) return; const it=item; item=null;
-      it.classList.remove('ft-arrastando'); it.style.transform=''; it.style.background='';
-      if(horiz&&dx>90){ const b=botaoPagar(it); if(b) b.click(); }
-    });
+      e.preventDefault(); // a página não acompanha o dedo
+      if(!fundo){ if(getComputedStyle(item.parentNode).position==='static') item.parentNode.style.position='relative'; fundo=criarFundo(item); item.classList.add('ft-sw','ft-sw-on','ft-arrastando'); }
+      let v=Math.max(0,ddx); if(v>MAX) v=MAX+(v-MAX)*0.25; dx=v; // "elástico" depois do máximo
+      item.style.transform=`translate3d(${dx}px,0,0)`;
+      const ok=dx>LIMITE; fundo.classList.toggle('ok',ok);
+      if(ok!==passou){ passou=ok; if(ok) vibrar('leve'); }
+    },{passive:false});
+    const soltar=()=>{
+      if(!item) return; const it=item, f=fundo; item=null; fundo=null;
+      it.classList.remove('ft-arrastando');
+      if(horiz&&dx>LIMITE){
+        const b=botaoPagar(it);
+        it.style.transform=`translate3d(${it.offsetWidth}px,0,0)`; vibrar('sucesso');
+        setTimeout(()=>{ limpar(it,f); if(b) b.click(); },200);
+      } else limpar(it,f);
+    };
+    det.addEventListener('touchend',soltar);
+    det.addEventListener('touchcancel',soltar);
   })();
 
   // ════ D3 teclado de valor (só em tela de toque; dá pra voltar ao teclado normal) ════
