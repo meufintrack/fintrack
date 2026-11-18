@@ -1195,6 +1195,50 @@ html[data-tema="escuro"] .ft-busca-in button{color:var(--g3)}
 }
 @media(max-width:420px){ .perfil-trocar{display:none} .perfil-selector{padding:4px 9px 4px 4px} }
 
+
+/* ═════════ FT2 — Lote 4 ═════════ */
+.ft-ag-acoes{display:grid;grid-template-columns:1fr 1.6fr;gap:8px;margin:0 0 12px}
+.ft-ag-acoes button{display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 8px;border-radius:var(--rs);
+  border:1.5px solid var(--border);background:var(--card);color:var(--text);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer}
+.ft-ag-acoes svg{width:17px;height:17px;color:var(--g1);flex-shrink:0}
+html[data-tema="escuro"] .ft-ag-acoes svg{color:var(--g3)}
+
+/* A8 lembretes */
+.cal-day.ft-nota::before{content:"";position:absolute;top:4px;left:4px;width:7px;height:7px;border-radius:2px;background:var(--yel);pointer-events:none;transform:rotate(45deg)}
+.cal-day.ft-done.ft-nota::before{background:#fff}
+.ft-legend .ft-lg-nota{background:var(--yel);transform:rotate(45deg);width:7px;height:7px;border-radius:2px}
+.ft-lb-sec{margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)}
+.ft-lb-t{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.ft-lb{display:flex;align-items:center;gap:10px;padding:7px 0}
+.ft-lb-ic{width:30px;height:30px;border-radius:9px;background:var(--yelp);color:var(--yel);display:grid;place-items:center;flex-shrink:0}
+.ft-lb-ic svg{width:15px;height:15px}
+.ft-lb-tx{flex:1;min-width:0;font-size:13px;font-weight:600;word-break:break-word}
+.ft-lb-x{border:none;background:none;color:var(--muted);font-size:15px;cursor:pointer;padding:4px 6px}
+.ft-lb-add{width:100%;margin-top:8px;padding:9px;border-radius:var(--rs);border:1.5px dashed var(--border);background:transparent;color:var(--muted);
+  font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer}
+.ft-form label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 5px}
+.ft-form input{width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);
+  font-family:var(--font);font-size:16px;outline:none}
+.ft-form input:focus{border-color:var(--g1)}
+.ft-form .ft-cf-b{margin-top:14px}
+.ft-form-erro{color:var(--red);font-size:12px;font-weight:600;margin-top:6px;min-height:16px}
+
+/* N5 limites por categoria */
+.ft-lim-l{padding:7px 0}
+.ft-lim-l+.ft-lim-l{border-top:1px solid var(--border)}
+.ft-lim-top{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:5px;gap:8px}
+.ft-lim-top span:last-child{color:var(--muted);font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ft-lim-bar{height:7px;border-radius:7px;background:var(--border);overflow:hidden}
+.ft-lim-bar i{display:block;height:100%;border-radius:7px;transition:width .4s ease}
+.ft-lim-msg{font-size:11px;font-weight:700;margin-top:4px}
+.ft-lim-vazio{font-size:12.5px;color:var(--muted);line-height:1.5}
+.ft-lim-btn{margin-top:10px;width:100%;padding:10px;border-radius:var(--rs);border:none;background:var(--gpale);color:var(--g1);
+  font-family:var(--font);font-size:12.5px;font-weight:800;cursor:pointer}
+html[data-tema="escuro"] .ft-lim-btn{color:var(--g3)}
+.ft-lim-form .ft-lim-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.ft-lim-form .ft-lim-row span{flex:1;font-size:13.5px;font-weight:600}
+.ft-lim-form .ft-lim-row input{width:130px;flex:0 0 130px;padding:10px 12px;text-align:right;font-family:var(--fd);font-weight:700}
+
 </style>
 </head>
 <body>
@@ -1504,6 +1548,7 @@ html[data-tema="escuro"] .ft-busca-in button{color:var(--g3)}
 
   <!-- SEMANA -->
   <div class="panel" id="panel-semana">
+    <div id="ft-limites"></div>
     <div class="slimit">
       <div class="slimit-head">
         <span id="s-range">Semana atual</span>
@@ -1562,7 +1607,12 @@ html[data-tema="escuro"] .ft-busca-in button{color:var(--g3)}
       <span><i class="ft-lg-late"></i>atrasado</span>
       <span><i style="background:var(--heat3)"></i>dia pesado</span>
       <span><i class="ft-lg-rec"></i>dia de receber</span>
+      <span><i class="ft-lg-nota"></i>lembrete</span>
       <span class="ft-legend-tip">deslize pro lado pra trocar o mês</span>
+    </div>
+    <div class="ft-ag-acoes">
+      <button type="button" onclick="ftLembreteNovo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Lembrete</button>
+      <button type="button" onclick="ftExportarICS()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5L12 18l2.5-2.5"/></svg>Mandar pro Calendário</button>
     </div>
     <div class="cal-day-detail" id="cal-day-detail"></div>
   </div>
@@ -7307,7 +7357,7 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
   // ════ D3 teclado de valor (só em tela de toque; dá pra voltar ao teclado normal) ════
   const CAMPOS=['renda-input','f-valor','p-val','s-val','e-valor','c-limite','pf-entrada','pf-valor','fatura-val','ex-val','saldo-input','receb-val','meta-input','ep-val','emp-pag-valor','mf-v','mp-v','ms-v','ft-pg-v'];
   const ehToque=()=>{try{return matchMedia('(pointer:coarse)').matches||('ontouchstart' in window&&navigator.maxTouchPoints>0);}catch(e){return false;}};
-  const marcarCampos=()=>{ if(!ehToque()) return; CAMPOS.forEach(id=>{ const el=$(id); if(el&&el.dataset.ftNormal!=='1') el.setAttribute('inputmode','none'); }); };
+  const marcarCampos=()=>{ if(!ehToque()) return; CAMPOS.forEach(id=>{ const el=$(id); if(el&&el.dataset.ftNormal!=='1') el.setAttribute('inputmode','none'); }); document.querySelectorAll('input.ft-dinheiro').forEach(el=>{ if(el.dataset.ftNormal!=='1') el.setAttribute('inputmode','none'); }); };
   let kpAlvo=null,kpCent=0,kpNovo=true,kpAbertoEm=0;
   function montarKp(){
     if($('ft-kp-bk')) return;
@@ -7346,7 +7396,7 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
   {
     marcarCampos();
     document.addEventListener('focusin',e=>{
-      const el=e.target; if(!el||!el.id||CAMPOS.indexOf(el.id)<0||el.dataset.ftNormal==='1'||!ehToque()) return;
+      const el=e.target; if(!el||el.tagName!=='INPUT') return; const ehCampo=(el.id&&CAMPOS.indexOf(el.id)>=0)||el.classList.contains('ft-dinheiro'); if(!ehCampo||el.dataset.ftNormal==='1'||!ehToque()) return;
       el.setAttribute('inputmode','none'); el.blur(); kpAbrir(el);
     });
     document.addEventListener('keydown',e=>{
@@ -7357,6 +7407,7 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
     });
   }
 
+  window.ftMarcarCampos=marcarCampos;
   // ════ D6 carregando ════
   const hero=$('ft-hero'); if(hero) hero.classList.add('ft-carregando');
   const pronto=()=>{ if(hero) hero.classList.remove('ft-carregando'); };
@@ -7380,6 +7431,253 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
     const d=document.createElement('div'); d.className='ft-sw-dica'; d.textContent='Dica: arraste uma conta para a direita para pagar →'; alvo.appendChild(d);
     lsSet('ft_dica_sw','1');
   });
+})();
+</script>
+
+<script>
+// ═════════ FT2 — Lote 4. Dados novos: S.lembretes [{id,data,texto,ts}] e S.limitesCat {categoria: valor por semana}.
+// Ficam dentro de S, então sincronizam com o Firebase como o resto. A versão antiga do app preserva esses campos.
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const num=v=>Number(v)||0;
+  const iso=(a,m,d)=>`${a}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const DS=['dom','seg','ter','qua','qui','sex','sáb'];
+  const SVG=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const IC_NOTA=SVG('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>');
+  const lembretes=()=>Array.isArray(S.lembretes)?S.lembretes:[];
+  const limites=()=>(S.limitesCat&&typeof S.limitesCat==='object'&&!Array.isArray(S.limitesCat))?S.limitesCat:{};
+  const safe=(nome,fn)=>function(){try{return fn.apply(this,arguments);}catch(e){console.error('FT2 '+nome,e);}};
+
+  // ── folha simples com formulário (mesmo visual das confirmações) ──
+  function folha(html,aoMontar){
+    const bk=document.createElement('div'); bk.className='ft-sheet-bk op'; bk.style.zIndex='1000';
+    bk.innerHTML=`<div class="ft-sheet ft-form" role="dialog" aria-modal="true">${html}</div>`;
+    const fechar=()=>{ bk.remove(); document.removeEventListener('keydown',tecla); };
+    const tecla=e=>{ if(e.key==='Escape') fechar(); };
+    bk.addEventListener('click',e=>{ if(e.target===bk) fechar(); });
+    document.addEventListener('keydown',tecla);
+    document.body.appendChild(bk);
+    aoMontar(bk,fechar);
+    return fechar;
+  }
+
+  // ════ A8 lembretes ════
+  window.ftLembreteNovo=function(dataISO){
+    if(!dataISO){
+      const a=_calDate.getFullYear(), m=_calDate.getMonth()+1;
+      const h=new Date(); const d=(_calSelected!==null&&_calSelected!==undefined)?_calSelected:((h.getFullYear()===a&&h.getMonth()+1===m)?h.getDate():1);
+      dataISO=iso(a,m,d);
+    }
+    folha(`<div class="ft-sheet-h"><b>Novo lembrete</b></div>
+      <label for="ft-lb-txt">O que lembrar</label><input type="text" id="ft-lb-txt" maxlength="120" placeholder="Ex: cobrar o João, renovar seguro..." autocomplete="off">
+      <label for="ft-lb-data">Dia</label><input type="date" id="ft-lb-data">
+      <div class="ft-form-erro" id="ft-lb-erro"></div>
+      <div class="ft-cf-b"><button type="button" class="nao">Cancelar</button><button type="button" class="sim">Salvar</button></div>`,
+    (bk,fechar)=>{
+      const t=bk.querySelector('#ft-lb-txt'), d=bk.querySelector('#ft-lb-data');
+      d.value=dataISO;
+      bk.querySelector('.nao').onclick=fechar;
+      const salvar=()=>{
+        const texto=t.value.trim(), data=d.value;
+        if(!texto){ bk.querySelector('#ft-lb-erro').textContent='Escreva o lembrete.'; t.focus(); return; }
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(data)){ bk.querySelector('#ft-lb-erro').textContent='Escolha um dia.'; return; }
+        if(!Array.isArray(S.lembretes)) S.lembretes=[];
+        S.lembretes.push({id:uid(),data,texto,ts:Date.now()});
+        save(); fechar(); atualizarTudo();
+        try{ showToast('📝 Lembrete salvo'); }catch(e){}
+      };
+      bk.querySelector('.sim').onclick=salvar;
+      t.addEventListener('keydown',e=>{ if(e.key==='Enter') salvar(); });
+      setTimeout(()=>t.focus(),60);
+    });
+  };
+  window.ftLembreteApagar=function(id){
+    const arr=lembretes(); const i=arr.findIndex(x=>x.id===id); if(i<0) return;
+    const copia=JSON.parse(JSON.stringify(arr[i]));
+    arr.splice(i,1); save(); atualizarTudo();
+    if(typeof ftUndoToast==='function') ftUndoToast('🗑️ Lembrete apagado',()=>{
+      if(!Array.isArray(S.lembretes)) S.lembretes=[];
+      if(S.lembretes.some(x=>x.id===copia.id)) return;
+      S.lembretes.splice(Math.min(i,S.lembretes.length),0,copia); save(); atualizarTudo();
+    });
+  };
+  const doDia=(a,m,d)=>lembretes().filter(l=>l&&l.data===iso(a,m,d));
+  function atualizarTudo(){
+    try{ renderAgenda(); }catch(e){}
+    try{ if(typeof ftRenderProx==='function') ftRenderProx(); }catch(e){}
+  }
+  // marca os dias com lembrete no calendário
+  const marcarDias=safe('marcar lembretes',function(){
+    const a=_calDate.getFullYear(), m=_calDate.getMonth()+1;
+    const dias=new Set(lembretes().filter(l=>l&&typeof l.data==='string'&&l.data.startsWith(iso(a,m,1).slice(0,8))).map(l=>parseInt(l.data.slice(8,10))));
+    document.querySelectorAll('#cal-grid [data-day]').forEach(c=>c.classList.toggle('ft-nota',dias.has(parseInt(c.dataset.day))));
+  });
+  // lista os lembretes no detalhe do dia
+  const detalhe=safe('detalhe lembretes',function(dia,mes,ano){
+    const det=$('cal-day-detail'); const alvo=det&&det.firstElementChild; if(!alvo) return;
+    const ls=doDia(ano,mes,dia);
+    const sec=document.createElement('div'); sec.className='ft-lb-sec';
+    sec.innerHTML=(ls.length?`<div class="ft-lb-t">Lembretes</div>`+ls.map(l=>`<div class="ft-lb"><div class="ft-lb-ic">${IC_NOTA}</div><div class="ft-lb-tx"></div><button type="button" class="ft-lb-x" aria-label="Apagar lembrete" data-id="${esc(l.id)}">✕</button></div>`).join(''):'')
+      +`<button type="button" class="ft-lb-add">+ Lembrete neste dia</button>`;
+    ls.forEach((l,k)=>{ sec.querySelectorAll('.ft-lb-tx')[k].textContent=l.texto; });
+    sec.querySelectorAll('.ft-lb-x').forEach(b=>b.onclick=()=>ftLembreteApagar(b.dataset.id));
+    sec.querySelector('.ft-lb-add').onclick=()=>ftLembreteNovo(iso(ano,mes,dia));
+    alvo.appendChild(sec);
+  });
+  // lembretes dos próximos 7 dias no cartão "Próximas contas"
+  const proximos=safe('próximos lembretes',function(){
+    const el=$('ft-prox'); if(!el||!el.innerHTML) return;
+    const h=new Date(); const hoje=new Date(h.getFullYear(),h.getMonth(),h.getDate());
+    const lim=new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()+7);
+    const ls=lembretes().filter(l=>{ if(!l||typeof l.data!=='string') return false; const d=new Date(l.data+'T12:00:00'); return d>=hoje&&d<lim; })
+      .sort((a,b)=>a.data.localeCompare(b.data)).slice(0,3);
+    if(!ls.length) return;
+    let x='<div class="ft-lb-sec"><div class="ft-lb-t">Lembretes</div>';
+    ls.forEach(l=>{
+      const d=new Date(l.data+'T12:00:00'); const dif=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-hoje)/86400000);
+      const q=dif===0?'hoje':dif===1?'amanhã':`${DS[d.getDay()]}, ${d.getDate()}`;
+      x+=`<button type="button" class="ft-up" onclick="ftIrAgenda(${d.getDate()},${d.getMonth()+1},${d.getFullYear()})"><div class="ft-up-ic" style="background:var(--yelp);color:var(--yel)">${IC_NOTA}</div><div class="ft-up-tx"><b>${esc(l.texto)}</b><span>${q}</span></div></button>`;
+    });
+    el.insertAdjacentHTML('beforeend',x+'</div>');
+  });
+
+  // ════ A9 mandar pro Calendário do iPhone (arquivo .ics; não guarda nada) ════
+  function escICS(s){ return String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n'); }
+  function dobrar(linha){ // linhas de no máximo 75 bytes (regra do formato)
+    const enc=new TextEncoder(); if(enc.encode(linha).length<=75) return linha;
+    const out=[]; let atual='', bytes=0, limite=75;
+    for(const ch of linha){ const b=enc.encode(ch).length; if(bytes+b>limite){ out.push(atual); atual=' '; bytes=1; limite=75; } atual+=ch; bytes+=b; }
+    out.push(atual); return out.join('\r\n');
+  }
+  const dt8=s=>s.replace(/-/g,'');
+  function diaSeguinte(isoD){ const d=new Date(isoD+'T12:00:00'); d.setDate(d.getDate()+1); return iso(d.getFullYear(),d.getMonth()+1,d.getDate()); }
+  function eventos(){
+    const a=_calDate.getFullYear(), m=_calDate.getMonth()+1, dias=new Date(a,m,0).getDate();
+    const h=new Date(); const ehMesAtual=h.getFullYear()===a&&h.getMonth()+1===m;
+    const ini=ehMesAtual?h.getDate():1; const ev=[];
+    for(let d=ini;d<=dias;d++){
+      (contasDoDia(d,m,a)||[]).forEach(c=>{
+        if(c.pago) return;
+        const rec=c.tipo==='emprestimo'&&c.empTipo==='emprestei';
+        const tipo=c.tipo==='parcela'?'Parcela':c.tipo==='fatura-cartao'?'Fatura do cartão':c.tipo==='emprestimo'?(rec?'Empréstimo a receber':'Empréstimo a pagar'):'Conta fixa';
+        ev.push({uid:`ft-${c.tipo}-${c.pid||c.id}-${a}${String(m).padStart(2,'0')}@fintrack`,data:iso(a,m,d),
+          titulo:`${rec?'Receber':'Pagar'}: ${c.nome} — ${fmtM(num(c.valor))}`,desc:`${tipo} · FinTrack`,aviso:`${rec?'Receber':'Vence'} amanhã: ${c.nome}`});
+      });
+      doDia(a,m,d).forEach(l=>ev.push({uid:`ft-lembrete-${l.id}@fintrack`,data:l.data,titulo:`📝 ${l.texto}`,desc:'Lembrete · FinTrack',aviso:`Amanhã: ${l.texto}`}));
+    }
+    return {ev,mes:MESES[m-1],ano:a};
+  }
+  function montarICS(ev){
+    const agora=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+    const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FinTrack//PT-BR','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:FinTrack'];
+    ev.forEach(e=>{
+      L.push('BEGIN:VEVENT','UID:'+e.uid,'DTSTAMP:'+agora,'DTSTART;VALUE=DATE:'+dt8(e.data),'DTEND;VALUE=DATE:'+dt8(diaSeguinte(e.data)),
+        'SUMMARY:'+escICS(e.titulo),'DESCRIPTION:'+escICS(e.desc),'TRANSP:TRANSPARENT',
+        'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+escICS(e.aviso),'TRIGGER:-PT15H','END:VALARM','END:VEVENT');
+    });
+    L.push('END:VCALENDAR');
+    return L.map(dobrar).join('\r\n')+'\r\n';
+  }
+  window.ftMontarICS=function(){ const r=eventos(); return {...r,texto:montarICS(r.ev)}; }; // usado nos testes
+  window.ftExportarICS=async function(){
+    try{
+      const r=eventos();
+      if(!r.ev.length){ showToast(`Nada pendente em ${r.mes} pra mandar 🎉`); return; }
+      const nContas=r.ev.filter(e=>!e.uid.startsWith('ft-lembrete')).length, nLemb=r.ev.length-nContas;
+      const partes=[nContas?`${nContas} conta${nContas>1?'s':''}`:'',nLemb?`${nLemb} lembrete${nLemb>1?'s':''}`:''].filter(Boolean).join(' e ');
+      const ok=await ftConfirm(`Mandar ${partes} de ${r.mes} pro Calendário?\nCada um vira um evento no dia, com aviso às 9h do dia anterior. Se mandar de novo, o iPhone pode duplicar os eventos.`);
+      if(!ok) return;
+      const nome=`fintrack-${r.mes}-${r.ano}.ics`;
+      const blob=new Blob([montarICS(r.ev)],{type:'text/calendar;charset=utf-8'});
+      let file=null; try{ file=new File([blob],nome,{type:'text/calendar'}); }catch(e){}
+      if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+        try{ await navigator.share({files:[file],title:'FinTrack'}); return; }catch(e){ if(e&&e.name==='AbortError') return; }
+      }
+      const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download=nome;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+      showToast('📅 Abra o arquivo para adicionar ao Calendário');
+    }catch(e){ console.error('FT2 calendário',e); try{showToast('⚠️ Não deu pra gerar o arquivo');}catch(_){} }
+  };
+
+  // ════ N5 limite por categoria (gastos da semana atual) ════
+  function categorias(){
+    const sel=$('s-cat'); const cats=sel?[...sel.options].map(o=>o.value||o.textContent):[];
+    Object.keys(limites()).forEach(c=>{ if(cats.indexOf(c)<0) cats.push(c); });
+    return cats;
+  }
+  function gastoCat(){
+    const t={}; ((S.semanaAtual&&S.semanaAtual.gastos)||[]).forEach(g=>{ if(!g) return; t[g.cat]=(t[g.cat]||0)+num(g.valor); }); return t;
+  }
+  const corPct=p=>p>=1?'var(--red)':p>=0.8?'var(--yel)':'var(--g1)';
+  window.ftRenderLimites=safe('limites',function(){
+    const el=$('ft-limites'); if(!el) return;
+    const lim=limites(), gasto=gastoCat();
+    const ativos=categorias().filter(c=>num(lim[c])>0);
+    let h=`<div class="ft-card-h"><span>Limites da semana</span><small>${ativos.length?`${ativos.length} categoria${ativos.length>1?'s':''}`:''}</small></div>`;
+    if(!ativos.length) h+='<div class="ft-lim-vazio">Defina quanto quer gastar por semana em cada categoria (comida, transporte...). A barra enche e o app avisa quando chegar em 80%.</div>';
+    ativos.forEach(c=>{
+      const L=num(lim[c]), G=num(gasto[c]), p=L>0?G/L:0;
+      const msg=p>=1?`Passou ${fmtM(G-L)} do limite`:p>=0.8?`Atenção: ${Math.round(p*100)}% usado`:`Ainda pode ${fmtM(L-G)}`;
+      h+=`<div class="ft-lim-l"><div class="ft-lim-top"><span>${esc(c)}</span><span class="ft-val">${fmtM(G)} / ${fmtM(L)}</span></div>
+        <div class="ft-lim-bar"><i style="width:${Math.min(100,Math.round(p*100))}%;background:${corPct(p)}"></i></div>
+        <div class="ft-lim-msg" style="color:${corPct(p)}">${msg}</div></div>`;
+    });
+    h+=`<button type="button" class="ft-lim-btn" onclick="ftLimitesEditar()">${ativos.length?'Mudar limites':'Definir limites'}</button>`;
+    el.className='ft-card'; el.innerHTML=h;
+  });
+  window.ftLimitesEditar=function(){
+    const cats=categorias(), lim=limites();
+    folha(`<div class="ft-sheet-h"><b>Limites por semana</b></div>
+      <div class="ft-cf-m" style="text-align:left;margin:0">Deixe em branco a categoria sem limite.</div>
+      <div class="ft-lim-form">${cats.map((c,i)=>`<div class="ft-lim-row"><span></span><input type="number" class="ft-dinheiro" id="ft-lim-${i}" step="0.01" min="0" placeholder="sem limite"></div>`).join('')}</div>
+      <div class="ft-cf-b"><button type="button" class="nao">Cancelar</button><button type="button" class="sim">Salvar</button></div>`,
+    (bk,fechar)=>{
+      cats.forEach((c,i)=>{ bk.querySelectorAll('.ft-lim-row span')[i].textContent=c; const v=num(lim[c]); if(v>0) bk.querySelector('#ft-lim-'+i).value=v.toFixed(2); });
+      try{ if(typeof ftMarcarCampos==='function') ftMarcarCampos(); }catch(e){}
+      bk.querySelector('.nao').onclick=fechar;
+      bk.querySelector('.sim').onclick=()=>{
+        const novo={};
+        cats.forEach((c,i)=>{ const v=parseFloat(String(bk.querySelector('#ft-lim-'+i).value).replace(',','.')); if(isFinite(v)&&v>0) novo[c]=Math.round(v*100)/100; });
+        S.limitesCat=novo; save(); fechar(); ftRenderLimites();
+        try{ showToast('✅ Limites salvos'); }catch(e){}
+      };
+    });
+  };
+  // aviso ao lançar gasto que passa de 80% ou 100%
+  (function(){
+    const orig=window.addGasto; if(typeof orig!=='function'||orig._ft4) return;
+    const novo=function(){
+      const antes=gastoCat();
+      const r=orig.apply(this,arguments);
+      try{
+        const depois=gastoCat(), lim=limites();
+        Object.keys(lim).forEach(c=>{
+          const L=num(lim[c]); if(L<=0) return;
+          const a=num(antes[c])/L, d=num(depois[c])/L;
+          if(a<1&&d>=1) setTimeout(()=>showToast(`🚨 ${c}: passou do limite da semana`),2300);
+          else if(a<0.8&&d>=0.8) setTimeout(()=>showToast(`⚠️ ${c}: ${Math.round(d*100)}% do limite da semana`),2300);
+        });
+        ftRenderLimites();
+      }catch(e){ console.error('FT2 aviso limite',e); }
+      return r;
+    };
+    novo._ft4=true; window.addGasto=novo;
+  })();
+
+  // ── ganchos ──
+  function envolver(nome,depois){
+    const orig=window[nome]; if(typeof orig!=='function'||orig['_ft4_'+nome]) return;
+    const novo=function(){ const r=orig.apply(this,arguments); try{depois.apply(this,arguments);}catch(e){console.error('FT2 gancho '+nome,e);} return r; };
+    novo['_ft4_'+nome]=true; window[nome]=novo;
+  }
+  envolver('renderAgenda',()=>marcarDias());
+  envolver('renderCalDetail',(d,m,a)=>detalhe(d,m,a));
+  envolver('ftRenderProx',()=>proximos());
+  envolver('renderSemana',()=>ftRenderLimites());
+  envolver('updAll',()=>ftRenderLimites());
+  ftRenderLimites();
 })();
 </script>
 
