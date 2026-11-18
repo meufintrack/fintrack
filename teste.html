@@ -1329,6 +1329,35 @@ html,body{overflow-x:clip;max-width:100%}
 }
 
 
+
+/* ═════════ FT2 — Lote 7: telas separadas no celular (computador não muda) ═════════ */
+.ft-sec-tit,.ft-chips{display:none}
+@keyframes ftTela{from{opacity:0}to{opacity:1}}
+@media(max-width:600px){
+  /* o título agora fica no topo, não em cima da seção */
+  .main>.panel.on::before{content:none!important;display:none!important}
+  /* INÍCIO: só o resumo; as seções ficam guardadas */
+  body:not(.ft-sec) .main>.panel{display:none!important}
+  /* SEÇÃO: só a seção aberta, começando do topo */
+  body.ft-sec .main>*:not(.panel):not(.mbk):not(.ft-chips):not(.tabs){display:none!important}
+  body.ft-sec footer{display:none!important}
+  body.ft-sec .main>.panel.on{animation:ftTela .22s ease both}
+  /* Agenda igual à prévia: o dia escolhido logo embaixo do calendário; Lembrete/Calendário depois */
+  body.ft-sec #panel-agenda.on{display:flex;flex-direction:column}
+  body.ft-sec #panel-agenda.on>.ft-ag-acoes{order:9;margin-top:12px}
+  body.ft-sec .ft-saud,body.ft-sec .hdr-brand-text h1{display:none!important}
+  body.ft-sec .ft-sec-tit{display:block;font-family:var(--fd);font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.05;color:var(--text);padding-top:17px}
+  /* atalhos entre Fixos / Parcelas / Semana / Cartões / Empréstimos */
+  body.ft-sec.ft-grupo-contas .ft-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:2px -14px 12px;padding:2px 14px;
+    -webkit-overflow-scrolling:touch;touch-action:pan-x}
+  .ft-chips::-webkit-scrollbar{display:none}
+  .ft-chips button{flex:0 0 auto;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--font);
+    font-size:13px;font-weight:700;padding:8px 14px;border-radius:999px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .ft-chips button.on{background:var(--g1);border-color:var(--g1);color:#fff}
+  html[data-tema="escuro"] .ft-chips button.on{background:var(--g3);border-color:var(--g3);color:#06231A}
+}
+@media(max-width:600px) and (prefers-reduced-motion:reduce){body.ft-sec .main>.panel.on{animation:none}}
+
 </style>
 </head>
 <body>
@@ -1371,6 +1400,7 @@ html,body{overflow-x:clip;max-width:100%}
         <div class="hdr-brand-text">
           <div class="ft-saud" id="ft-saud"></div>
           <h1>FinTrack</h1>
+          <div class="ft-sec-tit" id="ft-sec-tit" aria-live="polite"></div>
         </div>
       </div>
       <div class="hdr-sub" id="hdr-sub">Gestão financeira inteligente</div>
@@ -1536,6 +1566,13 @@ html,body{overflow-x:clip;max-width:100%}
   </div>
 
   <!-- TABS -->
+  <div class="ft-chips" id="ft-chips" role="tablist" aria-label="Contas">
+    <button type="button" data-ftchip="fixos" onclick="ftAbrirAba('fixos')">Fixos</button>
+    <button type="button" data-ftchip="parcelas" onclick="ftAbrirAba('parcelas')">Parcelas</button>
+    <button type="button" data-ftchip="semana" onclick="ftAbrirAba('semana')">Semana</button>
+    <button type="button" data-ftchip="cartoes" onclick="ftAbrirAba('cartoes')">Cartões</button>
+    <button type="button" data-ftchip="emprestimos" onclick="ftAbrirAba('emprestimos')">Empréstimos</button>
+  </div>
   <div class="tabs">
     <button class="tbtn on" data-tab="fixos"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/></svg>Fixos</button>
     <button class="tbtn" data-tab="parcelas"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>Parcelas</button>
@@ -7034,6 +7071,7 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
   // ── navegação ──
   function abaBtn(t){return document.querySelector(`.tabs [data-tab="${t}"]`);}
   function rolarAbas(){
+    if(window.ftCelTelas&&window.ftCelTelas()){ window.scrollTo(0,0); return; }   // celular: cada aba é uma tela (Lote 7)
     const t=document.querySelector('.tabs'); if(!t) return;
     const hdr=document.querySelector('.hdr'); const off=(hdr&&getComputedStyle(hdr).position==='sticky')?hdr.offsetHeight:0;
     window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY-off-8,behavior:'smooth'});
@@ -7041,7 +7079,9 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
   window.ftAbrirAba=function(t){ ftContasFechar(); const b=abaBtn(t); if(b){b.click(); setTimeout(rolarAbas,30);} marcarNav(); };
   window.ftContasFechar=function(){ const s=$('ft-contas-bk'); if(s) s.classList.remove('op'); };
   window.ftNav=function(q){
-    if(q==='inicio'){ window.scrollTo({top:0,behavior:'smooth'}); setTimeout(marcarNav,400); return; }
+    if(q==='inicio'){
+      if(window.ftCelTelas&&window.ftCelTelas()){ ftContasFechar(); window.ftTelaInicio(); marcarNav(); return; }
+      window.scrollTo({top:0,behavior:'smooth'}); setTimeout(marcarNav,400); return; }
     if(q==='contas'){ $('ft-contas-bk').classList.add('op'); return; }
     ftAbrirAba(q);
   };
@@ -7053,9 +7093,11 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
     setTimeout(()=>{ const det=$('cal-day-detail'); if(det&&det.firstElementChild) det.scrollIntoView({behavior:'smooth',block:'center'}); else rolarAbas(); },60);
     marcarNav();
   };
+  window.ftMarcarNav=function(){marcarNav();};
   function marcarNav(){
     const tab=(typeof getTab==='function')?getTab():'fixos';
-    const t=document.querySelector('.tabs'); const topo=t?t.getBoundingClientRect().top>window.innerHeight*0.6:true;
+    const t=document.querySelector('.tabs');
+    const topo=(window.ftCelTelas&&window.ftCelTelas())?!document.body.classList.contains('ft-sec'):(t?t.getBoundingClientRect().top>window.innerHeight*0.6:true);
     const q=topo?'inicio':(tab==='agenda'?'agenda':tab==='historico'?'historico':'contas');
     document.querySelectorAll('#ft-nav [data-ftnav]').forEach(b=>b.classList.toggle('on',b.dataset.ftnav===q));
   }
@@ -7899,6 +7941,53 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
   // troca de perfil muda o nome do topo
   try{ const alvo=document.getElementById('perfil-nome-hdr'); if(alvo) new MutationObserver(saudacao).observe(alvo,{childList:true,characterData:true,subtree:true}); }catch(e){}
   saudacao(); setInterval(saudacao,10*60*1000);
+})();
+</script>
+
+<script>
+// ═════════ FT2 — Lote 7: no celular cada botão abre uma tela (Início / Agenda / Contas / Histórico). Só navegação. ═════════
+(function(){
+  'use strict';
+  const NOMES={fixos:'Fixos',parcelas:'Parcelas',semana:'Semana',agenda:'Agenda',cartoes:'Cartões',emprestimos:'Empréstimos',historico:'Histórico'};
+  const CONTAS=['fixos','parcelas','semana','cartoes','emprestimos'];
+  const mq=window.matchMedia('(max-width:600px)');
+  window.ftCelTelas=()=>mq.matches;
+  const aba=()=>(typeof getTab==='function')?getTab():'fixos';
+  function pintar(){
+    const t=aba(), b=document.body;
+    const el=document.getElementById('ft-sec-tit'); if(el) el.textContent=NOMES[t]||'';
+    b.classList.toggle('ft-grupo-contas',mq.matches&&CONTAS.includes(t));
+    document.querySelectorAll('#ft-chips [data-ftchip]').forEach(c=>{const on=c.dataset.ftchip===t;c.classList.toggle('on',on);c.setAttribute('aria-selected',on);
+      if(on&&b.classList.contains('ft-sec')){try{c.scrollIntoView({block:'nearest',inline:'center'});}catch(e){}}});
+    try{ window.ftMarcarNav&&window.ftMarcarNav(); }catch(e){}
+  }
+  function entrar(){
+    if(!mq.matches) return;
+    document.body.classList.add('ft-sec');
+    // Agenda: já abre com o dia de hoje escolhido (como na prévia)
+    try{
+      if(aba()==='agenda'&&(_calSelected===null||_calSelected===undefined)){
+        const h=new Date();
+        if(_calDate&&_calDate.getMonth()===h.getMonth()&&_calDate.getFullYear()===h.getFullYear()){ _calSelected=h.getDate(); renderAgenda(); }
+      }
+    }catch(e){ console.error('FT7 agenda',e); }
+    pintar();
+    window.scrollTo(0,0);
+  }
+  window.ftTelaInicio=function(){
+    document.body.classList.remove('ft-sec','ft-grupo-contas');
+    window.scrollTo(0,0);
+    pintar();
+  };
+  document.querySelectorAll('.tabs [data-tab]').forEach(b=>{
+    // o app antigo rola suave até a aba clicada; no celular (telas) isso puxava a tela pra baixo no iPhone
+    const orig=b.scrollIntoView;
+    b.scrollIntoView=function(){ if(mq.matches) return; return orig.apply(this,arguments); };
+    b.addEventListener('click',()=>{ if(mq.matches){ document.body.classList.add('ft-sec'); window.scrollTo(0,0); } setTimeout(entrar,0); });
+  });
+  // virou computador/tablet: tudo volta como era
+  try{ mq.addEventListener('change',()=>{ if(!mq.matches) document.body.classList.remove('ft-sec','ft-grupo-contas'); pintar(); }); }catch(e){}
+  pintar();
 })();
 </script>
 
