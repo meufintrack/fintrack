@@ -1238,6 +1238,8 @@ html[data-tema="escuro"] .ft-lim-btn{color:var(--g3)}
 .ft-lim-form .ft-lim-row{display:flex;align-items:center;gap:10px;margin-top:8px}
 .ft-lim-form .ft-lim-row span{flex:1;font-size:13.5px;font-weight:600}
 .ft-lim-form .ft-lim-row input{width:130px;flex:0 0 130px;padding:10px 12px;text-align:right;font-family:var(--fd);font-weight:700}
+.ft-ics-passos{margin:12px 0 10px;padding-left:20px;font-size:13.5px;line-height:1.55;color:var(--text,inherit)}
+.ft-ics-passos li{margin-bottom:6px}
 
 
 /* ═════════ FT2 — Lote 5: topo fininho ═════════ */
@@ -7628,21 +7630,20 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
       const nome=`fintrack-${r.mes}-${r.ano}.ics`;
       const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
       if(ios){
-        // iPhone: abrir o calendário direto no Safari mostra a tela "Adicionar tudo" do app Calendário.
-        // (Compartilhar o arquivo só oferece "Salvar em Arquivos".)
+        // iPhone: o iOS não deixa um site abrir o Calendário direto (link data: fica em branco).
+        // Caminho que funciona: salvar o .ics em Arquivos e tocar nele lá -> "Adicionar tudo".
         folha(`<div class="ft-sheet-h"><b>Mandar pro Calendário</b></div>
-          <div class="ft-cf-m" style="text-align:left;margin:0">${partes} de ${r.mes}. Cada um vira um evento no dia, com aviso às 9h do dia anterior.<br><br>Na próxima tela, toque em <b>Adicionar tudo</b>. Se mandar de novo depois, o iPhone pode duplicar os eventos.</div>
-          <div class="ft-cf-b" style="flex-direction:column"><button type="button" class="sim">Abrir no Calendário</button><button type="button" class="nao ft-ics-arq">Salvar arquivo .ics</button><button type="button" class="nao ft-ics-x">Cancelar</button></div>`,
+          <div class="ft-cf-m" style="text-align:left;margin:0">${partes} de ${r.mes}. Cada um vira um evento no dia, com aviso às 9h do dia anterior.</div>
+          <ol class="ft-ics-passos">
+            <li>Toque em <b>Salvar no iPhone</b> e escolha <b>Salvar em Arquivos</b>.</li>
+            <li>Abra o app <b>Arquivos</b> e toque em <b>${nome}</b>.</li>
+            <li>Toque em <b>Adicionar tudo</b>. Pronto, vai pro seu Calendário.</li>
+          </ol>
+          <div class="ft-cf-m" style="text-align:left;margin:0;font-size:12px">Se mandar de novo depois, o iPhone pode duplicar os eventos.</div>
+          <div class="ft-cf-b" style="flex-direction:column"><button type="button" class="sim">Salvar no iPhone</button><button type="button" class="nao ft-ics-x">Cancelar</button></div>`,
         (bk,fechar)=>{
-          bk.querySelector('.sim').onclick=()=>{
-            fechar();
-            const url='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
-            // janela separada: o FinTrack continua aberto atrás (importante quando ele está instalado na tela de início)
-            let w=null; try{ w=window.open(url,'_blank'); }catch(e){}
-            if(!w) window.location.href=url;
-          };
+          bk.querySelector('.sim').onclick=()=>{ fechar(); salvarArquivo(ics,nome); };
           bk.querySelector('.ft-ics-x').onclick=fechar;
-          bk.querySelector('.ft-ics-arq').onclick=()=>{ fechar(); salvarArquivo(ics,nome); };
         });
         return;
       }
