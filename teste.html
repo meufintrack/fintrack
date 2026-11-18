@@ -1202,6 +1202,10 @@ html[data-tema="escuro"] .ft-busca-in button{color:var(--g3)}
 }
 @media(max-width:420px){ .perfil-trocar{display:none} .perfil-selector{padding:4px 9px 4px 4px} }
 
+/* teclado de valor: sem atraso nem toque duplo */
+.ft-kp,.ft-kp *{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.ft-kp-g button.ft-kp-ap{transform:scale(.94);filter:brightness(.92)}
+
 
 /* ═════════ FT2 — Lote 4 ═════════ */
 .ft-ag-acoes{display:grid;grid-template-columns:1fr 1.6fr;gap:8px;margin:0 0 12px}
@@ -7530,7 +7534,15 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
       <button type="button" class="ft-kp-alt" id="ft-kp-alt">usar o teclado normal</button></div>`;
     // o mesmo toque que abriu não pode fechar (o clique cai no fundo logo depois)
     bk.addEventListener('click',e=>{ if(e.target===bk&&Date.now()-kpAbertoEm>450) kpFechar(); });
-    bk.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>kpTecla(b.dataset.k)));
+    // cada toque conta na hora (no iPhone, dois toques rápidos viravam "toque duplo" e o segundo número sumia)
+    bk.querySelectorAll('[data-k]').forEach(b=>{
+      b.addEventListener('pointerdown',e=>{
+        if(e.button>0) return; e.preventDefault(); kpTecla(b.dataset.k);
+        b.classList.add('ft-kp-ap'); setTimeout(()=>b.classList.remove('ft-kp-ap'),110);
+        try{ window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.ftHaptic&&window.webkit.messageHandlers.ftHaptic.postMessage('leve'); }catch(_){}
+      });
+      b.addEventListener('click',e=>{ if(e.detail===0) kpTecla(b.dataset.k); });   // só teclado físico/leitor de tela
+    });
     bk.querySelector('#ft-kp-ok').onclick=kpFechar;
     bk.querySelector('#ft-kp-alt').onclick=()=>{ const el=kpAlvo; kpFechar(); if(el){ el.dataset.ftNormal='1'; el.setAttribute('inputmode','decimal'); setTimeout(()=>el.focus(),60); } };
     document.body.appendChild(bk);
