@@ -1084,6 +1084,117 @@ html[data-tema="escuro"] .ft-contas-grid button svg{color:var(--g3)}
   color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));box-shadow:var(--shlg);cursor:pointer}
 .ft-pagar-tudo small{display:block;font-size:10.5px;font-weight:600;opacity:.85;margin-top:2px}
 
+
+/* ═════════ FT2 — Lote 3 ═════════ */
+.ft-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:14px;margin-bottom:12px}
+.ft-card-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;font-weight:800;margin-bottom:8px}
+.ft-card-h small{font-weight:600;color:var(--muted);font-size:11px}
+.ft-card-x{border:none;background:var(--bg);color:var(--muted);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;flex-shrink:0}
+
+/* N1/N2 previsão + posso gastar */
+.ft-prev-big{font-family:var(--fd);font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.ft-prev-frase{font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.ft-prev-linhas{margin-top:10px;border-top:1px dashed var(--border);padding-top:8px;display:flex;flex-direction:column;gap:4px}
+.ft-prev-linhas div{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.ft-prev-linhas b{color:var(--text);font-weight:700}
+.ft-pg{margin-top:12px;background:var(--bg);border-radius:var(--rs);padding:10px}
+.ft-pg label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.ft-pg-row{display:flex;gap:8px}
+.ft-pg input{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--card);color:var(--text);
+  font-family:var(--fd);font-size:16px;font-weight:700;outline:none}
+.ft-pg input:focus{border-color:var(--g1)}
+.ft-pg-res{margin-top:8px;font-size:12.5px;font-weight:600;line-height:1.45;display:none;border-radius:10px;padding:8px 10px}
+.ft-pg-res.ok{display:block;background:var(--gpale);color:var(--okt)}
+.ft-pg-res.meio{display:block;background:var(--yelp);color:var(--warnt)}
+.ft-pg-res.nao{display:block;background:var(--redp);color:var(--badt)}
+
+/* N3 assinaturas */
+.ft-assin-tot{display:flex;gap:8px;margin-bottom:6px}
+.ft-assin-tot div{flex:1;background:var(--bg);border-radius:var(--rs);padding:8px 10px}
+.ft-assin-tot span{display:block;font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.ft-assin-tot b{font-family:var(--fd);font-size:17px}
+.ft-assin-l{display:flex;justify-content:space-between;font-size:12px;padding:5px 2px;border-top:1px solid var(--border)}
+.ft-assin-l span:last-child{font-weight:700;font-variant-numeric:tabular-nums}
+.ft-assin-l em{font-style:normal;color:var(--muted);font-size:10.5px;margin-left:6px}
+
+/* N7 resumo do mês */
+.ft-res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ft-res-grid div{background:var(--bg);border-radius:var(--rs);padding:9px 10px;min-width:0}
+.ft-res-grid span{display:block;font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.ft-res-grid b{font-family:var(--fd);font-size:16px;white-space:nowrap}
+.ft-res-nota{font-size:12px;color:var(--muted);margin-top:9px;line-height:1.5}
+.ft-res-nota b{color:var(--text)}
+
+/* N4 busca */
+.ft-busca-bk{position:fixed;inset:0;z-index:950;background:rgba(5,12,9,.45);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);display:none}
+.ft-busca-bk.op{display:block}
+.ft-busca{background:var(--card);color:var(--text);max-width:600px;margin:0 auto;border-radius:0 0 22px 22px;
+  padding:calc(12px + env(safe-area-inset-top,0px)) 14px 14px;max-height:85vh;overflow:auto;box-shadow:0 10px 40px -10px rgba(0,0,0,.35)}
+.ft-busca-in{display:flex;gap:8px;align-items:center}
+.ft-busca-in input{flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);
+  font-family:var(--font);font-size:16px;outline:none}
+.ft-busca-in input:focus{border-color:var(--g1)}
+.ft-busca-in button{border:none;background:none;color:var(--g1);font-family:var(--font);font-weight:800;font-size:14px;cursor:pointer;padding:8px 4px}
+html[data-tema="escuro"] .ft-busca-in button{color:var(--g3)}
+.ft-busca-g{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 2px 2px}
+.ft-busca-vazio{font-size:13px;color:var(--muted);padding:16px 4px;text-align:center}
+
+/* N6 backup */
+.ft-backup-btn{width:100%;display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px;border-radius:16px;border:1.5px dashed var(--border);
+  background:transparent;color:var(--text);font-family:var(--font);text-align:left;cursor:pointer}
+.ft-backup-btn svg{width:22px;height:22px;color:var(--g1);flex-shrink:0}
+.ft-backup-btn b{display:block;font-size:13.5px}
+.ft-backup-btn small{font-size:11px;color:var(--muted)}
+
+/* D1 desfazer */
+.ft-undo{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);z-index:960;
+  display:flex;align-items:center;gap:12px;background:var(--toast);color:#fff;border-radius:14px;padding:10px 10px 10px 14px;
+  font-size:13px;font-weight:600;box-shadow:0 10px 30px -8px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s,transform .25s;
+  max-width:calc(100vw - 32px)}
+.ft-undo.op{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.ft-undo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ft-undo button{border:none;background:rgba(255,255,255,.12);color:#7FE3AF;font-family:var(--font);font-weight:800;font-size:13px;padding:7px 11px;border-radius:9px;cursor:pointer;flex-shrink:0}
+
+/* D2 deslizar pra pagar */
+.cal-conta-item.ft-sw{position:relative;transition:transform .2s}
+.cal-conta-item.ft-arrastando{transition:none}
+.ft-sw-dica{font-size:10.5px;color:var(--muted);text-align:center;margin-top:8px}
+
+/* D3 teclado de valor */
+.ft-kp-bk{position:fixed;inset:0;z-index:980;background:rgba(5,12,9,.35);display:none;align-items:flex-end;justify-content:center}
+.ft-kp-bk.op{display:flex}
+.ft-kp{background:var(--card);color:var(--text);width:100%;max-width:520px;border-radius:24px 24px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));
+  animation:sum .22s ease;box-shadow:0 -10px 40px -10px rgba(0,0,0,.35)}
+.ft-kp-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:center}
+.ft-kp-v{font-family:var(--fd);font-size:36px;font-weight:800;text-align:center;letter-spacing:-.02em;margin:4px 0 12px;font-variant-numeric:tabular-nums}
+.ft-kp-g{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.ft-kp-g button{padding:14px 0;border:none;border-radius:14px;background:var(--bg);color:var(--text);font-family:var(--fd);font-size:22px;font-weight:700;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.ft-kp-g button:active{transform:scale(.96);background:var(--border)}
+.ft-kp-ok{width:100%;margin-top:8px;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;
+  font-family:var(--font);font-size:15px;font-weight:800;cursor:pointer}
+.ft-kp-alt{display:block;margin:8px auto 0;border:none;background:none;color:var(--muted);font-family:var(--font);font-size:11.5px;text-decoration:underline;cursor:pointer}
+
+/* D6 telas vazias e carregando */
+.empty{background:var(--card);border:1.5px dashed var(--border);border-radius:var(--r);margin-bottom:12px;color:var(--muted)}
+.empty .icon{font-size:30px;opacity:.85}
+.ft-hero.ft-carregando .ft-hero-v,.ft-hero.ft-carregando .ft-hero-pills b{color:transparent;border-radius:8px;
+  background:linear-gradient(90deg,rgba(255,255,255,.12),rgba(255,255,255,.28),rgba(255,255,255,.12));background-size:200% 100%;
+  animation:ftBrilho 1.2s linear infinite}
+.ft-hero.ft-carregando .ft-hero-sub{opacity:0}
+@keyframes ftBrilho{from{background-position:200% 0}to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.ft-hero.ft-carregando .ft-hero-v{animation:none}}
+/* topo no celular: 3 botões + perfil sem apertar */
+@media(max-width:600px){
+  .ft-acts{gap:5px;margin-right:6px}
+  .ft-ibtn{width:32px;height:32px;border-radius:11px}
+  .ft-ibtn svg{width:16px;height:16px}
+  .hdr-brand{gap:8px;min-width:0}
+  .hdr-brand-text h1{font-size:19px}
+  .perfil-selector{padding:4px 10px 4px 4px;gap:6px}
+}
+@media(max-width:420px){ .perfil-trocar{display:none} .perfil-selector{padding:4px 9px 4px 4px} }
+
 </style>
 </head>
 <body>
@@ -1133,6 +1244,9 @@ html[data-tema="escuro"] .ft-contas-grid button svg{color:var(--g3)}
         <span id="user-name"></span>
       </div>
       <div class="ft-acts">
+        <button class="ft-ibtn" id="ft-busca-btn" type="button" onclick="ftBuscaAbrir()" aria-label="Buscar" title="Buscar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        </button>
         <button class="ft-ibtn" id="ft-eye" type="button" onclick="ftToggleHide()" aria-label="Esconder valores" title="Esconder valores">
           <svg class="ft-eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
           <svg class="ft-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7c1.9 0 3.6-.6 5-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
@@ -1195,6 +1309,8 @@ html[data-tema="escuro"] .ft-contas-grid button svg{color:var(--g3)}
     </div>
   </div>
   <div class="ft-prox" id="ft-prox"></div>
+  <div id="ft-resumo-home"></div>
+  <div class="ft-prev" id="ft-prev"></div>
   <button type="button" class="ft-kpi-toggle" id="ft-kpi-toggle" onclick="ftToggleKpis()"><span id="ft-kpi-toggle-t">Ver todos os números</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
   <!-- KPIs -->
   <div class="kpi-grid">
@@ -1289,6 +1405,7 @@ html[data-tema="escuro"] .ft-contas-grid button svg{color:var(--g3)}
 
   <!-- FIXOS -->
   <div class="panel on" id="panel-fixos">
+    <div id="ft-assin"></div>
     <div class="fcard">
       <h3>➕ Novo Gasto Fixo</h3>
       <div class="frow s1"><div class="fld"><label>Nome</label>
@@ -1589,6 +1706,7 @@ html[data-tema="escuro"] .ft-contas-grid button svg{color:var(--g3)}
   </div>
 
   <div class="panel" id="panel-historico">
+    <div id="ft-resumo-hist"></div>
     <div class="hist-tabs">
       <button class="htbtn on" data-hperiod="semana">Semanas</button>
       <button class="htbtn" data-hperiod="mes">Meses</button>
@@ -1626,6 +1744,7 @@ html[data-tema="escuro"] .ft-contas-grid button svg{color:var(--g3)}
       <button type="button" onclick="ftAbrirAba('cartoes')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg><b>Cartões</b><span>faturas e limites</span></button>
       <button type="button" onclick="ftAbrirAba('emprestimos')"><svg class="ft-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg><b>Empréstimos</b><span>quem deve a quem</span></button>
     </div>
+    <button type="button" class="ft-backup-btn" onclick="ftBackup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span><b>Baixar backup</b><small id="ft-backup-info">guarda uma cópia de tudo neste aparelho</small></span></button>
   </div>
 </div>
 
@@ -6838,14 +6957,21 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
     const ok=await ftConfirm(`Pagar ${lista.length} contas do dia ${dia}?\n${lista.map(c=>'• '+c.nome+' — '+fmtM(Number(c.valor)||0)).join('\n')}\n\nTotal: ${fmtM(tot)}`);
     if(!ok) return;
     let n=0;
-    lista.forEach(alvo=>{
-      // confere de novo, na hora, se ainda está pendente (nunca desmarca algo pago)
-      const atual=pagaveis(dia,mes,ano).find(c=>c.tipo===alvo.tipo&&c.id===alvo.id&&c.pid===alvo.pid);
-      if(!atual) return;
-      try{ pagarUm(atual,mes,ano); n++; }catch(e){ console.error('FT2 pagar tudo',e); }
-    });
-    try{ renderAgenda(); updKPIs(); }catch(e){}
-    try{ showToast(`✅ ${n} conta${n>1?'s':''} paga${n>1?'s':''}`); }catch(e){}
+    window.__ftBatch=[];   // o Lote 3 junta tudo num "Desfazer" só
+    try{
+      lista.forEach(alvo=>{
+        // confere de novo, na hora, se ainda está pendente (nunca desmarca algo pago)
+        const atual=pagaveis(dia,mes,ano).find(c=>c.tipo===alvo.tipo&&c.id===alvo.id&&c.pid===alvo.pid);
+        if(!atual) return;
+        try{ pagarUm(atual,mes,ano); n++; }catch(e){ console.error('FT2 pagar tudo',e); }
+      });
+    }finally{
+      const feitos=window.__ftBatch; window.__ftBatch=null;
+      try{ renderAgenda(); updKPIs(); }catch(e){}
+      const msg=`✅ ${n} conta${n>1?'s':''} paga${n>1?'s':''}`;
+      if(typeof window.ftBatchFim==='function'&&feitos&&feitos.length) window.ftBatchFim(msg,feitos);
+      else { try{ showToast(msg); }catch(e){} }
+    }
   };
   function botaoPagarTudo(dia,mes,ano){
     try{
@@ -6877,6 +7003,383 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
   try{ ftRenderProx(); }catch(e){}
   marcarNav();
   document.querySelectorAll('.tabs [data-tab]').forEach(b=>b.addEventListener('click',()=>setTimeout(marcarNav,50)));
+})();
+</script>
+
+<script>
+// ═════════ FT2 — Lote 3. Previsão/busca/resumo só LEEM. Desfazer usa os mesmos botões de desmarcar. ═════════
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}};
+  const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+  const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const DSN=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  const DIA=86400000;
+  const hojeD=()=>{const a=new Date();return new Date(a.getFullYear(),a.getMonth(),a.getDate());};
+  const somaDias=(d,k)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+k);
+  const num=v=>Number(v)||0;
+  const ehReceber=c=>c.tipo==='emprestimo'&&c.empTipo==='emprestei';
+  const safe=(nome,fn)=>function(){try{return fn.apply(this,arguments);}catch(e){console.error('FT2 '+nome,e);}};
+
+  // ════ N1 previsão até o próximo recebimento ════
+  // Mesma regra do "Disponível": conta ligada a cartão não sai do saldo (entra na fatura).
+  function saiDoSaldo(c){
+    if(c.pago||ehReceber(c)) return false;
+    if(c.tipo==='fixo'){ const f=(S.fixos||[]).find(x=>x.id===c.id); return !(f&&f.cartaoId); }
+    if(c.tipo==='parcela'){ const p=(S.parcelas||[]).find(x=>x.id===c.pid); return !(p&&p.cartaoId); }
+    if(c.tipo==='emprestimo') return c.empTipo==='peguei';
+    return true; // fatura do cartão
+  }
+  function contasAte(fim){
+    const hoje=hojeD(); let total=0,n=0;
+    const somaDia=(d,m,a)=>(contasDoDia(d,m,a)||[]).forEach(c=>{ if(saiDoSaldo(c)){ total+=num(c.valor); n++; } });
+    for(let d=1;d<hoje.getDate();d++) somaDia(d,hoje.getMonth()+1,hoje.getFullYear()); // atrasadas do mês
+    for(let dt=hoje;dt<fim;dt=somaDias(dt,1)) somaDia(dt.getDate(),dt.getMonth()+1,dt.getFullYear());
+    return {total,n};
+  }
+  function proxRecebimento(){
+    const hoje=hojeD();
+    if((S.rendaMode||'semanal')==='semanal'){
+      const ds=S.rendaDiaSemana==null?5:Number(S.rendaDiaSemana);
+      let k=(ds-hoje.getDay()+7)%7; if(k===0) k=7;
+      return {dt:somaDias(hoje,k),dias:k,nome:k===1?'amanhã':DSN[ds]};
+    }
+    const dt=new Date(hoje.getFullYear(),hoje.getMonth()+1,1);
+    return {dt,dias:Math.round((dt-hoje)/DIA),nome:'o dia 1º'};
+  }
+  function gastoMedioDia(){
+    const hoje=hojeD(), ini=somaDias(hoje,-13);
+    const gs=[...((S.semanaAtual&&S.semanaAtual.gastos)||[])];
+    (S.semanasHist||[]).forEach(s=>(s.gastos||[]).forEach(g=>gs.push(g)));
+    let soma=0,primeira=null;
+    gs.forEach(g=>{
+      if(!g||g.cartaoId||!g.data) return;
+      const d=new Date(g.data+'T12:00:00'); if(isNaN(d)) return;
+      const d0=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+      if(d0>=ini&&d0<=hoje) soma+=num(g.valor);
+      if(!primeira||d0<primeira) primeira=d0;
+    });
+    if(!primeira) return 0;
+    const dias=Math.max(1,Math.min(14,Math.round((hoje-primeira)/DIA)+1));
+    return soma/dias;
+  }
+  function previsao(){
+    const sr=calcSaldoReal(); if(sr===null||sr===undefined) return null;
+    const pr=proxRecebimento(), contas=contasAte(pr.dt), media=gastoMedioDia();
+    const dia=media*pr.dias;
+    return {sr,pr,contas,media,dia,fim:sr-contas.total-dia};
+  }
+  window.ftRenderPrev=safe('previsão',function(){
+    const el=$('ft-prev'); if(!el) return;
+    const p=previsao();
+    if(!p){ el.innerHTML=''; el.className='ft-prev'; return; }
+    el.className='ft-prev ft-card';
+    const dd=`${String(p.pr.dt.getDate()).padStart(2,'0')}/${String(p.pr.dt.getMonth()+1).padStart(2,'0')}`;
+    const cor=p.fim<0?'var(--red)':'var(--g1)';
+    const v=$('ft-pg-v')?$('ft-pg-v').value:'';
+    el.innerHTML=`<div class="ft-card-h"><span>Previsão até receber</span><small>${p.pr.nome}, ${dd}</small></div>
+      <div class="ft-prev-frase">Se nada mudar, você chega lá com</div>
+      <div class="ft-prev-big ft-val" style="color:${cor}">${fmtM(p.fim)}</div>
+      <div class="ft-prev-linhas">
+        <div><span>Na conta agora</span><b class="ft-val">${fmtM(p.sr)}</b></div>
+        <div><span>Contas até lá (${p.contas.n})</span><b class="ft-val">− ${fmtM(p.contas.total)}</b></div>
+        <div><span>Dia a dia (${fmtM(p.media)} × ${p.pr.dias} dia${p.pr.dias>1?'s':''})</span><b class="ft-val">− ${fmtM(p.dia)}</b></div>
+      </div>
+      <div class="ft-pg">
+        <label for="ft-pg-v">Posso gastar?</label>
+        <div class="ft-pg-row"><input type="number" id="ft-pg-v" step="0.01" min="0" placeholder="R$ 0,00" ${ehToque()?'inputmode="none"':''} value="${v}" oninput="ftPosso()"></div>
+        <div class="ft-pg-res" id="ft-pg-res"></div>
+      </div>`;
+    ftPosso();
+  });
+  // ════ N2 posso gastar ════
+  window.ftPosso=safe('posso',function(){
+    const inp=$('ft-pg-v'), res=$('ft-pg-res'); if(!inp||!res) return;
+    const v=parseFloat(String(inp.value).replace(',','.'))||0;
+    if(v<=0){ res.className='ft-pg-res'; res.textContent=''; return; }
+    const p=previsao(); if(!p) return;
+    const sobra=p.fim-v, porDia=sobra/Math.max(1,p.pr.dias);
+    if(sobra<0){ res.className='ft-pg-res nao'; res.textContent=`Não cabe. Faltariam ${fmtM(-sobra)} até ${p.pr.nome}.`; }
+    else if(sobra<Math.max(50,p.media*p.pr.dias*0.5)){ res.className='ft-pg-res meio'; res.textContent=`Cabe, mas fica apertado: sobram ${fmtM(sobra)} (${fmtM(porDia)} por dia) até ${p.pr.nome}.`; }
+    else { res.className='ft-pg-res ok'; res.textContent=`Cabe! Sobram ${fmtM(sobra)} até ${p.pr.nome} (${fmtM(porDia)} por dia).`; }
+  });
+
+  // ════ N3 raio-X das assinaturas ════
+  const NOMES_ASSIN=/netflix|spotify|prime|amazon|disney|hbo|max\b|youtube|icloud|apple|google one|deezer|globoplay|chatgpt|openai|claude|xbox|playstation|psn|paramount|crunchyroll|star\+|twitch|canva|adobe|microsoft|office|dropbox|tidal|kindle|audible|duolingo/i;
+  window.ftRenderAssin=safe('assinaturas',function(){
+    const el=$('ft-assin'); if(!el) return;
+    const lista=(S.fixos||[]).filter(f=>/assinatura/i.test(f.cat||'')||NOMES_ASSIN.test(f.nome||''));
+    if(!lista.length){ el.innerHTML=''; el.className=''; return; }
+    const mes=lista.reduce((s,f)=>s+num(f.valor),0);
+    el.className='ft-card';
+    el.innerHTML=`<div class="ft-card-h"><span>Raio-X das assinaturas</span><small>${lista.length} serviço${lista.length>1?'s':''}</small></div>
+      <div class="ft-assin-tot"><div><span>Por mês</span><b class="ft-val">${fmtM(mes)}</b></div><div><span>Por ano</span><b class="ft-val" style="color:var(--red)">${fmtM(mes*12)}</b></div></div>
+      ${lista.sort((a,b)=>num(b.valor)-num(a.valor)).map(f=>`<div class="ft-assin-l"><span>${esc(f.nome)}<em>${fmtM(num(f.valor)*12)}/ano</em></span><span class="ft-val">${fmtM(num(f.valor))}</span></div>`).join('')}`;
+  });
+
+  // ════ N7 resumo do mês (mesmas fontes da aba Histórico) ════
+  function dadosMes(m,a){ // m: 1-12
+    const pref=`${a}-${String(m).padStart(2,'0')}`;
+    let entrou=0,fixos=0,parc=0,dia=0,maior=null;
+    const maiorDe=(nome,v)=>{ if(!maior||v>maior.v) maior={nome,v}; };
+    (S.recebimentos||[]).forEach(r=>{ if(r&&String(r.data||'').startsWith(pref)) entrou+=num(r.valor); });
+    (S.extras||[]).forEach(e=>{ if(e&&String(e.data||'').startsWith(pref)) entrou+=num(e.valor); });
+    (S.fixosPagos||[]).forEach(fp=>{ if(+fp.mes!==m||+fp.ano!==a) return; const f=(S.fixos||[]).find(x=>x.id===fp.id); if(!f) return; fixos+=num(f.valor); maiorDe(f.nome,num(f.valor)); });
+    (S.parcelas||[]).forEach(p=>(p.pagas||[]).forEach(pg=>{ if(+pg.mes===m&&+pg.ano===a){ parc+=num(p.valor); maiorDe(p.desc,num(p.valor)); } }));
+    const gs=[...((S.semanaAtual&&S.semanaAtual.gastos)||[])]; (S.semanasHist||[]).forEach(s=>(s.gastos||[]).forEach(g=>gs.push(g)));
+    gs.forEach(g=>{ if(g&&String(g.data||'').startsWith(pref)){ dia+=num(g.valor); maiorDe(g.desc,num(g.valor)); } });
+    const saiu=fixos+parc+dia;
+    return {entrou,fixos,parc,dia,saiu,maior,tem:entrou>0||saiu>0};
+  }
+  function htmlResumo(fechavel){
+    const h=hojeD(); const ref=new Date(h.getFullYear(),h.getMonth()-1,1), ant=new Date(h.getFullYear(),h.getMonth()-2,1);
+    const d=dadosMes(ref.getMonth()+1,ref.getFullYear()); if(!d.tem) return '';
+    const a=dadosMes(ant.getMonth()+1,ant.getFullYear());
+    const saldoMes=d.entrou-d.saiu;
+    let comp='';
+    if(a.saiu>0){ const pct=Math.round((d.saiu-a.saiu)/a.saiu*100);
+      comp=pct===0?`Você gastou o mesmo que em ${MESES[ant.getMonth()]}.`:`Você gastou <b>${Math.abs(pct)}% ${pct>0?'a mais':'a menos'}</b> que em ${MESES[ant.getMonth()]}.`; }
+    const meta=num(S.metaMensal);
+    const metaTxt=meta>0&&d.entrou>0?(saldoMes>=meta?` Meta de ${fmtM(meta)} batida! 🎉`:` Meta de ${fmtM(meta)} não foi batida.`):'';
+    return `<div class="ft-card-h"><span>Como foi ${MESES[ref.getMonth()]}</span>${fechavel?`<button type="button" class="ft-card-x" onclick="ftResumoFechar()" aria-label="Fechar">✕</button>`:''}</div>
+      <div class="ft-res-grid">
+        <div><span>Entrou</span><b class="ft-val" style="color:var(--g1)">${fmtM(d.entrou)}</b></div>
+        <div><span>Saiu</span><b class="ft-val" style="color:var(--red)">${fmtM(d.saiu)}</b></div>
+        <div><span>Contas e parcelas</span><b class="ft-val">${fmtM(d.fixos+d.parc)}</b></div>
+        <div><span>Dia a dia</span><b class="ft-val">${fmtM(d.dia)}</b></div>
+      </div>
+      <div class="ft-res-nota">${d.entrou>0?`Sobrou <b class="ft-val">${fmtM(saldoMes)}</b> no mês.`:''}${metaTxt} ${d.maior?`Maior gasto: <b>${esc(d.maior.nome||'—')}</b> (${fmtM(d.maior.v)}).`:''} ${comp}</div>`;
+  }
+  window.ftResumoFechar=function(){ const h=hojeD(); lsSet('ft_resumo_fechado',`${h.getFullYear()}-${h.getMonth()+1}`); ftRenderResumo(); };
+  window.ftRenderResumo=safe('resumo',function(){
+    const h=hojeD();
+    const home=$('ft-resumo-home'), hist=$('ft-resumo-hist');
+    const fechado=lsGet('ft_resumo_fechado','')===`${h.getFullYear()}-${h.getMonth()+1}`;
+    if(home){ const x=(h.getDate()<=10&&!fechado)?htmlResumo(true):''; home.innerHTML=x; home.className=x?'ft-card':''; }
+    if(hist){ const x=htmlResumo(false); hist.innerHTML=x; hist.className=x?'ft-card':''; }
+  });
+
+  // ════ N4 busca ════
+  function montarBusca(){
+    if($('ft-busca-bk')) return;
+    const bk=document.createElement('div'); bk.id='ft-busca-bk'; bk.className='ft-busca-bk';
+    bk.innerHTML=`<div class="ft-busca" role="dialog" aria-label="Buscar"><div class="ft-busca-in">
+      <input type="search" id="ft-busca-q" placeholder="Buscar conta, parcela, gasto, pessoa..." autocomplete="off">
+      <button type="button" onclick="ftBuscaFechar()">Fechar</button></div><div id="ft-busca-r"></div></div>`;
+    bk.addEventListener('click',e=>{ if(e.target===bk) ftBuscaFechar(); });
+    document.body.appendChild(bk);
+    $('ft-busca-q').addEventListener('input',buscar);
+    $('ft-busca-q').addEventListener('keydown',e=>{ if(e.key==='Escape') ftBuscaFechar(); });
+  }
+  window.ftBuscaAbrir=function(){ montarBusca(); $('ft-busca-bk').classList.add('op'); const q=$('ft-busca-q'); q.value=''; buscar(); setTimeout(()=>q.focus(),30); };
+  window.ftBuscaFechar=function(){ const b=$('ft-busca-bk'); if(b) b.classList.remove('op'); };
+  window.ftBuscaIr=function(aba,dia){
+    ftBuscaFechar();
+    if(dia){ const h=hojeD(); ftIrAgenda(dia,h.getMonth()+1,h.getFullYear()); }
+    else ftAbrirAba(aba);
+  };
+  const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  function item(nome,sub,valor,acao){
+    return `<button type="button" class="ft-up" onclick="${acao}"><div class="ft-up-tx"><b>${esc(nome)}</b><span>${sub}</span></div><div class="ft-up-v ft-val">${fmtM(num(valor))}</div></button>`;
+  }
+  function buscar(){
+    const r=$('ft-busca-r'); const q=norm($('ft-busca-q').value).trim();
+    if(q.length<2){ r.innerHTML='<div class="ft-busca-vazio">Digite pelo menos 2 letras.</div>'; return; }
+    const tem=s=>norm(s).includes(q);
+    const grupos=[];
+    const fx=(S.fixos||[]).filter(f=>tem(f.nome)||tem(f.cat));
+    if(fx.length) grupos.push(['Fixos',fx.map(f=>item(f.nome,(f.diaVenc?`todo dia ${f.diaVenc} · `:'')+(f.cartaoId||f.tipo==='cartao'?'cartão':'PIX'),f.valor,f.diaVenc?`ftBuscaIr('agenda',${parseInt(f.diaVenc)||0})`:`ftBuscaIr('fixos')`))]);
+    const pc=(S.parcelas||[]).filter(p=>tem(p.desc));
+    if(pc.length) grupos.push(['Parcelas',pc.map(p=>item(p.desc,`${p.atual||'?'}/${p.total||'?'}${p.diaVenc?` · dia ${p.diaVenc}`:''}`,p.valor,`ftBuscaIr('parcelas')`))]);
+    const gs=[]; ((S.semanaAtual&&S.semanaAtual.gastos)||[]).forEach(g=>gs.push(g)); (S.semanasHist||[]).forEach(s=>(s.gastos||[]).forEach(g=>gs.push(g)));
+    const gf=gs.filter(g=>g&&(tem(g.desc)||tem(g.cat))).sort((a,b)=>String(b.data).localeCompare(String(a.data))).slice(0,15);
+    if(gf.length) grupos.push(['Gastos',gf.map(g=>item(g.desc,`${fmtDate(g.data)}${g.cat?' · '+esc(g.cat):''}`,g.valor,`ftBuscaIr('semana')`))]);
+    const em=(S.emprestimos||[]).filter(e=>tem(e.pessoa));
+    if(em.length) grupos.push(['Empréstimos',em.map(e=>item(e.pessoa,e.tipo==='emprestei'?'você emprestou':'você pegou',e.valor,`ftBuscaIr('emprestimos')`))]);
+    const ct=(S.cartoes||[]).filter(c=>tem(c.nome));
+    if(ct.length) grupos.push(['Cartões',ct.map(c=>item(c.nome,`vence dia ${c.venc}`,c.limite,`ftBuscaIr('cartoes')`))]);
+    r.innerHTML=grupos.length?grupos.map(([t,l])=>`<div class="ft-busca-g">${t}</div>${l.join('')}`).join(''):'<div class="ft-busca-vazio">Nada encontrado.</div>';
+  }
+
+  // ════ N6 backup ════
+  window.ftBackup=function(){
+    try{ exportJ(); lsSet('ft_backup_em',String(Date.now())); infoBackup(); showToast('⬇️ Backup baixado'); }catch(e){ console.error(e); }
+  };
+  function infoBackup(){
+    const el=$('ft-backup-info'); if(!el) return;
+    const t=parseInt(lsGet('ft_backup_em','0'))||0;
+    if(!t){ el.textContent='guarda uma cópia de tudo neste aparelho · nunca feito aqui'; return; }
+    const d=Math.floor((Date.now()-t)/DIA);
+    el.textContent='último neste aparelho: '+(d===0?'hoje':d===1?'ontem':`há ${d} dias`);
+  }
+
+  // ════ D1 desfazer ════
+  let undoT=null;
+  function undoEl(){
+    let el=$('ft-undo'); if(el) return el;
+    el=document.createElement('div'); el.id='ft-undo'; el.className='ft-undo'; el.setAttribute('role','status');
+    el.innerHTML='<span id="ft-undo-t"></span><button type="button" id="ft-undo-b">Desfazer</button>';
+    document.body.appendChild(el); return el;
+  }
+  window.ftUndoToast=function(msg,desfazer){
+    const el=undoEl(); $('ft-undo-t').textContent=msg; el.classList.add('op');
+    let usado=false;
+    $('ft-undo-b').onclick=()=>{ if(usado) return; usado=true; el.classList.remove('op'); clearTimeout(undoT);
+      try{ desfazer(); }catch(e){ console.error('FT2 desfazer',e); } };
+    clearTimeout(undoT); undoT=setTimeout(()=>el.classList.remove('op'),5000);
+  };
+  // situação atual de "pago" (para só desfazer se nada mudou depois)
+  function pagoFixo(id,m,a){ return (S.fixosPagos||[]).some(fp=>fp.id===id&&+fp.mes===+m&&+fp.ano===+a); }
+  function pagoParc(pid,m,a){ const p=(S.parcelas||[]).find(x=>x.id===pid); return !!(p&&(p.pagas||[]).some(x=>+x.mes===+m&&+x.ano===+a)); }
+  function nomeFixo(id){ const f=(S.fixos||[]).find(x=>x.id===id); return f?f.nome:'Conta'; }
+  function nomeParc(id){ const p=(S.parcelas||[]).find(x=>x.id===id); return p?p.desc:'Parcela'; }
+  function embrulharToggle(nome,estado,rotulo){
+    const orig=window[nome]; if(typeof orig!=='function'||orig._ft3) return;
+    const novo=function(id,m,a){
+      const antes=estado(id,m,a);
+      const r=orig.apply(this,arguments);
+      try{
+        const depois=estado(id,m,a); if(antes===depois) return r;
+        const refazer=()=>{ if(estado(id,m,a)===depois){ orig(id,m,a); } };
+        if(Array.isArray(window.__ftBatch)) window.__ftBatch.push(refazer);
+        else ftUndoToast(`${depois?'✅ Paga':'↩︎ Desmarcada'}: ${rotulo(id)}`,refazer);
+      }catch(e){ console.error('FT2 toggle',e); }
+      return r;
+    };
+    novo._ft3=true; window[nome]=novo;
+  }
+  embrulharToggle('toggleFixoPagoCal',pagoFixo,nomeFixo);
+  embrulharToggle('toggleFaturaCartao',pagoFixo,nomeFixo);
+  embrulharToggle('togglePagaCalendario',pagoParc,nomeParc);
+  window.ftBatchFim=function(msg,feitos){
+    ftUndoToast(msg,()=>{ feitos.slice().reverse().forEach(f=>{ try{f();}catch(e){console.error(e);} }); try{renderAgenda();updKPIs();}catch(e){} });
+  };
+  // excluir fixo / parcela / gasto: devolve o item no mesmo lugar
+  function embrulharExcluir(nome,lista,rotulo,depoisVolta){
+    const orig=window[nome]; if(typeof orig!=='function'||orig._ft3) return;
+    const novo=async function(id){
+      const arr=lista(); const idx=arr.findIndex(x=>x.id===id); const copia=idx>=0?JSON.parse(JSON.stringify(arr[idx])):null;
+      const r=await orig.apply(this,arguments);
+      try{
+        if(copia&&!lista().some(x=>x.id===id)){
+          ftUndoToast(`🗑️ Excluído: ${rotulo(copia)}`,()=>{
+            if(lista().some(x=>x.id===id)) return;
+            const a=lista(); a.splice(Math.min(idx,a.length),0,copia);
+            if(depoisVolta) depoisVolta(copia);
+            save(); updAll(); try{renderAgenda();}catch(e){}
+          });
+        }
+      }catch(e){ console.error('FT2 excluir',e); }
+      return r;
+    };
+    novo._ft3=true; window[nome]=novo;
+  }
+  embrulharExcluir('delFixo',()=>S.fixos,c=>c.nome);
+  embrulharExcluir('delParcela',()=>S.parcelas,c=>c.desc);
+  // gasto: ao excluir, o app devolveu o valor ao saldo; ao desfazer, desconta de novo (o inverso exato)
+  embrulharExcluir('delGasto',()=>S.semanaAtual.gastos,c=>c.desc,c=>{ if(!c.cartaoId&&S.saldoReal!==null) S.saldoReal-=c.valor; });
+
+  // ════ D2 deslizar pra pagar (no detalhe do dia da agenda) ════
+  (function(){
+    const det=$('cal-day-detail'); if(!det) return;
+    let item=null,x0=0,y0=0,dx=0,horiz=null;
+    const botaoPagar=it=>[...it.querySelectorAll('.pago-btn')].find(b=>b.textContent.trim()==='Pagar'&&/toggle/.test(b.getAttribute('onclick')||''));
+    det.addEventListener('touchstart',e=>{
+      const it=e.target.closest('.cal-conta-item'); if(!it||e.target.closest('button')||!botaoPagar(it)){ item=null; return; }
+      item=it; const t=e.touches[0]; x0=t.clientX; y0=t.clientY; dx=0; horiz=null;
+    },{passive:true});
+    det.addEventListener('touchmove',e=>{
+      if(!item) return; const t=e.touches[0]; const ddx=t.clientX-x0, ddy=t.clientY-y0;
+      if(horiz===null&&(Math.abs(ddx)>8||Math.abs(ddy)>8)) horiz=Math.abs(ddx)>Math.abs(ddy);
+      if(!horiz) return;
+      dx=Math.max(0,Math.min(140,ddx));
+      item.classList.add('ft-sw','ft-arrastando'); item.style.transform=`translateX(${dx}px)`;
+      item.style.background=dx>90?'var(--gpale)':'';
+    },{passive:true});
+    det.addEventListener('touchend',()=>{
+      if(!item) return; const it=item; item=null;
+      it.classList.remove('ft-arrastando'); it.style.transform=''; it.style.background='';
+      if(horiz&&dx>90){ const b=botaoPagar(it); if(b) b.click(); }
+    });
+  })();
+
+  // ════ D3 teclado de valor (só em tela de toque; dá pra voltar ao teclado normal) ════
+  const CAMPOS=['renda-input','f-valor','p-val','s-val','e-valor','c-limite','pf-entrada','pf-valor','fatura-val','ex-val','saldo-input','receb-val','meta-input','ep-val','emp-pag-valor','mf-v','mp-v','ms-v','ft-pg-v'];
+  const ehToque=()=>{try{return matchMedia('(pointer:coarse)').matches||('ontouchstart' in window&&navigator.maxTouchPoints>0);}catch(e){return false;}};
+  const marcarCampos=()=>{ if(!ehToque()) return; CAMPOS.forEach(id=>{ const el=$(id); if(el&&el.dataset.ftNormal!=='1') el.setAttribute('inputmode','none'); }); };
+  let kpAlvo=null,kpCent=0,kpNovo=true,kpAbertoEm=0;
+  function montarKp(){
+    if($('ft-kp-bk')) return;
+    const bk=document.createElement('div'); bk.id='ft-kp-bk'; bk.className='ft-kp-bk';
+    bk.innerHTML=`<div class="ft-kp" role="dialog" aria-label="Digitar valor"><div class="ft-kp-lbl" id="ft-kp-lbl">Valor</div><div class="ft-kp-v" id="ft-kp-v">R$ 0,00</div>
+      <div class="ft-kp-g">${['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(k=>`<button type="button" data-k="${k}">${k}</button>`).join('')}</div>
+      <button type="button" class="ft-kp-ok" id="ft-kp-ok">Pronto</button>
+      <button type="button" class="ft-kp-alt" id="ft-kp-alt">usar o teclado normal</button></div>`;
+    // o mesmo toque que abriu não pode fechar (o clique cai no fundo logo depois)
+    bk.addEventListener('click',e=>{ if(e.target===bk&&Date.now()-kpAbertoEm>450) kpFechar(); });
+    bk.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>kpTecla(b.dataset.k)));
+    bk.querySelector('#ft-kp-ok').onclick=kpFechar;
+    bk.querySelector('#ft-kp-alt').onclick=()=>{ const el=kpAlvo; kpFechar(); if(el){ el.dataset.ftNormal='1'; el.setAttribute('inputmode','decimal'); setTimeout(()=>el.focus(),60); } };
+    document.body.appendChild(bk);
+  }
+  function kpMostrar(){ $('ft-kp-v').textContent=fmtM(kpCent/100); }
+  function kpEscrever(){
+    if(!kpAlvo) return;
+    kpAlvo.value=kpCent?(kpCent/100).toFixed(2):'';
+    kpAlvo.dispatchEvent(new Event('input',{bubbles:true}));
+    kpAlvo.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function kpTecla(k){
+    if(k==='⌫'){ kpCent=Math.floor(kpCent/10); kpNovo=false; }
+    else{ if(kpNovo){ kpCent=0; kpNovo=false; } if(kpCent<1e9) kpCent=k==='00'?kpCent*100:kpCent*10+Number(k); }
+    kpMostrar(); kpEscrever();
+  }
+  function kpAbrir(el){
+    montarKp(); kpAlvo=el; kpNovo=true; kpAbertoEm=Date.now();
+    const v=parseFloat(String(el.value).replace(',','.')); kpCent=isFinite(v)&&v>0?Math.round(v*100):0;
+    const lb=el.id&&document.querySelector(`label[for="${el.id}"]`)||el.closest('.fld,.rp-row,.ft-pg')&&el.closest('.fld,.rp-row,.ft-pg').querySelector('label');
+    $('ft-kp-lbl').textContent=lb?lb.textContent.trim():'Valor';
+    kpMostrar(); $('ft-kp-bk').classList.add('op');
+  }
+  function kpFechar(){ const b=$('ft-kp-bk'); if(b) b.classList.remove('op'); kpAlvo=null; }
+  {
+    marcarCampos();
+    document.addEventListener('focusin',e=>{
+      const el=e.target; if(!el||!el.id||CAMPOS.indexOf(el.id)<0||el.dataset.ftNormal==='1'||!ehToque()) return;
+      el.setAttribute('inputmode','none'); el.blur(); kpAbrir(el);
+    });
+    document.addEventListener('keydown',e=>{
+      if(!kpAlvo) return;
+      if(/^\d$/.test(e.key)){ kpTecla(e.key); e.preventDefault(); }
+      else if(e.key==='Backspace'){ kpTecla('⌫'); e.preventDefault(); }
+      else if(e.key==='Enter'||e.key==='Escape'){ kpFechar(); e.preventDefault(); }
+    });
+  }
+
+  // ════ D6 carregando ════
+  const hero=$('ft-hero'); if(hero) hero.classList.add('ft-carregando');
+  const pronto=()=>{ if(hero) hero.classList.remove('ft-carregando'); };
+  setTimeout(pronto,8000);
+
+  // ════ ganchos ════
+  function envolver(nome,depois){
+    const orig=window[nome]; if(typeof orig!=='function'||orig['_ft3_'+nome]) return;
+    const novo=function(){ const r=orig.apply(this,arguments); try{depois();}catch(e){console.error('FT2 gancho '+nome,e);} return r; };
+    novo['_ft3_'+nome]=true; window[nome]=novo;
+  }
+  envolver('updKPIs',()=>{ ftRenderPrev(); ftRenderResumo(); marcarCampos(); try{ if(typeof _uid!=='undefined'&&_uid) pronto(); }catch(e){} });
+  envolver('renderFixos',()=>ftRenderAssin());
+  infoBackup();
+  ftRenderAssin(); ftRenderResumo();
+  // dica de deslizar, uma vez por aparelho
+  envolver('renderCalDetail',()=>{
+    if(lsGet('ft_dica_sw','0')==='1') return;
+    const det=$('cal-day-detail'); const alvo=det&&det.firstElementChild; if(!alvo||!ehToque()) return;
+    if(!alvo.querySelector('.pago-btn')) return;
+    const d=document.createElement('div'); d.className='ft-sw-dica'; d.textContent='Dica: arraste uma conta para a direita para pagar →'; alvo.appendChild(d);
+    lsSet('ft_dica_sw','1');
+  });
 })();
 </script>
 
