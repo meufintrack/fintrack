@@ -875,7 +875,7 @@ button,input,select,textarea{font-family:var(--font)}
 .ft-ibtn .ft-eye-off{display:none}
 html.ft-hide .ft-ibtn .ft-eye-on{display:none}
 html.ft-hide .ft-ibtn .ft-eye-off{display:block}
-@media(min-width:601px){.ft-acts{margin-top:10px}}
+
 @media(max-width:600px){.ft-acts{margin-right:8px}}
 
 /* esconder valores (H4) */
@@ -963,6 +963,11 @@ html[data-tema="escuro"] .ft-amt-in{color:var(--g3)}
 html.ft-hide :is(.emp-nums b,.proj-row strong,.pasta-resumo .pr-nums b,.cal-detail-title span,.chk-val,
   #panel-cartoes div[style*="font-weight:700"],#panel-cartoes strong,#list-cartoes div[style*="font-size:18px"]){
   filter:blur(7px);transition:filter .2s}
+/* tela larga: olho/lua e perfil lado a lado, sem encostar */
+@media(min-width:601px){
+  .ft-acts{display:inline-flex;vertical-align:middle;margin:10px 8px 0 0}
+  #perfil-selector[style*="flex"]{display:inline-flex!important;vertical-align:middle;margin-top:10px}
+}
 
 </style>
 </head>
