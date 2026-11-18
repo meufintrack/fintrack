@@ -7630,19 +7630,13 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
       const nome=`fintrack-${r.mes}-${r.ano}.ics`;
       const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
       if(ios){
-        // iPhone: o iOS não deixa um site abrir o Calendário direto (link data: fica em branco).
-        // Caminho que funciona: salvar o .ics em Arquivos e tocar nele lá -> "Adicionar tudo".
+        // iPhone: baixar o .ics (blob + download) abre direto a tela do Calendário com "Adicionar Tudo".
+        // Testado no iPhone virtual, no Safari e com o app na tela de início. (data: fica em branco; compartilhar só oferece Arquivos.)
         folha(`<div class="ft-sheet-h"><b>Mandar pro Calendário</b></div>
-          <div class="ft-cf-m" style="text-align:left;margin:0">${partes} de ${r.mes}. Cada um vira um evento no dia, com aviso às 9h do dia anterior.</div>
-          <ol class="ft-ics-passos">
-            <li>Toque em <b>Salvar no iPhone</b> e escolha <b>Salvar em Arquivos</b>.</li>
-            <li>Abra o app <b>Arquivos</b> e toque em <b>${nome}</b>.</li>
-            <li>Toque em <b>Adicionar tudo</b>. Pronto, vai pro seu Calendário.</li>
-          </ol>
-          <div class="ft-cf-m" style="text-align:left;margin:0;font-size:12px">Se mandar de novo depois, o iPhone pode duplicar os eventos.</div>
-          <div class="ft-cf-b" style="flex-direction:column"><button type="button" class="sim">Salvar no iPhone</button><button type="button" class="nao ft-ics-x">Cancelar</button></div>`,
+          <div class="ft-cf-m" style="text-align:left;margin:0">${partes} de ${r.mes}. Cada um vira um evento no dia, com aviso às 9h do dia anterior.<br><br>Na próxima tela, toque em <b>Adicionar Tudo</b>. Se mandar de novo depois, o iPhone só adiciona o que for novo.</div>
+          <div class="ft-cf-b" style="flex-direction:column"><button type="button" class="sim">Abrir no Calendário</button><button type="button" class="nao ft-ics-x">Cancelar</button></div>`,
         (bk,fechar)=>{
-          bk.querySelector('.sim').onclick=()=>{ fechar(); salvarArquivo(ics,nome); };
+          bk.querySelector('.sim').onclick=()=>{ fechar(); baixarICS(ics,nome); };
           bk.querySelector('.ft-ics-x').onclick=fechar;
         });
         return;
@@ -7652,6 +7646,13 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
       await salvarArquivo(ics,nome);
     }catch(e){ console.error('FT2 calendário',e); try{showToast('⚠️ Não deu pra gerar o arquivo');}catch(_){} }
   };
+  function baixarICS(ics,nome){
+    try{
+      const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+      const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download=nome; a.style.display='none';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),60000);
+    }catch(e){ console.error('FT2 calendário',e); salvarArquivo(ics,nome); }
+  }
   async function salvarArquivo(ics,nome){
     try{
       const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
