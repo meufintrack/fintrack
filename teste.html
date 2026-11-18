@@ -1279,6 +1279,9 @@ html[data-tema="escuro"] .hdr{background:linear-gradient(150deg,rgba(11,42,31,.9
 
 /* ═════════ FT2 — Lote 6: visual de celular (só até 600px; computador não muda) ═════════ */
 .ft-saud{display:none}
+/* a página nunca rola pro lado (arrastar conta pra pagar ou deslizar o mês deslocava a tela inteira) */
+html,body{overflow-x:clip;max-width:100%}
+#cal-day-detail,#ft-ag-lista{overflow-x:clip}
 .ft-atalhos{display:none}
 @media(max-width:600px){
   /* topo claro, igual à prévia */
