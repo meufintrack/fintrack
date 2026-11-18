@@ -7587,10 +7587,36 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
       if(!r.ev.length){ showToast(`Nada pendente em ${r.mes} pra mandar 🎉`); return; }
       const nContas=r.ev.filter(e=>!e.uid.startsWith('ft-lembrete')).length, nLemb=r.ev.length-nContas;
       const partes=[nContas?`${nContas} conta${nContas>1?'s':''}`:'',nLemb?`${nLemb} lembrete${nLemb>1?'s':''}`:''].filter(Boolean).join(' e ');
-      const ok=await ftConfirm(`Mandar ${partes} de ${r.mes} pro Calendário?\nCada um vira um evento no dia, com aviso às 9h do dia anterior. Se mandar de novo, o iPhone pode duplicar os eventos.`);
-      if(!ok) return;
+      const ics=montarICS(r.ev);
       const nome=`fintrack-${r.mes}-${r.ano}.ics`;
-      const blob=new Blob([montarICS(r.ev)],{type:'text/calendar;charset=utf-8'});
+      const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+      if(ios){
+        // iPhone: abrir o calendário direto no Safari mostra a tela "Adicionar tudo" do app Calendário.
+        // (Compartilhar o arquivo só oferece "Salvar em Arquivos".)
+        folha(`<div class="ft-sheet-h"><b>Mandar pro Calendário</b></div>
+          <div class="ft-cf-m" style="text-align:left;margin:0">${partes} de ${r.mes}. Cada um vira um evento no dia, com aviso às 9h do dia anterior.<br><br>Na próxima tela, toque em <b>Adicionar tudo</b>. Se mandar de novo depois, o iPhone pode duplicar os eventos.</div>
+          <div class="ft-cf-b" style="flex-direction:column"><button type="button" class="sim">Abrir no Calendário</button><button type="button" class="nao ft-ics-arq">Salvar arquivo .ics</button><button type="button" class="nao ft-ics-x">Cancelar</button></div>`,
+        (bk,fechar)=>{
+          bk.querySelector('.sim').onclick=()=>{
+            fechar();
+            const url='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
+            // janela separada: o FinTrack continua aberto atrás (importante quando ele está instalado na tela de início)
+            let w=null; try{ w=window.open(url,'_blank'); }catch(e){}
+            if(!w) window.location.href=url;
+          };
+          bk.querySelector('.ft-ics-x').onclick=fechar;
+          bk.querySelector('.ft-ics-arq').onclick=()=>{ fechar(); salvarArquivo(ics,nome); };
+        });
+        return;
+      }
+      const ok=await ftConfirm(`Mandar ${partes} de ${r.mes} pro Calendário?\nCada um vira um evento no dia, com aviso às 9h do dia anterior. Se mandar de novo, o calendário pode duplicar os eventos.`);
+      if(!ok) return;
+      await salvarArquivo(ics,nome);
+    }catch(e){ console.error('FT2 calendário',e); try{showToast('⚠️ Não deu pra gerar o arquivo');}catch(_){} }
+  };
+  async function salvarArquivo(ics,nome){
+    try{
+      const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
       let file=null; try{ file=new File([blob],nome,{type:'text/calendar'}); }catch(e){}
       if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
         try{ await navigator.share({files:[file],title:'FinTrack'}); return; }catch(e){ if(e&&e.name==='AbortError') return; }
