@@ -7677,6 +7677,13 @@ já cadastradas. Compras novas no cartão não entram nesta conta.</div>
       if(!r.ev.length){ showToast(`Nada pendente em ${r.mes} pra mandar 🎉`); return; }
       const nContas=r.ev.filter(e=>!e.uid.startsWith('ft-lembrete')).length, nLemb=r.ev.length-nContas;
       const partes=[nContas?`${nContas} conta${nContas>1?'s':''}`:'',nLemb?`${nLemb} lembrete${nLemb>1?'s':''}`:''].filter(Boolean).join(' e ');
+      // Dentro do app FinTrack do iPhone: o próprio app coloca os eventos no Calendário (sem tela de arquivo).
+      const ponte=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.ftCalendario;
+      if(ponte){
+        const ok=await ftConfirm(`Colocar ${partes} de ${r.mes} no seu Calendário?\nCada um vira um evento no dia, com aviso às 9h do dia anterior. Se mandar de novo, só atualiza o que já estava lá.`);
+        if(!ok) return;
+        ponte.postMessage({ev:r.ev}); return;
+      }
       const ics=montarICS(r.ev);
       const nome=`fintrack-${r.mes}-${r.ano}.ics`;
       const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
